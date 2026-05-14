@@ -1,0 +1,16 @@
+services:
+  peerskills:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      # SQLite-Datenbank persistent auf dem Host speichern
+      - ./data:/data
+    environment:
+      - PORT=3001
+      - DB_PATH=/data/peerskills.db
+      - JWT_SECRET=${JWT_SECRET:-peerskills-dev-secret-change-in-production}
+      - NODE_ENV=production
+    restart: unless-stopped

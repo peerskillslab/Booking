@@ -1,0 +1,21 @@
+# Node
+node_modules/
+
+# Local env
+.env
+.env.*
+
+# SQLite database
+/data/
+server/peerskills.db
+
+# Build output
+peer-skills-lab-kurse/dist/
+
+# macOS
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
