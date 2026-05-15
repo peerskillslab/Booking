@@ -12,6 +12,5 @@ services:
         value: production
       - key: JWT_SECRET
         generateValue: true
-    volumes:
-      - name: data
-        mountPath: /data
+      - key: DATABASE_URL
+        sync: false

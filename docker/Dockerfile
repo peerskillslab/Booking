@@ -28,11 +28,7 @@ COPY server/ ./
 # Express serviert es als statische Dateien
 COPY --from=frontend-builder /build/frontend/dist ../peer-skills-lab-kurse/dist
 
-# Verzeichnis für die SQLite-Datenbank anlegen (wird als Volume gemountet)
-RUN mkdir -p /data
-
 ENV PORT=3001
-ENV DB_PATH=/data/peerskills.db
 ENV NODE_ENV=production
 
 EXPOSE 3001
