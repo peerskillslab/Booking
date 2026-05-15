@@ -15,4 +15,3 @@ services:
     volumes:
       - name: data
         mountPath: /data
-    preDeployCommand: git submodule update --init --recursive
