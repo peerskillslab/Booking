@@ -20,6 +20,7 @@ const apiCors = cors({
 app.use(express.json());
 
 // --- API Routes (mit CORS) ---
+app.use('/api/setup',                     apiCors, require('./routes/setup'));
 app.use('/api/auth',                      apiCors, require('./routes/auth'));
 app.use('/api/entities/courses',          apiCors, require('./routes/courses'));
 app.use('/api/entities/bookings',         apiCors, require('./routes/bookings'));
