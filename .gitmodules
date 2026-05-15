@@ -1,0 +1,3 @@
+[submodule "peer-skills-lab-kurse"]
+	path = peer-skills-lab-kurse
+	url = https://github.com/peerskillslab/peer-skills-lab-kurse.git
