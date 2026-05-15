@@ -1,23 +1,54 @@
-const Database = require('better-sqlite3');
-const path = require('path');
+const { Pool } = require('pg');
 const fs = require('fs');
+const path = require('path');
 
-// Azure App Service: /home ist persistent. Lokal: im server/db/ Verzeichnis.
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'peerskills.db');
+const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://localhost/peerskills';
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
-let db;
+let pool;
 
-function getDb() {
-  if (!db) throw new Error('Database not initialized. Call initDb() first.');
-  return db;
+function getPool() {
+  if (!pool) throw new Error('Database not initialized. Call initDb() first.');
+  return pool;
 }
 
-function initDb() {
-  db = new Database(DB_PATH);
-  const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
-  db.exec(schema);
-  return db;
+async function initDb() {
+  pool = new Pool({
+    connectionString: DATABASE_URL,
+    // Connection pool config
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  });
+
+  // Test connection
+  try {
+    const client = await pool.connect();
+    console.log('✓ Database connected');
+    client.release();
+  } catch (err) {
+    console.error('✗ Database connection failed:', err);
+    throw err;
+  }
+
+  // Run schema
+  try {
+    const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
+    const statements = schema
+      .split(';')
+      .map(s => s.trim())
+      .filter(s => s && !s.startsWith('--'));
+
+    for (const statement of statements) {
+      await pool.query(statement);
+    }
+    console.log('✓ Database schema initialized');
+  } catch (err) {
+    console.error('✗ Schema initialization failed:', err);
+    throw err;
+  }
+
+  return pool;
 }
 
-module.exports = { getDb, initDb };
+module.exports = { getPool, initDb };

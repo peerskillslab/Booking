@@ -19,11 +19,13 @@ const RESERVED = new Set(['sort', 'limit', 'offset']);
 function buildWhere(query, allowedCols) {
   const conditions = [];
   const values = [];
+  let paramCount = 0;
   for (const [key, val] of Object.entries(query)) {
     if (RESERVED.has(key)) continue;
     if (!allowedCols.includes(key)) continue;
     if (val === undefined || val === '') continue;
-    conditions.push(`${key} = ?`);
+    paramCount++;
+    conditions.push(`${key} = $${paramCount}`);
     values.push(val);
   }
   return { conditions, values };

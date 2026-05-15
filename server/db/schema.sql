@@ -1,6 +1,3 @@
-PRAGMA journal_mode=WAL;
-PRAGMA foreign_keys=ON;
-
 CREATE TABLE IF NOT EXISTS users (
   id          TEXT PRIMARY KEY,
   email       TEXT UNIQUE NOT NULL,
@@ -8,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   full_name   TEXT,
   role        TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('admin','tutor','student')),
   studienjahr INTEGER DEFAULT 1 CHECK (studienjahr BETWEEN 1 AND 6),
-  created_date TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+  created_date TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
 );
 
 CREATE TABLE IF NOT EXISTS courses (
@@ -28,7 +25,7 @@ CREATE TABLE IF NOT EXISTS courses (
   level                TEXT CHECK (level IN ('Anfänger','Fortgeschritten','Experte','Alle Level')),
   status               TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','cancelled','completed','draft')),
   created_by           TEXT,
-  created_date         TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+  created_date         TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
 );
 
 CREATE TABLE IF NOT EXISTS bookings (
@@ -39,9 +36,9 @@ CREATE TABLE IF NOT EXISTS bookings (
   user_name    TEXT,
   status       TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed','cancelled','pending')),
   notes        TEXT,
-  price_paid   REAL DEFAULT 0,
+  price_paid   DOUBLE PRECISION DEFAULT 0,
   created_by   TEXT,
-  created_date TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+  created_date TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
   FOREIGN KEY (course_id) REFERENCES courses(id)
 );
 
@@ -57,7 +54,7 @@ CREATE TABLE IF NOT EXISTS course_templates (
   image_url         TEXT,
   level             TEXT CHECK (level IN ('Anfänger','Fortgeschritten','Experte','Alle Level')),
   created_by        TEXT,
-  created_date      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+  created_date      TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
 );
 
 CREATE TABLE IF NOT EXISTS monthly_stat_snapshots (
@@ -69,7 +66,7 @@ CREATE TABLE IF NOT EXISTS monthly_stat_snapshots (
   tutor_data         TEXT,
   course_data        TEXT,
   reset_date         TEXT,
-  created_date       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+  created_date       TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
 );
 
 -- Indexes for common filter/sort operations

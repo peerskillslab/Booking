@@ -1,16 +1,41 @@
+version: '3.8'
+
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: peerskills-postgres
+    environment:
+      POSTGRES_DB: peerskills
+      POSTGRES_USER: peerskills
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-peerskills-dev-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U peerskills"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   peerskills:
     build:
       context: .
       dockerfile: docker/Dockerfile
+    container_name: peerskills-app
     ports:
       - "3001:3001"
-    volumes:
-      # SQLite-Datenbank persistent auf dem Host speichern
-      - ./data:/data
     environment:
       - PORT=3001
-      - DB_PATH=/data/peerskills.db
+      - DATABASE_URL=postgresql://peerskills:${DB_PASSWORD:-peerskills-dev-password}@postgres:5432/peerskills
       - JWT_SECRET=${JWT_SECRET:-peerskills-dev-secret-change-in-production}
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local

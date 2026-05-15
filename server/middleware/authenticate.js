@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { getDb } = require('../db/database');
+const { getPool } = require('../db/database');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'peerskills-dev-secret-change-in-production';
 
@@ -14,10 +14,19 @@ function authenticate(req, res, next) {
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    const db = getDb();
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.sub);
-    req.user = user || null;
-    next();
+    const pool = getPool();
+    // Note: This is synchronous middleware, but we need to fetch from async pool
+    // For now, we'll use a workaround: store pool reference in req and fetch user later if needed
+    // But since authenticate is called on every request, we need to make it async
+    pool.query('SELECT * FROM users WHERE id = $1', [payload.sub])
+      .then(result => {
+        req.user = result.rows[0] || null;
+        next();
+      })
+      .catch(() => {
+        req.user = null;
+        next();
+      });
   } catch {
     req.user = null;
     next();
