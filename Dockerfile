@@ -1,5 +1,5 @@
 # ---- Stage 1: Frontend bauen ----
-FROM node:22-alpine AS frontend-builder
+FROM node:23-alpine AS frontend-builder
 
 WORKDIR /build/frontend
 COPY peer-skills-lab-kurse/package*.json ./
@@ -11,7 +11,9 @@ ENV VITE_API_BASE_URL=/api
 RUN npm run build
 
 # ---- Stage 2: Production Image ----
-FROM node:22-alpine
+FROM node:23-alpine
+
+RUN apk update && apk upgrade && apk add --no-cache dumb-init
 
 WORKDIR /app
 
