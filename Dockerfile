@@ -3,7 +3,7 @@ FROM node:23-alpine AS frontend-builder
 
 WORKDIR /build/frontend
 COPY peer-skills-lab-kurse/package*.json ./
-RUN npm ci
+RUN npm ci || npm install
 
 COPY peer-skills-lab-kurse/ ./
 # Produkions-API-URL: relativ, damit der Container überall funktioniert
