@@ -19,23 +19,6 @@ services:
       retries: 5
     restart: unless-stopped
 
-  peerskills:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    container_name: peerskills-app
-    ports:
-      - "3001:3001"
-    environment:
-      - PORT=3001
-      - DATABASE_URL=postgresql://peerskills:${DB_PASSWORD:-peerskills-dev-password}@postgres:5432/peerskills
-      - JWT_SECRET=${JWT_SECRET:-peerskills-dev-secret-change-in-production}
-      - NODE_ENV=${NODE_ENV:-production}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
-
 volumes:
   postgres_data:
     driver: local
