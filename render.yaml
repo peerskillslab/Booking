@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: peerskills
+    runtime: docker
+    dockerfilePath: ./docker/Dockerfile
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+    volumes:
+      - name: data
+        mountPath: /data
+    buildCommand: git submodule update --init --recursive
