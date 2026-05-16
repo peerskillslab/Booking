@@ -1,0 +1,114 @@
+{
+  "name": "CourseTemplate",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Titel der Kursvorlage"
+    },
+    "description": {
+      "type": "string",
+      "description": "Ausf\u00fchrliche Beschreibung"
+    },
+    "short_description": {
+      "type": "string",
+      "description": "Kurze Beschreibung"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "CST Abdomen",
+        "CST HKL",
+        "CST Gyn\u00e4kologie",
+        "CST Lunge",
+        "CST Neurologie",
+        "CST Bewegungsapparat",
+        "POCUS",
+        "Venenpunktion"
+      ],
+      "description": "Kategorie"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "description": "Standarddauer in Minuten"
+    },
+    "max_participants": {
+      "type": "number",
+      "description": "Maximale Teilnehmerzahl"
+    },
+    "location": {
+      "type": "string",
+      "description": "Standardort"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Bild-URL"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "Anf\u00e4nger",
+        "Fortgeschritten",
+        "Experte",
+        "Alle Level"
+      ],
+      "description": "Schwierigkeitsstufe"
+    }
+  },
+  "required": [
+    "title",
+    "category"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "tutor"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "name": "Course",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Titel des Kurses"
+    },
+    "description": {
+      "type": "string",
+      "description": "Ausf\u00fchrliche Beschreibung des Kurses"
+    },
+    "short_description": {
+      "type": "string",
+      "description": "Kurze Beschreibung f\u00fcr die \u00dcbersicht"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "CST Abdomen",
+        "CST HKL",
+        "CST Gyn\u00e4kologie",
+        "CST Lunge",
+        "CST Neurologie",
+        "CST Bewegungsapparat",
+        "POCUS",
+        "Venenpunktion"
+      ],
+      "description": "Kategorie des Kurses"
+    },
+    "instructor": {
+      "type": "string",
+      "description": "Name des Kursleiters"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Datum des Kurses"
+    },
+    "time": {
+      "type": "string",
+      "description": "Uhrzeit des Kurses (z.B. 10:00 - 12:00)"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "description": "Dauer in Minuten"
+    },
+    "max_participants": {
+      "type": "number",
+      "description": "Maximale Teilnehmerzahl"
+    },
+    "current_participants": {
+      "type": "number",
+      "default": 0,
+      "description": "Aktuelle Teilnehmerzahl"
+    },
+    "location": {
+      "type": "string",
+      "description": "Ort des Kurses"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Bild-URL f\u00fcr den Kurs"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "Anf\u00e4nger",
+        "Fortgeschritten",
+        "Experte",
+        "Alle Level"
+      ],
+      "description": "Schwierigkeitsstufe"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "cancelled",
+        "completed",
+        "draft"
+      ],
+      "default": "active",
+      "description": "Status des Kurses"
+    }
+  },
+  "required": [
+    "title",
+    "category",
+    "date",
+    "max_participants"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.status": "active"
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "tutor"
+          }
+        },
+        {
+          "field": "current_participants"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

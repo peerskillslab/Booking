@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Eina01 Semibold – commercial font.
+  Upload the font files and uncomment the @font-face block below.
+  Fallback: Nunito (geometric, similar feel) from Google Fonts.
+*/
+
+/*
+@font-face {
+  font-family: 'Eina01';
+  src: url('/fonts/Eina01-SemiBold.woff2') format('woff2'),
+       url('/fonts/Eina01-SemiBold.woff') format('woff');
+  font-weight: 600;
+  font-style: normal;
+}
+*/
+
+:root {
+  /* Grün: #466e0e → HSL ≈ 86° 76% 24% */
+  /* Blau: #4e9597 → HSL ≈ 181° 30% 45% */
+
+  --background: 80 20% 97%;
+  --foreground: 86 40% 10%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 86 40% 10%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 86 40% 10%;
+
+  /* Primary = Grün */
+  --primary: 86 76% 24%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary = helles Grün-Grau */
+  --secondary: 86 20% 92%;
+  --secondary-foreground: 86 40% 20%;
+
+  /* Accent = Blau */
+  --accent: 181 30% 45%;
+  --accent-foreground: 0 0% 100%;
+
+  --muted: 86 15% 94%;
+  --muted-foreground: 86 15% 40%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 86 15% 87%;
+  --input: 86 15% 87%;
+  --ring: 86 76% 24%;
+
+  --radius: 0.625rem;
+
+  --chart-1: 86 76% 24%;
+  --chart-2: 181 30% 45%;
+  --chart-3: 86 50% 35%;
+  --chart-4: 181 50% 30%;
+  --chart-5: 86 30% 55%;
+
+  /* Typography */
+  --font-family: 'Eina01', 'Nunito', sans-serif;
+  --letter-spacing: -0.065em;
+  --line-height: 1.4;
+}
+
+.dark {
+  --background: 86 20% 6%;
+  --foreground: 86 10% 92%;
+  --card: 86 15% 10%;
+  --card-foreground: 86 10% 92%;
+  --popover: 86 15% 10%;
+  --popover-foreground: 86 10% 92%;
+  --primary: 86 65% 38%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 86 15% 16%;
+  --secondary-foreground: 86 10% 80%;
+  --muted: 86 15% 16%;
+  --muted-foreground: 86 10% 50%;
+  --accent: 181 30% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 86 15% 20%;
+  --input: 86 15% 20%;
+  --ring: 86 65% 38%;
+}
+
+body {
+  font-family: var(--font-family);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing);
+  line-height: var(--line-height);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+/* iOS momentum scrolling for all scrollable containers */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+button, a, nav, [role="tab"], [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family);
+  font-weight: 600;
+  letter-spacing: var(--letter-spacing);
+  line-height: var(--line-height);
+}
+
+p, span, a, button, input, label, li {
+  font-family: var(--font-family);
+  letter-spacing: var(--letter-spacing);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

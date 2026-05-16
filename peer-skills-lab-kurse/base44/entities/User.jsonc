@@ -1,0 +1,32 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "description": "Die Rolle des Nutzers",
+      "enum": [
+        "admin",
+        "tutor",
+        "student"
+      ],
+      "default": "student"
+    },
+    "studienjahr": {
+      "type": "integer",
+      "description": "Studienjahr",
+      "enum": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "default": 1
+    }
+  },
+  "required": [
+    "role"
+  ]
+}
