@@ -1,0 +1,56 @@
+name: Deploy to Hetzner
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.HETZNER_IP }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Deploy to Hetzner
+        env:
+          HETZNER_IP: ${{ secrets.HETZNER_IP }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new root@${HETZNER_IP} << 'DEPLOY_SCRIPT'
+          set -e
+
+          APP_DIR="/opt/peerskills"
+          cd $APP_DIR
+
+          echo "🔄 Pulling latest code..."
+          git pull origin main
+
+          echo "🐳 Building and deploying..."
+          docker build -t peerskills:latest .
+
+          echo "📦 Loading image..."
+          docker save peerskills:latest | gzip | gunzip | docker load
+
+          echo "🚀 Restarting containers..."
+          cd $APP_DIR && docker compose up -d --force-recreate
+
+          echo "✅ Deployment successful!"
+          docker compose ps
+          DEPLOY_SCRIPT
+
+      - name: Notify on Success
+        if: success()
+        run: echo "✅ Deployment successful to ${{ secrets.HETZNER_IP }}"
+
+      - name: Notify on Failure
+        if: failure()
+        run: echo "❌ Deployment failed! Check logs above."
