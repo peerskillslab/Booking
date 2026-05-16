@@ -12,7 +12,9 @@ const apiCors = cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);                          // curl / same-origin
     if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return cb(null, true);  // lokale Entwicklung
+    if (/^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return cb(null, true);  // 127.0.0.1
     if (/^https:\/\//.test(origin)) return cb(null, true);      // ngrok / prod (https)
+    if (/^http:\/\/\d+\.\d+\.\d+\.\d+/.test(origin)) return cb(null, true);  // IP-Adressen (Hetzner)
     cb(new Error('CORS: not allowed'));
   },
   credentials: true,
