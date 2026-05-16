@@ -2,10 +2,9 @@
 FROM node:23-alpine AS frontend-builder
 
 WORKDIR /build/frontend
-COPY peer-skills-lab-kurse/package*.json ./
+COPY peer-skills-lab-kurse/ ./
 RUN npm install
 
-COPY peer-skills-lab-kurse/ ./
 # Produkions-API-URL: relativ, damit der Container überall funktioniert
 ENV VITE_API_BASE_URL=/api
 RUN npm run build
