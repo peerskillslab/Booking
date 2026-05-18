@@ -283,7 +283,7 @@ function JoinBlock() {
     <section className="au-section au-section-join">
       <div className="au-join-right" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22, display: "flex", flexDirection: "column", gap: 18 }}>
         <div style={{ fontSize: 13.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500 }}>Direkt erreichen</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+        <div className="au-contact-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
           <ContactRow label="Allgemein"  value="info@peerskillslab.ch" icon={Icon.Mail}      href="mailto:info@peerskillslab.ch" />
           <ContactRow label="Instagram"  value="@peerskillslab"         icon={Icon.Instagram} href="https://www.instagram.com/peerskillslab_bern" />
           <ContactRow label="LinkedIn"   value="PeerSkills Lab"         icon={Icon.LinkedIn}  href="https://www.linkedin.com/company/112596144" />
@@ -330,6 +330,7 @@ export default function AboutUs() {
           .au-partners-header { flex-direction: column; gap: 6px; align-items: flex-start; }
           .au-partners-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .au-join-grid { grid-template-columns: 1fr !important; }
+          .au-contact-grid { grid-template-columns: 1fr !important; }
           .au-join-left { padding: 28px 24px; }
           .au-join-right { padding: 24px 20px; }
           .au-join-h2 { font-size: 36px; }
