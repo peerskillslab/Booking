@@ -97,6 +97,17 @@ const PARTNERS = [
   { name: "Direktion Lehre und Forschung", logo: "/partners/insel.png", url: "https://inselgruppe.ch/de/die-insel-gruppe/organisation/direktion-lehre-und-forschung" },
 ];
 
+const COURSES = [
+  { name: "CST Abdomen",           icon: Icon.Stethoscope, body: "Klinische Untersuchung des Abdomens – von der Inspektion bis zur Palpation der Organe, prüfungsrelevant und klinikbezogen." },
+  { name: "CST HKL",               icon: Icon.Heart,       body: "Herz-Kreislauf-Lungen-Untersuchung: Auskultation, Perkussion und Beurteilung kardiovaskulärer Befunde." },
+  { name: "CST Lunge",             icon: Icon.Stethoscope, body: "Systematische Lungenuntersuchung inkl. Atemexkursion, Stimmfremitus und gezielter Auskultation." },
+  { name: "CST Bewegungsapparat",  icon: Icon.Users,       body: "Untersuchung von Gelenken und Muskeln – orientiert an häufigen OSCE-Stationen und klinischen Tests." },
+  { name: "CST Neurologie",        icon: Icon.Sparkle,     body: "Neurologische Grunduntersuchung: Reflexe, Sensibilität, Koordination und Hirnnerven strukturiert üben." },
+  { name: "CST Gynäkologie",       icon: Icon.Heart,       body: "Gynäkologische Anamnese und Untersuchungsabläufe – sicher und einfühlsam in geschütztem Rahmen." },
+  { name: "Venenpunktion",         icon: Icon.Stethoscope, body: "Praktisches Training der Venenpunktion: Technik, Hygiene und sicherer Umgang mit Kanülen und Vakuumsystemen." },
+  { name: "POCUS Notfallsonografie", icon: Icon.Sparkle,   body: "Einführung in die Point-of-Care-Sonografie: Schallkopfführung, Standardschnitte und notfallrelevante Befunde." },
+];
+
 const TONE_PAIRS = [
   ["#E5DFC9","#D5CCAB"], ["#DDE2CB","#C8D1AA"], ["#E8DEC8","#D6BF9A"],
   ["#D7DDC8","#BFC9A4"], ["#EBE2CF","#DAC8A8"], ["#D5DCCA","#BAC4A1"],
@@ -291,6 +302,35 @@ function ContactRow({ label, value, icon: I, href }) {
   return <div style={shared}>{inner}</div>;
 }
 
+function CoursesBlock() {
+  return (
+    <section className="au-section">
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22 }} className="au-courses-inner">
+        <div className="au-partners-header" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 28 }}>
+          <h2 style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-0.015em", margin: 0 }}>Unsere Kurse</h2>
+          <span style={{ fontSize: 13.5, color: "var(--ink-3)", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>8 Kurse</span>
+        </div>
+        <div className="au-courses-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+          {COURSES.map((c, i) => {
+            const I = c.icon;
+            return (
+              <div key={i} style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 16, padding: "28px 26px", display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: A.soft, color: A.deep, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <I width="22" height="22" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.2, marginBottom: 10 }}>{c.name}</div>
+                  <p style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink-2)", margin: 0 }}>{c.body}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function JoinBlock() {
   return (
     <section className="au-section au-section-join">
@@ -320,6 +360,7 @@ export default function AboutUs() {
         .au-h2 { font-size: 56px; }
         .au-stats-inner { padding: 56px 56px; }
         .au-partners-inner { padding: 40px 40px 36px; }
+        .au-courses-inner { padding: 40px 40px 36px; }
         .au-join-left { padding: 48px 48px 44px; }
         .au-join-right { padding: 40px 36px; }
         .au-stat-n { font-size: 76px; }
@@ -342,6 +383,8 @@ export default function AboutUs() {
           .au-partners-inner { padding: 24px 16px 20px; }
           .au-partners-header { flex-direction: column; gap: 6px; align-items: flex-start; }
           .au-partners-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .au-courses-inner { padding: 24px 16px 20px; }
+          .au-courses-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .au-join-grid { grid-template-columns: 1fr !important; }
           .au-contact-grid { grid-template-columns: 1fr !important; }
           .au-join-left { padding: 28px 24px; }
@@ -361,6 +404,7 @@ export default function AboutUs() {
           .au-stat-n { font-size: 52px; }
           .au-team-mosaic { grid-template-columns: repeat(6, 1fr) !important; grid-auto-rows: 160px !important; }
           .au-partners-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .au-courses-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .au-join-grid { grid-template-columns: 1fr !important; }
           .au-join-left { padding: 36px 36px 32px; }
           .au-join-right { padding: 32px 28px; }
@@ -422,6 +466,7 @@ export default function AboutUs() {
 
       <HowCards />
       <StatsBlock />
+      <CoursesBlock />
       <TeamSection />
       <PartnersBand />
       <JoinBlock />
