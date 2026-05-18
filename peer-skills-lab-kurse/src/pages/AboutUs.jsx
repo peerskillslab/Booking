@@ -204,7 +204,7 @@ function TeamSection() {
           Werde ein Teil unseres Teams! Wir sind immer auf der Suche nach motivierten Peer-Tutor*innen, die Lust haben, praktische Skills zu unterrichten. Schreib uns einfach eine Mail oder komm zu einer unserer Vereinssitzungen vorbei.
         </p>
       </div>
-      <div className="au-team-mosaic" style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gridAutoRows: "130px", gap: 14 }}>
+      <div className="au-team-mosaic" style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gridAutoRows: "160px", gap: 14 }}>
         {TEAM.map((m, i) => {
           const spans = { c: "span 4", r: "span 2" };
           return (
@@ -337,7 +337,7 @@ export default function AboutUs() {
           .au-stat-n { font-size: 44px; }
           .au-team-header { flex-direction: column; gap: 12px; align-items: flex-start; }
           .au-team-sub { max-width: 100% !important; }
-          .au-team-mosaic { grid-template-columns: repeat(2, 1fr) !important; grid-auto-rows: 200px !important; }
+          .au-team-mosaic { grid-template-columns: repeat(2, 1fr) !important; grid-auto-rows: 240px !important; }
           .au-team-cell { grid-column: auto !important; grid-row: auto !important; }
           .au-partners-inner { padding: 24px 16px 20px; }
           .au-partners-header { flex-direction: column; gap: 6px; align-items: flex-start; }
@@ -359,7 +359,7 @@ export default function AboutUs() {
           .au-how-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .au-stats-numbers { grid-template-columns: repeat(2, 1fr) !important; }
           .au-stat-n { font-size: 52px; }
-          .au-team-mosaic { grid-template-columns: repeat(6, 1fr) !important; grid-auto-rows: 140px !important; }
+          .au-team-mosaic { grid-template-columns: repeat(6, 1fr) !important; grid-auto-rows: 160px !important; }
           .au-partners-grid { grid-template-columns: repeat(3, 1fr) !important; }
           .au-join-grid { grid-template-columns: 1fr !important; }
           .au-join-left { padding: 36px 36px 32px; }
