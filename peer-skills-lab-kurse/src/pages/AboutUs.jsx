@@ -88,7 +88,7 @@ const TEAM = [
 ];
 
 const PARTNERS = [
-  { name: "Medizinische Fakultät" },
+  { name: "Medizinische Fakultät", logo: "/partners/unibern.png" },
   { name: "BiSS Bern", logo: "/partners/biss.png" },
   { name: "Fachschaft Medizin", logo: "/partners/fsmb.png" },
   { name: "Alumni Med Bern", logo: "/partners/logo_alumni_med_bern.png" },
