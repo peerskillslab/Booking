@@ -92,6 +92,8 @@ const PARTNERS = [
   { name: "Skills Lab der Universität" },
   { name: "Fachschaft Medizin", logo: "/partners/fsmb.png" },
   { name: "Alumni Med Bern", logo: "/partners/logo_alumni_med_bern.png" },
+  { name: "YSSA Bern", logo: "/partners/yssa.jpg" },
+  { name: "PEC Bern", logo: "/partners/pec.jpg" },
   { name: "Inselspital — Lehre" },
   { name: "Lehrkommission" },
 ];
