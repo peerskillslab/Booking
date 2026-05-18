@@ -89,7 +89,7 @@ const TEAM = [
 
 const PARTNERS = [
   { name: "Medizinische Fakultät" },
-  { name: "Skills Lab der Universität" },
+  { name: "BiSS Bern", logo: "/partners/biss.png" },
   { name: "Fachschaft Medizin", logo: "/partners/fsmb.png" },
   { name: "Alumni Med Bern", logo: "/partners/logo_alumni_med_bern.png" },
   { name: "YSSA Bern", logo: "/partners/yssa.jpg" },
