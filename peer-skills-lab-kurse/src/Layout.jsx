@@ -200,7 +200,7 @@ export default function Layout({ children, currentPageName }) {
       {/* Global Footer – desktop only */}
       <footer className="hidden md:flex border-t border-border/40 px-14 py-8 justify-between items-center text-sm text-muted-foreground">
         <div className="flex items-center gap-6">
-          <span>Peer Skills Lab e.V.</span>
+          <span>Peer Skills Lab</span>
           <Link to="/Datenschutz" className="hover:text-foreground transition-colors">Datenschutz</Link>
           <Link to="/Impressum" className="hover:text-foreground transition-colors">Impressum</Link>
         </div>
