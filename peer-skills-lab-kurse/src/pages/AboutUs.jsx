@@ -125,7 +125,7 @@ function Pill({ icon: I, label }) {
 
 function HowCards() {
   const steps = [
-    { n: "01", icon: Icon.Users,       title: "Peers lehren Peers",        body: "Studierende lernen am besten von Studis, die gerade die gleichen Stationen üben. Augenhöhe statt Frontalunterricht — Fragen stellen, Fehler machen, korrigiert werden." },
+    { n: "01", icon: Icon.Users,       title: "Peers lehren Peers",        body: "Studierende lernen besonders effektiv im Austausch mit Peers, die sich in derselben Ausbildungsphase befinden. Lernen auf Augenhöhe ermöglicht offenes Fragenstellen, aktives Ausprobieren und das Korrigieren von Fehlern ohne Hemmschwelle. Dadurch entsteht eine hohe soziale Kongruenz, während die kognitive Kongruenz durch verständliche, nah an der eigenen Denkstruktur liegende Erklärungen unterstützt wird." },
     { n: "02", icon: Icon.Repeat,      title: "Strategisch wiederholen",   body: "Skills landen nicht in einem einmaligen Kurs, sondern in einer Sequenz. Spaced practice, gezielt vor Prüfungsphasen — damit Untersuchung und Punktion wirklich sitzen." },
     { n: "03", icon: Icon.Stethoscope, title: "OSCE- und Klinik-nah",      body: "Jede Station orientiert sich an den Lernzielen der Universität." },
     { n: "04", icon: Icon.Sparkle,     title: "Niedrigschwellig & offen",  body: "Eintragen, hingehen, üben. Wer Lust hat selbst zu unterrichten, schreibt uns einfach!" },
