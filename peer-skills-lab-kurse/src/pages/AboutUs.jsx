@@ -94,8 +94,7 @@ const PARTNERS = [
   { name: "Alumni Med Bern", logo: "/partners/logo_alumni_med_bern.png" },
   { name: "YSSA Bern", logo: "/partners/yssa.jpg" },
   { name: "PEC Bern", logo: "/partners/pec.jpg" },
-  { name: "Inselspital — Lehre" },
-  { name: "Lehrkommission" },
+  { name: "Direktion Lehre und Forschung" },
 ];
 
 const TONE_PAIRS = [
