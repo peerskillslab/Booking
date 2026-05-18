@@ -88,13 +88,13 @@ const TEAM = [
 ];
 
 const PARTNERS = [
-  { name: "Medizinische Fakultät", logo: "/partners/unibern.png" },
-  { name: "BiSS Bern", logo: "/partners/biss.png" },
-  { name: "Fachschaft Medizin", logo: "/partners/fsmb.png" },
-  { name: "Alumni Med Bern", logo: "/partners/logo_alumni_med_bern.png" },
-  { name: "YSSA Bern", logo: "/partners/yssa.jpg" },
-  { name: "PEC Bern", logo: "/partners/pec.jpg" },
-  { name: "Direktion Lehre und Forschung", logo: "/partners/insel.png" },
+  { name: "Medizinische Fakultät", logo: "/partners/unibern.png", url: "https://www.medizin.unibe.ch" },
+  { name: "BiSS Bern", logo: "/partners/biss.png", url: "https://cms.biss.iml.unibe.ch" },
+  { name: "Fachschaft Medizin", logo: "/partners/fsmb.png", url: "https://www.fsmb.ch" },
+  { name: "Alumni Med Bern", logo: "/partners/logo_alumni_med_bern.png", url: "https://med.alumni.unibe.ch" },
+  { name: "YSSA Bern", logo: "/partners/yssa.jpg", url: "https://www.yssa-bern.ch/startseite" },
+  { name: "PEC Bern", logo: "/partners/pec.jpg", url: "https://www.fsmb.ch/paul-ehrlich-contest/" },
+  { name: "Direktion Lehre und Forschung", logo: "/partners/insel.png", url: "https://inselgruppe.ch/de/die-insel-gruppe/organisation/direktion-lehre-und-forschung" },
 ];
 
 const TONE_PAIRS = [
@@ -238,17 +238,30 @@ function PartnersBand() {
           <span style={{ fontSize: 13.5, color: "var(--ink-3)", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>6 Institutionen</span>
         </div>
         <div className="au-partners-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-          {PARTNERS.map((p, i) => (
-            <div key={i} style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 14, height: 320, display: "flex", flexDirection: "column" }}>
-              {p.logo
-                ? <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "8px", overflow: "hidden", borderRadius: "12px 12px 0 0" }}>
-                    <img src={p.logo} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                  </div>
-                : <div style={{ flex: 1, margin: "16px 16px 12px", background: "repeating-linear-gradient(135deg, #E5DFC9 0 8px, #EFE9D3 8px 16px)", border: "1px solid var(--line)", borderRadius: 8 }} />
-              }
-              <div style={{ fontSize: 13.5, fontWeight: 500, lineHeight: 1.35, padding: "10px 16px 14px", borderTop: "1px solid var(--line-soft)" }}>{p.name}</div>
-            </div>
-          ))}
+          {PARTNERS.map((p, i) => {
+            const card = (
+              <div style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 14, height: 320, display: "flex", flexDirection: "column", transition: p.url ? "opacity 0.15s, transform 0.15s" : undefined, cursor: p.url ? "pointer" : "default" }}>
+                {p.logo
+                  ? <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "8px", overflow: "hidden", borderRadius: "12px 12px 0 0" }}>
+                      <img src={p.logo} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                    </div>
+                  : <div style={{ flex: 1, margin: "16px 16px 12px", background: "repeating-linear-gradient(135deg, #E5DFC9 0 8px, #EFE9D3 8px 16px)", border: "1px solid var(--line)", borderRadius: 8 }} />
+                }
+                <div style={{ fontSize: 13.5, fontWeight: 500, lineHeight: 1.35, padding: "10px 16px 14px", borderTop: "1px solid var(--line-soft)" }}>{p.name}</div>
+              </div>
+            );
+
+            if (p.url) {
+              return (
+                <a key={i} href={p.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", display: "block" }}
+                  onMouseEnter={e => { e.currentTarget.style.opacity = "0.75"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "translateY(0)"; }}>
+                  {card}
+                </a>
+              );
+            }
+            return <div key={i}>{card}</div>;
+          })}
         </div>
       </div>
     </section>
