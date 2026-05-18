@@ -94,7 +94,7 @@ const PARTNERS = [
   { name: "Alumni Med Bern", logo: "/partners/logo_alumni_med_bern.png" },
   { name: "YSSA Bern", logo: "/partners/yssa.jpg" },
   { name: "PEC Bern", logo: "/partners/pec.jpg" },
-  { name: "Direktion Lehre und Forschung" },
+  { name: "Direktion Lehre und Forschung", logo: "/partners/insel.png" },
 ];
 
 const TONE_PAIRS = [
