@@ -384,7 +384,7 @@ export default function AboutUs() {
           .au-partners-header { flex-direction: column; gap: 6px; align-items: flex-start; }
           .au-partners-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .au-courses-inner { padding: 24px 16px 20px; }
-          .au-courses-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .au-courses-grid { grid-template-columns: 1fr !important; }
           .au-join-grid { grid-template-columns: 1fr !important; }
           .au-contact-grid { grid-template-columns: 1fr !important; }
           .au-join-left { padding: 28px 24px; }
