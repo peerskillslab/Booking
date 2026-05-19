@@ -441,7 +441,7 @@ export default function AboutUs() {
             <Pill icon={Icon.Heart}       label="Non-profit, Verein" />
           </div>
         </div>
-        <div className="au-hero-annotation" style={{ position: "absolute", top: 0, right: 20, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, pointerEvents: "none" }}>
+        <div className="au-hero-annotation" style={{ position: "absolute", top: 0, right: 40, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, pointerEvents: "none" }}>
           <svg width="64" height="64" viewBox="0 0 48 48" fill="none" style={{ marginBottom: 8 }}>
             <path d="M38 36 C36 20, 20 12, 6 8" stroke="#466E0E" strokeWidth="1.8" strokeLinecap="round" fill="none" />
             <path d="M2 6 L8 6 L6 12" stroke="#466E0E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
