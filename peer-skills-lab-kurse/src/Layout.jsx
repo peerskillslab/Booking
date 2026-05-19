@@ -135,7 +135,7 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Mobile annotation - only when not logged in */}
           {!user && (
-            <div className="md:hidden flex items-center gap-1.5 mr-2">
+            <div className="md:hidden flex items-center gap-1">
               <span style={{ fontSize: 11, fontWeight: 700, color: "#4A5A30", whiteSpace: "nowrap" }}>
                 Anmelden
               </span>
