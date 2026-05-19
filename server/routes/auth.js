@@ -20,7 +20,7 @@ function makeToken(user) {
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, full_name } = req.body;
+    const { email, password, full_name, studienjahr } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'email und password erforderlich' });
 
     const pool = getPool();
@@ -30,8 +30,8 @@ router.post('/register', async (req, res) => {
     const hash = await bcrypt.hash(password, 10);
     const id = newId();
     await pool.query(
-      'INSERT INTO users (id, email, password_hash, full_name, role) VALUES ($1, $2, $3, $4, $5)',
-      [id, email.toLowerCase().trim(), hash, full_name || '', 'student']
+      'INSERT INTO users (id, email, password_hash, full_name, role, studienjahr) VALUES ($1, $2, $3, $4, $5, $6)',
+      [id, email.toLowerCase().trim(), hash, full_name || '', 'student', studienjahr || 1]
     );
 
     const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
