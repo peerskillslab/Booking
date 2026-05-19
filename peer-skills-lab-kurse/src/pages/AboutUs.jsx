@@ -408,6 +408,7 @@ export default function AboutUs() {
           .au-team-mosaic { grid-template-columns: repeat(6, 1fr) !important; grid-auto-rows: 160px !important; }
           .au-partners-grid { grid-template-columns: repeat(3, 1fr) !important; }
           .au-courses-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .au-img-band { grid-template-columns: repeat(2, 1fr) !important; }
           .au-join-grid { grid-template-columns: 1fr !important; }
           .au-join-left { padding: 36px 36px 32px; }
           .au-join-right { padding: 32px 28px; }
