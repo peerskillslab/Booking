@@ -391,7 +391,10 @@ export default function AboutUs() {
           .au-join-right { padding: 24px 20px; }
           .au-join-h2 { font-size: 36px; }
           .au-hero-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
-          .au-img-band { grid-template-columns: 1fr !important; }
+          .au-img-band { grid-template-columns: 1fr !important; gap: 20px !important; }
+          .au-imgband-caption { padding-top: 10px !important; }
+          .au-imgband-caption > div:first-child { font-size: 16px !important; }
+          .au-imgband-caption > div:last-child { font-size: 14px !important; margin-top: 4px !important; }
           .au-hero-padding { padding: 36px 16px 24px !important; }
           .au-imgband-padding { padding: 0 16px 48px !important; }
         }
@@ -455,7 +458,7 @@ export default function AboutUs() {
                   onError={(e) => { e.currentTarget.style.display = "none"; }}
                 />
               </div>
-              <div style={{ paddingLeft: 2 }}>
+              <div style={{ paddingLeft: 2 }} className="au-imgband-caption">
                 <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{item.label}</div>
                 <div style={{ fontSize: 13, color: "var(--ink-3)" }}>{item.caption}</div>
               </div>
