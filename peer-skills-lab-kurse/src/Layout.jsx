@@ -137,7 +137,7 @@ export default function Layout({ children, currentPageName }) {
           {!user && (
             <div className="md:hidden flex items-center gap-1">
               <span style={{ fontSize: 11, fontWeight: 700, color: "#4A5A30", whiteSpace: "nowrap" }}>
-                Anmelden
+                Jetzt anmelden & Kurse buchen
               </span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#466E0E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
