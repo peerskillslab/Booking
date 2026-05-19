@@ -135,7 +135,7 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Mobile annotation - only when not logged in */}
           {!user && (
-            <div className="md:hidden flex items-center gap-0.5" style={{ marginRight: '-10px' }}>
+            <div className="md:hidden flex items-center gap-0.5" style={{ marginRight: '-30px' }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: "#4A5A30", whiteSpace: "nowrap" }}>
                 Jetzt anmelden & Kurse buchen
               </span>
