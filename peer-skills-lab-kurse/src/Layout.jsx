@@ -133,6 +133,18 @@ export default function Layout({ children, currentPageName }) {
             )}
           </div>
 
+          {/* Mobile annotation - only when not logged in */}
+          {!user && (
+            <div className="md:hidden flex items-center gap-1.5 mr-2">
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#4A5A30", whiteSpace: "nowrap" }}>
+                Anmelden
+              </span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#466E0E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          )}
+
           {/* Mobile menu button */}
           <button
             className="md:hidden p-2 select-none"
