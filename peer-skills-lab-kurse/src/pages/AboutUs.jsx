@@ -397,7 +397,6 @@ export default function AboutUs() {
           .au-imgband-caption > div:last-child { font-size: 14px !important; margin-top: 4px !important; }
           .au-hero-padding { padding: 36px 16px 24px !important; }
           .au-imgband-padding { padding: 0 16px 48px !important; }
-          .au-hero-annotation { right: 16px !important; top: 35px !important; }
         }
 
         @media (min-width: 768px) and (max-width: 1023px) {
@@ -421,7 +420,7 @@ export default function AboutUs() {
       `}</style>
 
       {/* HERO */}
-      <section className="au-hero-padding" style={{ padding: "64px 56px 32px", position: "relative" }}>
+      <section className="au-hero-padding" style={{ padding: "64px 56px 32px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--ink-3)", fontSize: 14, marginBottom: 32 }}>
           <span style={{ width: 28, height: 1, background: "var(--ink-3)", display: "block" }} />
           <span style={{ letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 500 }}>Über uns · seit 2025</span>
@@ -439,15 +438,6 @@ export default function AboutUs() {
             <Pill icon={Icon.Repeat}      label="Spaced repetition" />
             <Pill icon={Icon.Users}       label="Peer-zu-Peer" />
             <Pill icon={Icon.Heart}       label="Non-profit, Verein" />
-          </div>
-        </div>
-        <div className="au-hero-annotation" style={{ position: "absolute", top: 0, right: 80, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, pointerEvents: "none" }}>
-          <svg width="64" height="64" viewBox="0 0 48 48" fill="none" style={{ marginBottom: 8 }}>
-            <path d="M38 36 C36 20, 20 12, 6 8" stroke="#466E0E" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-            <path d="M2 6 L8 6 L6 12" stroke="#466E0E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          </svg>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink-2)", textAlign: "right", lineHeight: 1.4, maxWidth: 240, fontStyle: "italic", whiteSpace: "nowrap" }}>
-            Jetzt anmelden & Kurse buchen
           </div>
         </div>
       </section>

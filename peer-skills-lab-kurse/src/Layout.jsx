@@ -47,7 +47,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/40" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/40" style={{ paddingTop: 'env(safe-area-inset-top)', position: 'relative' }}>
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 lg:h-20 flex items-center justify-between">
           {/* On mobile: show Back button on sub-pages, logo on root pages */}
           <div className="flex items-center">
@@ -190,6 +190,32 @@ export default function Layout({ children, currentPageName }) {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Arrow annotation pointing to login - only when not logged in */}
+        {!user && (
+          <div className="hidden md:flex absolute top-0 right-20 flex-col items-end gap-1 pointer-events-none" style={{ marginTop: '-8px' }}>
+            <svg width="64" height="64" viewBox="0 0 48 48" fill="none">
+              <path d="M38 36 C36 20, 20 12, 6 8" stroke="#466E0E" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+              <path d="M2 6 L8 6 L6 12" stroke="#466E0E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            </svg>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#4A5A30", textAlign: "right", lineHeight: 1.3, whiteSpace: "nowrap" }}>
+              Jetzt anmelden &<br />Kurse buchen
+            </div>
+          </div>
+        )}
+
+        {/* Mobile arrow annotation */}
+        {!user && (
+          <div className="md:hidden absolute top-12 right-4 flex flex-col items-end gap-1 pointer-events-none">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <path d="M38 36 C36 20, 20 12, 6 8" stroke="#466E0E" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+              <path d="M2 6 L8 6 L6 12" stroke="#466E0E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            </svg>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#4A5A30", textAlign: "right", lineHeight: 1.2, whiteSpace: "nowrap" }}>
+              Jetzt anmelden &<br />Kurse buchen
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main content - add bottom padding on mobile for tab bar */}
