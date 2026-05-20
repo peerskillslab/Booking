@@ -48,10 +48,9 @@ export default function CourseDetail() {
   const alreadyBooked = userBookings.length > 0;
   const spotsLeft = (course?.max_participants || 0) - (course?.current_participants || 0);
   const isFull = spotsLeft <= 0;
-  const isOwnCourse = user && course && (
-    user.email === course.created_by ||
-    user.role === 'admin'
-  );
+  const isOwnCourse = user && course &&
+    user.full_name === course.instructor &&
+    user.role !== 'admin';
 
   if (isLoading) {
     return (
