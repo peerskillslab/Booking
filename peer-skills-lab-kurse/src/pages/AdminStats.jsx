@@ -135,6 +135,13 @@ export default function AdminStats() {
   const totalParticipants = courses.reduce((sum, c) => sum + (c.current_participants || 0), 0);
   const totalBookings = bookings.length;
 
+  // YSSA-Statistik
+  const yssaCourses = courses.filter(c => c.category === "YSSA");
+  const yssaParticipants = yssaCourses.reduce((sum, c) => sum + (c.current_participants || 0), 0);
+  const yssaBookings = bookings.filter(b =>
+    yssaCourses.some(c => c.id === b.course_id)
+  ).length;
+
   // Tutor-Daten (aktueller Monat)
   const tutorMap = {};
   currentMonthCourses.forEach((c) => {
@@ -238,6 +245,48 @@ export default function AdminStats() {
                 </Card>
               </div>
             </div>
+
+            {/* YSSA Kurse */}
+            {yssaCourses.length > 0 && (
+              <div>
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">YSSA Kurse</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <Card className="border-border/60">
+                    <CardContent className="p-6 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
+                        <BookOpen className="w-6 h-6 text-violet-700" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Kurse</p>
+                        <p className="text-3xl font-bold text-foreground">{yssaCourses.length}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/60">
+                    <CardContent className="p-6 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
+                        <Users className="w-6 h-6 text-violet-700" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Teilnehmende</p>
+                        <p className="text-3xl font-bold text-foreground">{yssaParticipants}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/60">
+                    <CardContent className="p-6 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
+                        <Award className="w-6 h-6 text-violet-700" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Buchungen</p>
+                        <p className="text-3xl font-bold text-foreground">{yssaBookings}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
 
             {/* Aktueller Monat */}
             <div>

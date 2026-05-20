@@ -78,7 +78,9 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
     });
   };
 
-  const allSessionsValid = sessions.every(s => s.date && s.timeStart && s.timeEnd);
+  const allSessionsValid = sessions.every(s =>
+    s.date && (s.timeStart?.toString().trim()) && (s.timeEnd?.toString().trim())
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -173,15 +175,23 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
               </div>
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Abbrechen</Button>
-              <Button
-                onClick={() => publishMutation.mutate()}
-                disabled={!allSessionsValid || publishMutation.isPending}
-              >
-                {publishMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Ausschreiben
-              </Button>
+            <DialogFooter className="flex flex-col gap-2">
+              {!allSessionsValid && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Bitte füllen Sie alle Felder aus
+                </p>
+              )}
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">Abbrechen</Button>
+                <Button
+                  onClick={() => publishMutation.mutate()}
+                  disabled={!allSessionsValid || publishMutation.isPending}
+                  className="flex-1"
+                >
+                  {publishMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Ausschreiben
+                </Button>
+              </div>
             </DialogFooter>
           </>
         )}
