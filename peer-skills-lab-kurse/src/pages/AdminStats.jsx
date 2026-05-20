@@ -141,6 +141,11 @@ export default function AdminStats() {
   const totalParticipants = courses.reduce((sum, c) => sum + (c.current_participants || 0), 0);
   const totalBookings = bookings.length;
 
+  // Vergangene Kurse – stattgefunden vs. nicht stattgefunden (< 3 Teilnehmende)
+  const pastCourses = courses.filter((c) => c.date && new Date(`${c.date}T00:00:00`) < now);
+  const coursesHeld = pastCourses.filter((c) => (c.current_participants || 0) >= 3);
+  const coursesCancelled = pastCourses.filter((c) => (c.current_participants || 0) < 3);
+
   // YSSA-Statistik
   const yssaCourses = courses.filter(c => c.category === "YSSA");
   const yssaParticipants = yssaCourses.reduce((sum, c) => sum + (c.current_participants || 0), 0);
@@ -287,6 +292,37 @@ export default function AdminStats() {
                 </Card>
               </div>
             </div>
+
+            {/* Vergangene Kurse – stattgefunden vs. nicht stattgefunden */}
+            {pastCourses.length > 0 && (
+              <div>
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Vergangene Kurse</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Card className="border-green-200/60">
+                    <CardContent className="p-6 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+                        <BookOpen className="w-6 h-6 text-green-700" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Stattgefunden</p>
+                        <p className="text-3xl font-bold text-green-700">{coursesHeld.length}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-amber-200/60">
+                    <CardContent className="p-6 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                        <BookOpen className="w-6 h-6 text-amber-700" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Nicht stattgefunden</p>
+                        <p className="text-3xl font-bold text-amber-700">{coursesCancelled.length}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
 
             {/* YSSA Kurse */}
             {yssaCourses.length > 0 && (
