@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Loader2, BookOpen, XCircle } from "lucide-react";
-import { format, isBefore, addHours } from "date-fns";
+import { format, isBefore, subHours } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -68,6 +68,11 @@ export default function MyBookings() {
       await queryClient.invalidateQueries({ queryKey: ["myBookings"] });
       await queryClient.invalidateQueries({ queryKey: ["courses"] });
       await queryClient.invalidateQueries({ queryKey: ["adminCourses"] });
+    },
+    onError: (err) => {
+      if (err?.message === 'cancellation_deadline_passed') {
+        alert('Stornierung nicht mehr möglich (Frist von 72h vor Kursbeginn abgelaufen).');
+      }
     },
   });
 
@@ -156,7 +161,13 @@ export default function MyBookings() {
                         </div>
 
                         {booking.status === "confirmed" && (() => {
-                          const canCancel = isBefore(new Date(), addHours(new Date(booking.created_date), 24));
+                          const course = courseMap[booking.course_id];
+                          const courseStart = course?.date
+                            ? new Date(`${course.date}T${course.time || '00:00'}`)
+                            : null;
+                          const canCancel = courseStart
+                            ? isBefore(new Date(), subHours(courseStart, 72))
+                            : false;
                           return (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
@@ -165,7 +176,7 @@ export default function MyBookings() {
                                   size="sm"
                                   disabled={!canCancel}
                                   className={canCancel ? "text-destructive hover:text-destructive hover:bg-destructive/10" : "text-muted-foreground opacity-50 cursor-not-allowed"}
-                                  title={!canCancel ? "Stornierung nur bis 24h vorher möglich" : ""}
+                                  title={!canCancel ? "Stornierung nur bis 72h vor Kursbeginn möglich" : ""}
                                 >
                                   <XCircle className="w-4 h-4 mr-1.5" />
                                   Stornieren

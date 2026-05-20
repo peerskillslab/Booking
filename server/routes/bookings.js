@@ -101,6 +101,18 @@ router.patch('/:id', requireAuth, async (req, res) => {
     if (!booking) return res.status(404).json({ error: 'not_found' });
     if (!canWriteBooking(req.user, booking)) return res.status(403).json({ error: 'forbidden' });
 
+    if (req.body.status === 'cancelled' && req.user.role !== 'admin') {
+      const courseRes = await pool.query('SELECT date, time FROM courses WHERE id = $1', [booking.course_id]);
+      const course = courseRes.rows[0];
+      if (course) {
+        const courseStart = new Date(`${course.date}T${course.time || '00:00'}`);
+        const cutoff = new Date(courseStart.getTime() - 72 * 60 * 60 * 1000);
+        if (new Date() > cutoff) {
+          return res.status(403).json({ error: 'cancellation_deadline_passed' });
+        }
+      }
+    }
+
     const editable = ['status', 'notes', 'price_paid'];
     const updates = {};
     for (const key of editable) {
