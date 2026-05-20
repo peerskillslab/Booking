@@ -94,9 +94,18 @@ export default function MyBookings() {
   const getCourseStartDate = (course) => {
     if (!course?.date) return null;
     try {
-      const dateStr = typeof course.date === 'string' ? course.date : course.date?.toISOString?.().split('T')[0] || '';
-      const timeStr = course.time || '00:00';
-      return new Date(`${dateStr}T${timeStr}:00`);
+      let dateStr = course.date;
+      if (typeof dateStr !== 'string') {
+        if (dateStr instanceof Date) {
+          dateStr = dateStr.toISOString().split('T')[0];
+        } else {
+          return null;
+        }
+      }
+      const timeStr = (course.time && course.time.length >= 5) ? course.time.substring(0, 5) : '00:00';
+      const isoString = `${dateStr}T${timeStr}:00`;
+      const date = new Date(isoString);
+      return isNaN(date.getTime()) ? null : date;
     } catch {
       return null;
     }
@@ -114,6 +123,11 @@ export default function MyBookings() {
       }
 
       const course = courseMap[booking.course_id];
+      if (!course) {
+        upcoming.push(booking);
+        return;
+      }
+
       const courseStart = getCourseStartDate(course);
 
       if (courseStart && isBefore(courseStart, now)) {
@@ -124,7 +138,7 @@ export default function MyBookings() {
     });
 
     return { upcomingBookings: upcoming, pastBookings: past };
-  }, [bookings, courseMap]);
+  }, [bookings, courses]);
 
   if (!user) return null;
 
