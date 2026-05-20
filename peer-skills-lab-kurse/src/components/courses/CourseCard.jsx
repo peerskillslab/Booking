@@ -18,6 +18,7 @@ const categoryGradients = {
   "CST Bewegungsapparat": "from-amber-500/10 to-orange-500/10",
   "POCUS": "from-teal-500/10 to-emerald-500/10",
   "Venenpunktion": "from-green-500/10 to-lime-500/10",
+  "YSSA": "from-violet-500/10 to-purple-500/10",
 };
 
 const categoryColors = {
@@ -29,6 +30,7 @@ const categoryColors = {
   "CST Bewegungsapparat": "bg-amber-100 text-amber-700 border-amber-200",
   "POCUS": "bg-teal-100 text-teal-700 border-teal-200",
   "Venenpunktion": "bg-green-100 text-green-700 border-green-200",
+  "YSSA": "bg-violet-100 text-violet-700 border-violet-200",
 };
 
 function CourseCard({ course, index = 0 }) {

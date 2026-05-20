@@ -12,6 +12,7 @@ const categories = [
   { label: "CST Bewegungsapparat", value: "CST Bewegungsapparat", emoji: "🦴" },
   { label: "POCUS", value: "POCUS", emoji: "🔬" },
   { label: "Venenpunktion", value: "Venenpunktion", emoji: "💉" },
+  { label: "YSSA", value: "YSSA", emoji: "🪡" },
 ];
 
 export default function CategoryFilter({ selected, onSelect }) {

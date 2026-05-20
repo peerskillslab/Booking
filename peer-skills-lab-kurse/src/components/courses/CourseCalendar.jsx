@@ -27,6 +27,7 @@ const categoryColors = {
   "CST Bewegungsapparat":{ bg: "bg-amber-100", text: "text-amber-700",  border: "border-amber-200"  },
   "POCUS":              { bg: "bg-teal-100",   text: "text-teal-700",   border: "border-teal-200"   },
   "Venenpunktion":      { bg: "bg-green-100",  text: "text-green-700",  border: "border-green-200"  },
+  "YSSA":               { bg: "bg-violet-100", text: "text-violet-700", border: "border-violet-200" },
 };
 
 const fallbackColor = { bg: "bg-primary/10", text: "text-primary", border: "border-primary/20" };
