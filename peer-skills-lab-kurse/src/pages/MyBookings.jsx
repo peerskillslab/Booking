@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -91,6 +91,41 @@ export default function MyBookings() {
     pending: { label: "Ausstehend", className: "bg-accent/10 text-accent border-accent/20" },
   };
 
+  const getCourseStartDate = (course) => {
+    if (!course?.date) return null;
+    try {
+      const dateStr = typeof course.date === 'string' ? course.date : course.date?.toISOString?.().split('T')[0] || '';
+      const timeStr = course.time || '00:00';
+      return new Date(`${dateStr}T${timeStr}:00`);
+    } catch {
+      return null;
+    }
+  };
+
+  const { upcomingBookings, pastBookings } = useMemo(() => {
+    const now = new Date();
+    const upcoming = [];
+    const past = [];
+
+    bookings.forEach((booking) => {
+      if (booking.status !== "confirmed") {
+        upcoming.push(booking);
+        return;
+      }
+
+      const course = courseMap[booking.course_id];
+      const courseStart = getCourseStartDate(course);
+
+      if (courseStart && isBefore(courseStart, now)) {
+        past.push(booking);
+      } else {
+        upcoming.push(booking);
+      }
+    });
+
+    return { upcomingBookings: upcoming, pastBookings: past };
+  }, [bookings, courseMap]);
+
   if (!user) return null;
 
   return (
@@ -128,83 +163,59 @@ export default function MyBookings() {
             </Link>
           </motion.div>
         ) : (
-          <div className="space-y-4">
-            <AnimatePresence>
-              {bookings.map((booking, i) => {
-                const status = statusLabels[booking.status] || statusLabels.pending;
-                return (
-                  <motion.div
-                    key={booking.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                  >
-                    <Card className="border-border/60 hover:shadow-md transition-shadow">
-                      <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Link
-                              to={createPageUrl("CourseDetail") + `?id=${booking.course_id}`}
-                              className="font-semibold text-foreground hover:text-primary transition-colors"
-                            >
-                              {booking.course_title}
-                            </Link>
-                            <Badge className={`${status.className} border text-xs`}>
-                              {status.label}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            {courseMap[booking.course_id]?.date && (
-                              <span className="flex items-center gap-1">
-                                <Calendar className="w-3.5 h-3.5" />
-                                {format(new Date(courseMap[booking.course_id].date), "dd.MM.yyyy", { locale: de })}
-                              </span>
-                            )}
-                            {courseMap[booking.course_id]?.time && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3.5 h-3.5" />
-                                {courseMap[booking.course_id].time}
-                              </span>
-                            )}
-                          </div>
-                        </div>
+          <div className="space-y-8">
+            {upcomingBookings.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary"></span>
+                  Kommende Kurse
+                </h2>
+                <div className="space-y-4">
+                  <AnimatePresence>
+                    {upcomingBookings.map((booking, i) => {
+                      const status = statusLabels[booking.status] || statusLabels.pending;
+                      const course = courseMap[booking.course_id];
+                      const courseStart = getCourseStartDate(course);
+                      const canCancel = courseStart === null || isBefore(new Date(), subHours(courseStart, 72));
+                      const alreadyFeedback = userFeedbacks.some(fb => fb.course_id === booking.course_id);
 
-                        {(() => {
-                          const course = courseMap[booking.course_id];
-                          const courseStart = course?.date
-                            ? new Date(`${course.date}T${course.time || '00:00'}`)
-                            : null;
-                          const isPast = courseStart && isBefore(courseStart, new Date());
-                          const canCancel = courseStart === null || isBefore(new Date(), subHours(courseStart, 72));
-                          const alreadyFeedback = userFeedbacks.some(f => f.course_id === booking.course_id);
-
-                          return (
-                            <div className="flex items-center gap-2">
-                              {isPast && booking.status === "confirmed" && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedBooking(booking);
-                                    setFeedbackOpen(true);
-                                  }}
-                                  disabled={alreadyFeedback}
-                                  className={alreadyFeedback ? "text-muted-foreground opacity-50" : "text-primary hover:text-primary hover:bg-primary/10"}
-                                  title={alreadyFeedback ? "Rückmeldung bereits abgegeben" : ""}
-                                >
-                                  {alreadyFeedback ? (
-                                    <>
-                                      <span className="w-4 h-4 mr-1.5 text-green-600">✓</span>
-                                      Abgegeben
-                                    </>
-                                  ) : (
-                                    <>
-                                      <MessageSquare className="w-4 h-4 mr-1.5" />
-                                      Rückmeldung
-                                    </>
+                      return (
+                        <motion.div
+                          key={booking.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                        >
+                          <Card className="border-border/60 hover:shadow-md transition-shadow">
+                            <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Link
+                                    to={createPageUrl("CourseDetail") + `?id=${booking.course_id}`}
+                                    className="font-semibold text-foreground hover:text-primary transition-colors"
+                                  >
+                                    {booking.course_title}
+                                  </Link>
+                                  <Badge className={`${status.className} border text-xs`}>
+                                    {status.label}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                  {course?.date && (
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="w-3.5 h-3.5" />
+                                      {format(new Date(course.date), "dd.MM.yyyy", { locale: de })}
+                                    </span>
                                   )}
-                                </Button>
-                              )}
+                                  {course?.time && (
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="w-3.5 h-3.5" />
+                                      {course.time}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
                               {booking.status === "confirmed" && (
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
@@ -238,15 +249,100 @@ export default function MyBookings() {
                                   </AlertDialogContent>
                                 </AlertDialog>
                               )}
-                            </div>
-                          );
-                        })()}
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
+
+            {pastBookings.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground"></span>
+                  Vergangene Kurse
+                </h2>
+                <div className="space-y-4">
+                  <AnimatePresence>
+                    {pastBookings.map((booking, i) => {
+                      const status = statusLabels[booking.status] || statusLabels.pending;
+                      const course = courseMap[booking.course_id];
+                      const alreadyFeedback = userFeedbacks.some(fb => fb.course_id === booking.course_id);
+
+                      return (
+                        <motion.div
+                          key={booking.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                        >
+                          <Card className="border-border/60 hover:shadow-md transition-shadow">
+                            <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Link
+                                    to={createPageUrl("CourseDetail") + `?id=${booking.course_id}`}
+                                    className="font-semibold text-foreground hover:text-primary transition-colors"
+                                  >
+                                    {booking.course_title}
+                                  </Link>
+                                  <Badge className={`${status.className} border text-xs`}>
+                                    {status.label}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                  {course?.date && (
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="w-3.5 h-3.5" />
+                                      {format(new Date(course.date), "dd.MM.yyyy", { locale: de })}
+                                    </span>
+                                  )}
+                                  {course?.time && (
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="w-3.5 h-3.5" />
+                                      {course.time}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {booking.status === "confirmed" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedBooking(booking);
+                                    setFeedbackOpen(true);
+                                  }}
+                                  disabled={alreadyFeedback}
+                                  className={alreadyFeedback ? "text-muted-foreground opacity-50" : "text-primary hover:text-primary hover:bg-primary/10"}
+                                  title={alreadyFeedback ? "Rückmeldung bereits abgegeben" : ""}
+                                >
+                                  {alreadyFeedback ? (
+                                    <>
+                                      <span className="w-4 h-4 mr-1.5 text-green-600">✓</span>
+                                      Abgegeben
+                                    </>
+                                  ) : (
+                                    <>
+                                      <MessageSquare className="w-4 h-4 mr-1.5" />
+                                      Rückmeldung
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
