@@ -63,7 +63,10 @@ function BookingRow({ booking, course, status, action, lowParticipantsMessage })
       )}
       <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            {course?.kurs_nr && (
+              <span className="text-xs font-mono font-medium text-muted-foreground shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
+            )}
             <Link
               to={createPageUrl("CourseDetail") + `?id=${booking.course_id}`}
               className="font-semibold text-foreground hover:text-primary transition-colors"
