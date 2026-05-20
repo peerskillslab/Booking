@@ -10,7 +10,7 @@ router.use(authenticate);
 const ALLOWED_COLS = [
   'id','title','description','short_description','category','instructor',
   'date','time','duration_minutes','max_participants','current_participants',
-  'location','image_url','level','status','created_by','created_date',
+  'location','image_url','level','status','kurs_nr','created_by','created_date',
 ];
 const ALLOWED_SORT = ['created_date','date','title','status'];
 
@@ -63,19 +63,21 @@ router.post('/', requireAuth, async (req, res) => {
 
     const id = newId();
     const now = new Date().toISOString();
+    const numRes = await pool.query('SELECT COALESCE(MAX(kurs_nr), 0) + 1 AS next FROM courses');
+    const kurs_nr = numRes.rows[0].next;
     const result = await pool.query(`
       INSERT INTO courses
         (id, title, description, short_description, category, instructor, date, time,
          duration_minutes, max_participants, current_participants, location, image_url,
-         level, status, extra_dates, created_by, created_date)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+         level, status, extra_dates, kurs_nr, created_by, created_date)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
       RETURNING *
     `, [
       id, title, rest.description || null, rest.short_description || null, category,
       rest.instructor || null, date, rest.time || null, rest.duration_minutes || null,
       max_participants, rest.current_participants ?? 0, rest.location || null,
       rest.image_url || null, rest.level || null, rest.status || 'active',
-      rest.extra_dates || null, req.user.email, now
+      rest.extra_dates || null, kurs_nr, req.user.email, now
     ]);
 
     res.status(201).json(result.rows[0]);

@@ -25,6 +25,7 @@ const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--chart-3)
 
 export default function AdminStats() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [resetting, setResetting] = useState(false);
   const autoSnapshotRef = React.useRef(false);
   const queryClient = useQueryClient();
 
@@ -165,6 +166,18 @@ export default function AdminStats() {
     .map(([name, stats]) => ({ name, ...stats }))
     .sort((a, b) => b.courses - a.courses);
 
+  // Reset – alle Daten löschen
+  const handleReset = async () => {
+    setResetting(true);
+    try {
+      await peerskillslab.functions.invoke("resetAllData", {});
+      await queryClient.invalidateQueries();
+      autoSnapshotRef.current = false;
+    } finally {
+      setResetting(false);
+    }
+  };
+
   // CSV Export (aktueller Monat) – einzelne Kurse
   const handleExportCSV = () => {
     const monthLabel = format(now, "MMMM yyyy", { locale: de });
@@ -209,10 +222,37 @@ export default function AdminStats() {
               <p className="text-muted-foreground mt-0.5">Übersicht aller Kurse und Buchungen</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={isLoading}>
-            <Download className="w-4 h-4 mr-1.5" />
-            CSV Export
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={isLoading}>
+              <Download className="w-4 h-4 mr-1.5" />
+              CSV Export
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10" disabled={resetting}>
+                  <Trash2 className="w-4 h-4 mr-1.5" />
+                  Zurücksetzen
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Alle Daten löschen?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Diese Aktion löscht <strong>alle Kurse, Buchungen und Statistiken</strong> unwiderruflich. Die Kurs-Nummern starten danach wieder bei K-001. Benutzerkonten bleiben erhalten.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleReset}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Ja, alles löschen
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         {isLoading ? (

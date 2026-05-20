@@ -260,6 +260,9 @@ export default function AdminCourses() {
                   <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        {course.kurs_nr && (
+                          <span className="text-xs font-mono font-medium text-muted-foreground shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
+                        )}
                         <span className="font-semibold truncate">{course.title}</span>
                         <Badge variant="secondary" className="text-xs">{course.category}</Badge>
                         <Badge
@@ -345,7 +348,10 @@ export default function AdminCourses() {
                         <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="font-semibold truncate">{course.title}</span>
+                              {course.kurs_nr && (
+                          <span className="text-xs font-mono font-medium text-muted-foreground shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
+                        )}
+                        <span className="font-semibold truncate">{course.title}</span>
                               <Badge variant="secondary" className="text-xs">{course.category}</Badge>
                               <Badge
                                 className={`text-xs border ${

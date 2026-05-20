@@ -25,9 +25,12 @@ CREATE TABLE IF NOT EXISTS courses (
   level                TEXT CHECK (level IN ('Anfänger','Fortgeschritten','Experte','Alle Level')),
   status               TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','cancelled','completed','draft')),
   extra_dates          TEXT,
+  kurs_nr              INTEGER,
   created_by           TEXT,
   created_date         TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
 );
+
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS kurs_nr INTEGER;
 
 CREATE TABLE IF NOT EXISTS bookings (
   id           TEXT PRIMARY KEY,

@@ -52,4 +52,27 @@ router.post('/updateCourseParticipants', async (req, res) => {
   }
 });
 
+// POST /api/functions/resetAllData
+// Deletes all courses, bookings, feedbacks and stat snapshots (admin only).
+router.post('/resetAllData', async (req, res) => {
+  if (req.user?.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
+  const pool = getPool();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('DELETE FROM course_feedbacks');
+    await client.query('DELETE FROM bookings');
+    await client.query('DELETE FROM courses');
+    await client.query('DELETE FROM monthly_stat_snapshots');
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch {}
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;
