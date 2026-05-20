@@ -13,6 +13,7 @@ import Login from './pages/Login';
 import AboutUs from './pages/AboutUs';
 import Datenschutz from './pages/Datenschutz';
 import Impressum from './pages/Impressum';
+import FAQ from './pages/FAQ';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
@@ -95,6 +96,7 @@ function App() {
             <Route path="/AboutUs" element={<LayoutWrapper currentPageName="AboutUs"><PageTransitionWrapper><AboutUs /></PageTransitionWrapper></LayoutWrapper>} />
             <Route path="/Datenschutz" element={<LayoutWrapper currentPageName="Datenschutz"><PageTransitionWrapper><Datenschutz /></PageTransitionWrapper></LayoutWrapper>} />
             <Route path="/Impressum" element={<LayoutWrapper currentPageName="Impressum"><PageTransitionWrapper><Impressum /></PageTransitionWrapper></LayoutWrapper>} />
+            <Route path="/FAQ" element={<LayoutWrapper currentPageName="FAQ"><PageTransitionWrapper><FAQ /></PageTransitionWrapper></LayoutWrapper>} />
             <Route path="/*" element={<AuthenticatedApp />} />
           </Routes>
         </Router>

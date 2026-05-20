@@ -425,10 +425,25 @@ export default function AboutUs() {
           <span style={{ width: 28, height: 1, background: "var(--ink-3)", display: "block" }} />
           <span style={{ letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 500 }}>Über uns · seit 2025</span>
         </div>
-        <h1 style={{ fontWeight: 600, fontSize: "clamp(36px, 10vw, 168px)", lineHeight: 0.88, letterSpacing: "-0.045em", margin: "0 0 40px", wordBreak: "break-word" }}>
+        <h1 style={{ fontWeight: 600, fontSize: "clamp(36px, 10vw, 168px)", lineHeight: 0.88, letterSpacing: "-0.045em", margin: "0 0 24px", wordBreak: "break-word" }}>
           Peer produced<br />
           <span style={{ color: A.main }}>proficiency.</span>
         </h1>
+        <div style={{ marginBottom: 40 }}>
+          <Link to="/FAQ" style={{ textDecoration: "none" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "10px 18px", borderRadius: 12, background: A.soft, border: `1px solid ${A.main}30`, fontSize: 14.5, fontWeight: 600, color: A.main, transition: "background 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "#D4DFB8"}
+              onMouseLeave={e => e.currentTarget.style.background = A.soft}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+              </svg>
+              FAQs ansehen
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </div>
+          </Link>
+        </div>
         <div className="au-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 56, alignItems: "start" }}>
           <p style={{ fontSize: 22, lineHeight: 1.45, margin: 0, color: "var(--ink-2)" }}>
             Wir sind <strong style={{ color: "var(--ink)", fontWeight: 600 }}>Peer Skills Lab</strong> — ein Verein von Medizinstudierenden, der praktische Fertigkeiten mithilfe von Peers strategisch wiederholt. Damit OSCEs entspannter werden und der erste Tag auf Station weniger fremd anfühlt.

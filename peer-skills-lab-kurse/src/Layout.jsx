@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/AuthContext";
 
 // Root pages that show the logo; anything else shows a Back button on mobile
-const ROOT_PAGES = ["/", "/MyBookings", "/TutorDashboard", "/MyProfile", "/AdminCourses", "/AdminUsers", "/AdminStats", "/AboutUs", "/Datenschutz", "/Impressum"];
+const ROOT_PAGES = ["/", "/MyBookings", "/TutorDashboard", "/MyProfile", "/AdminCourses", "/AdminUsers", "/AdminStats", "/AboutUs", "/Datenschutz", "/Impressum", "/FAQ"];
 
 export default function Layout({ children, currentPageName }) {
   const { user, navigateToLogin } = useAuth();
