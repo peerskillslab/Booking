@@ -49,8 +49,7 @@ export default function CourseDetail() {
   const spotsLeft = (course?.max_participants || 0) - (course?.current_participants || 0);
   const isFull = spotsLeft <= 0;
   const isOwnCourse = user && course &&
-    user.full_name === course.instructor &&
-    user.role !== 'admin';
+    user.full_name === course.instructor;
 
   if (isLoading) {
     return (
