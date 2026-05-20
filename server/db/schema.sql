@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS courses (
   image_url            TEXT,
   level                TEXT CHECK (level IN ('Anfänger','Fortgeschritten','Experte','Alle Level')),
   status               TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','cancelled','completed','draft')),
+  extra_dates          TEXT,
   created_by           TEXT,
   created_date         TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
 );
@@ -53,6 +54,7 @@ CREATE TABLE IF NOT EXISTS course_templates (
   location          TEXT,
   image_url         TEXT,
   level             TEXT CHECK (level IN ('Anfänger','Fortgeschritten','Experte','Alle Level')),
+  session_count     INTEGER DEFAULT 1,
   created_by        TEXT,
   created_date      TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
 );

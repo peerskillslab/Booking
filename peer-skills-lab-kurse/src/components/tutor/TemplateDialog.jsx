@@ -9,13 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 
-const CATEGORIES = ["CST Abdomen", "CST HKL", "CST Gynäkologie", "CST Lunge", "CST Neurologie", "CST Bewegungsapparat", "POCUS", "Venenpunktion"];
+const CATEGORIES = ["CST Abdomen", "CST HKL", "CST Gynäkologie", "CST Lunge", "CST Neurologie", "CST Bewegungsapparat", "POCUS", "Venenpunktion", "YSSA"];
 const LEVELS = ["Anfänger", "Fortgeschritten", "Experte", "Alle Level"];
 
 const empty = {
   title: "", short_description: "", description: "", category: "CST Abdomen",
   level: "Alle Level", duration_minutes: 60, max_participants: 10,
-  location: "", image_url: "",
+  location: "", image_url: "", session_count: 1,
 };
 
 export default function TemplateDialog({ open, onOpenChange, editingTemplate, onSaved }) {
@@ -33,6 +33,7 @@ export default function TemplateDialog({ open, onOpenChange, editingTemplate, on
         max_participants: editingTemplate.max_participants || 10,
         location: editingTemplate.location || "",
         image_url: editingTemplate.image_url || "",
+        session_count: editingTemplate.session_count || 1,
       });
     } else {
       setForm(empty);
@@ -101,7 +102,7 @@ export default function TemplateDialog({ open, onOpenChange, editingTemplate, on
               <Input type="number" value={form.duration_minutes} onChange={(e) => f("duration_minutes", e.target.value)} className="mt-1.5" />
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-3 gap-4">
             <div>
               <Label>Max. Teilnehmer</Label>
               <Input type="number" value={form.max_participants} onChange={(e) => f("max_participants", e.target.value)} className="mt-1.5" />
@@ -109,6 +110,15 @@ export default function TemplateDialog({ open, onOpenChange, editingTemplate, on
             <div>
               <Label>Standardort</Label>
               <Input value={form.location} onChange={(e) => f("location", e.target.value)} className="mt-1.5" />
+            </div>
+            <div>
+              <Label>Anzahl Termine</Label>
+              <Select value={String(form.session_count)} onValueChange={(v) => f("session_count", parseInt(v))}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent position="popper">
+                  {[1, 2, 3, 4, 5, 6].map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div>

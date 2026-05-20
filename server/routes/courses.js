@@ -67,15 +67,15 @@ router.post('/', requireAuth, async (req, res) => {
       INSERT INTO courses
         (id, title, description, short_description, category, instructor, date, time,
          duration_minutes, max_participants, current_participants, location, image_url,
-         level, status, created_by, created_date)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+         level, status, extra_dates, created_by, created_date)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
       RETURNING *
     `, [
       id, title, rest.description || null, rest.short_description || null, category,
       rest.instructor || null, date, rest.time || null, rest.duration_minutes || null,
       max_participants, rest.current_participants ?? 0, rest.location || null,
       rest.image_url || null, rest.level || null, rest.status || 'active',
-      req.user.email, now
+      rest.extra_dates || null, req.user.email, now
     ]);
 
     res.status(201).json(result.rows[0]);
@@ -97,7 +97,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     const editable = [
       'title','description','short_description','category','instructor','date','time',
       'duration_minutes','max_participants','current_participants','location',
-      'image_url','level','status',
+      'image_url','level','status','extra_dates',
     ];
     const updates = {};
     for (const key of editable) {

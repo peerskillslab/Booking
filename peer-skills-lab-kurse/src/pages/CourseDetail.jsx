@@ -141,17 +141,41 @@ export default function CourseDetail() {
             <Card className="border-border/60 shadow-lg shadow-primary/5 sticky top-6">
               <CardContent className="p-6 space-y-5">
                 <div className="space-y-3">
-                  {course.date && (
-                    <div className="flex items-center gap-3 text-sm">
-                      <Calendar className="w-4 h-4 text-primary" />
-                      <span>{format(new Date(course.date), "EEEE, dd. MMMM yyyy", { locale: de })}</span>
+                  {course.extra_dates && JSON.parse(course.extra_dates).length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="text-xs font-semibold text-muted-foreground uppercase">Alle Termine:</div>
+                      {[{ date: course.date, time: course.time }, ...JSON.parse(course.extra_dates)].map((session, i) => (
+                        <div key={i} className="space-y-1 pb-2 border-b border-border/40 last:border-0 last:pb-0">
+                          {session.date && (
+                            <div className="flex items-center gap-3 text-sm">
+                              <Calendar className="w-4 h-4 text-primary" />
+                              <span>{format(new Date(session.date), "EEEE, dd. MMMM yyyy", { locale: de })}</span>
+                            </div>
+                          )}
+                          {session.time && (
+                            <div className="flex items-center gap-3 text-sm ml-7">
+                              <Clock className="w-4 h-4 text-primary" />
+                              <span>{session.time}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  )}
-                  {course.time && (
-                    <div className="flex items-center gap-3 text-sm">
-                      <Clock className="w-4 h-4 text-primary" />
-                      <span>{course.time}</span>
-                    </div>
+                  ) : (
+                    <>
+                      {course.date && (
+                        <div className="flex items-center gap-3 text-sm">
+                          <Calendar className="w-4 h-4 text-primary" />
+                          <span>{format(new Date(course.date), "EEEE, dd. MMMM yyyy", { locale: de })}</span>
+                        </div>
+                      )}
+                      {course.time && (
+                        <div className="flex items-center gap-3 text-sm">
+                          <Clock className="w-4 h-4 text-primary" />
+                          <span>{course.time}</span>
+                        </div>
+                      )}
+                    </>
                   )}
                   {course.duration_minutes && (
                     <div className="flex items-center gap-3 text-sm">

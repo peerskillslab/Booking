@@ -74,7 +74,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     if (!tpl) return res.status(404).json({ error: 'not_found' });
     if (!canWriteTemplate(req.user, tpl)) return res.status(403).json({ error: 'forbidden' });
 
-    const editable = ['title','description','short_description','category','duration_minutes','max_participants','location','image_url','level'];
+    const editable = ['title','description','short_description','category','duration_minutes','max_participants','location','image_url','level','session_count'];
     const updates = {};
     for (const key of editable) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
