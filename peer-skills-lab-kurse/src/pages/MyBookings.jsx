@@ -65,7 +65,7 @@ function BookingRow({ booking, course, status, action, lowParticipantsMessage })
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             {course?.kurs_nr && (
-              <span className="text-xs font-mono font-medium text-muted-foreground shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
+              <span className="text-xs font-mono font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
             )}
             <Link
               to={createPageUrl("CourseDetail") + `?id=${booking.course_id}`}

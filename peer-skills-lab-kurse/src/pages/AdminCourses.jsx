@@ -261,7 +261,7 @@ export default function AdminCourses() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         {course.kurs_nr && (
-                          <span className="text-xs font-mono font-medium text-muted-foreground shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
+                          <span className="text-xs font-mono font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
                         )}
                         <span className="font-semibold truncate">{course.title}</span>
                         <Badge variant="secondary" className="text-xs">{course.category}</Badge>
@@ -349,7 +349,7 @@ export default function AdminCourses() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                               {course.kurs_nr && (
-                          <span className="text-xs font-mono font-medium text-muted-foreground shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
+                          <span className="text-xs font-mono font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
                         )}
                         <span className="font-semibold truncate">{course.title}</span>
                               <Badge variant="secondary" className="text-xs">{course.category}</Badge>
