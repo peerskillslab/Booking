@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BookOpen, CalendarPlus, Pencil, Trash2, Loader2, Users, Clock, Archive, Mail, MessageSquare } from "lucide-react";
+import { Plus, BookOpen, CalendarPlus, Pencil, Trash2, Loader2, Users, Clock, Archive, Mail } from "lucide-react";
 import { format, isPast, endOfDay } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion } from "framer-motion";
 import TemplateDialog from "@/components/tutor/TemplateDialog";
 import PublishCourseDialog from "@/components/tutor/PublishCourseDialog";
 import BookingsDialog from "@/components/tutor/BookingsDialog";
-import FeedbacksViewDialog from "@/components/tutor/FeedbacksViewDialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from
@@ -26,8 +25,6 @@ export default function TutorDashboard() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [bookingsDialogOpen, setBookingsDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [feedbacksDialogOpen, setFeedbacksDialogOpen] = useState(false);
-  const [selectedCourseForFeedback, setSelectedCourseForFeedback] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -372,18 +369,6 @@ export default function TutorDashboard() {
                                   </span>
                                 </div>
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedCourseForFeedback(course);
-                                  setFeedbacksDialogOpen(true);
-                                }}
-                                className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                              >
-                                <MessageSquare className="w-4 h-4 mr-1.5" />
-                                Feedbacks
-                              </Button>
                             </CardContent>
                           </Card>
                         </motion.div>
@@ -428,18 +413,6 @@ export default function TutorDashboard() {
 
       }
 
-      {selectedCourseForFeedback &&
-      <FeedbacksViewDialog
-        open={feedbacksDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedCourseForFeedback(null);
-          }
-          setFeedbacksDialogOpen(open);
-        }}
-        course={selectedCourseForFeedback} />
-
-      }
     </div>);
 
 }
