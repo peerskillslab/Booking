@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useState } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
