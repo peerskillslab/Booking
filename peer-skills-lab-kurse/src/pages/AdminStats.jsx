@@ -157,9 +157,14 @@ export default function AdminStats() {
   const tutorMap = {};
   currentMonthCourses.forEach((c) => {
     const name = c.instructor || "Unbekannt";
-    if (!tutorMap[name]) tutorMap[name] = { courses: 0, participants: 0 };
+    if (!tutorMap[name]) tutorMap[name] = { courses: 0, participants: 0, held: 0, cancelled: 0 };
     tutorMap[name].courses += 1;
     tutorMap[name].participants += c.current_participants || 0;
+    const isPast = c.date && new Date(`${c.date}T00:00:00`) < now;
+    if (isPast) {
+      if ((c.current_participants || 0) >= 3) tutorMap[name].held += 1;
+      else tutorMap[name].cancelled += 1;
+    }
   });
   const tutorData = Object.entries(tutorMap)
     .map(([name, stats]) => ({ name, ...stats }))
@@ -180,16 +185,21 @@ export default function AdminStats() {
   const handleExportCSV = () => {
     const monthLabel = format(now, "MMMM yyyy", { locale: de });
     const rows = [
-      ["Monat", "Kursname", "Tutor:in", "Datum", "Zeit", "Teilnehmende", "Max. Plätze"],
-      ...currentMonthCourses.map((c) => [
-        monthLabel,
-        c.title || "—",
-        c.instructor || "—",
-        c.date || "—",
-        c.time || "—",
-        c.current_participants || 0,
-        c.max_participants || 0,
-      ]),
+      ["Monat", "Kursname", "Tutor:in", "Datum", "Zeit", "Teilnehmende", "Max. Plätze", "Status"],
+      ...currentMonthCourses.map((c) => {
+        const isPast = c.date && new Date(`${c.date}T00:00:00`) < now;
+        const status = !isPast ? "Ausstehend" : (c.current_participants || 0) >= 3 ? "Stattgefunden" : "Nicht stattgefunden";
+        return [
+          monthLabel,
+          c.title || "—",
+          c.instructor || "—",
+          c.date || "—",
+          c.time || "—",
+          c.current_participants || 0,
+          c.max_participants || 0,
+          status,
+        ];
+      }),
     ];
     const csv = rows.map((r) => r.join(";")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
@@ -437,7 +447,7 @@ export default function AdminStats() {
                           </span>
                           <span className="font-medium text-foreground">{tutor.name}</span>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                           <span className="flex items-center gap-1">
                             <BookOpen className="w-3.5 h-3.5" />
                             {tutor.courses} Kurse
@@ -446,6 +456,12 @@ export default function AdminStats() {
                             <Users className="w-3.5 h-3.5" />
                             {tutor.participants} Teilnehmende
                           </span>
+                          {tutor.held > 0 && (
+                            <span className="text-green-700 font-medium">✓ {tutor.held} stattgef.</span>
+                          )}
+                          {tutor.cancelled > 0 && (
+                            <span className="text-amber-700 font-medium">✗ {tutor.cancelled} ausgef.</span>
+                          )}
                         </div>
                       </div>
                     ))
