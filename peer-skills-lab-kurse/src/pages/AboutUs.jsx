@@ -425,20 +425,20 @@ export default function AboutUs() {
           <span style={{ width: 28, height: 1, background: "var(--ink-3)", display: "block" }} />
           <span style={{ letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 500 }}>Über uns · seit 2025</span>
         </div>
-        <h1 style={{ fontWeight: 600, fontSize: "clamp(36px, 10vw, 168px)", lineHeight: 0.88, letterSpacing: "-0.045em", margin: "0 0 24px", wordBreak: "break-word" }}>
+        <h1 style={{ fontWeight: 600, fontSize: "clamp(36px, 10vw, 168px)", lineHeight: 0.88, letterSpacing: "-0.045em", margin: "0 0 56px", wordBreak: "break-word" }}>
           Peer produced<br />
           <span style={{ color: A.main }}>proficiency.</span>
         </h1>
-        <div style={{ marginBottom: 40 }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 64 }}>
           <Link to="/FAQ" style={{ textDecoration: "none" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "10px 18px", borderRadius: 12, background: A.soft, border: `1px solid ${A.main}30`, fontSize: 14.5, fontWeight: 600, color: A.main, transition: "background 0.15s" }}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 28px", borderRadius: 16, background: A.soft, border: `1px solid ${A.main}30`, fontSize: 16, fontWeight: 600, color: A.main, transition: "background 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.background = "#D4DFB8"}
               onMouseLeave={e => e.currentTarget.style.background = A.soft}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
               </svg>
               FAQs ansehen
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
             </div>
