@@ -49,13 +49,13 @@ router.post('/', requireAuth, async (req, res) => {
     const result = await pool.query(`
       INSERT INTO course_templates
         (id, title, description, short_description, category, duration_minutes,
-         max_participants, location, image_url, level, created_by, created_date)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+         max_participants, location, image_url, level, session_count, created_by, created_date)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
       RETURNING *
     `, [
       id, title, rest.description || null, rest.short_description || null, category,
       rest.duration_minutes || null, rest.max_participants || null, rest.location || null,
-      rest.image_url || null, rest.level || null, req.user.email, now
+      rest.image_url || null, rest.level || null, rest.session_count || 1, req.user.email, now
     ]);
 
     res.status(201).json(result.rows[0]);
