@@ -71,6 +71,20 @@ CREATE TABLE IF NOT EXISTS monthly_stat_snapshots (
   created_date       TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
 );
 
+CREATE TABLE IF NOT EXISTS course_feedbacks (
+  id                TEXT PRIMARY KEY,
+  course_id         TEXT NOT NULL,
+  course_title      TEXT NOT NULL,
+  instructor        TEXT NOT NULL,
+  user_email        TEXT NOT NULL,
+  q1_good           TEXT,
+  q2_improve        TEXT,
+  q3_helpful        INTEGER CHECK (q3_helpful BETWEEN 1 AND 5),
+  q4_recommend      TEXT CHECK (q4_recommend IN ('Ja','Eher ja','Eher nein','Nein')),
+  created_date      TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
+  FOREIGN KEY (course_id) REFERENCES courses(id)
+);
+
 -- Indexes for common filter/sort operations
 CREATE INDEX IF NOT EXISTS idx_courses_status       ON courses(status);
 CREATE INDEX IF NOT EXISTS idx_courses_date         ON courses(date);
@@ -78,3 +92,5 @@ CREATE INDEX IF NOT EXISTS idx_courses_created_by   ON courses(created_by);
 CREATE INDEX IF NOT EXISTS idx_bookings_user_email  ON bookings(user_email);
 CREATE INDEX IF NOT EXISTS idx_bookings_course_id   ON bookings(course_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_status      ON bookings(status);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_course_id  ON course_feedbacks(course_id);
+CREATE INDEX IF NOT EXISTS idx_feedbacks_instructor ON course_feedbacks(instructor);

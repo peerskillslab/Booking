@@ -27,6 +27,7 @@ app.use('/api/setup',                     apiCors, require('./routes/setup'));
 app.use('/api/auth',                      apiCors, require('./routes/auth'));
 app.use('/api/entities/courses',          apiCors, require('./routes/courses'));
 app.use('/api/entities/bookings',         apiCors, require('./routes/bookings'));
+app.use('/api/entities/coursefeedbacks',  apiCors, require('./routes/courseFeedbacks'));
 app.use('/api/entities/users',            apiCors, require('./routes/users'));
 app.use('/api/entities/coursetemplates',  apiCors, require('./routes/courseTemplates'));
 app.use('/api/entities/monthlystatshots', apiCors, require('./routes/monthlyStats'));

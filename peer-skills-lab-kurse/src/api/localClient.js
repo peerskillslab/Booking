@@ -54,6 +54,7 @@ async function apiFetch(path, options = {}) {
 const ENTITY_PATHS = {
   Course:               'courses',
   Booking:              'bookings',
+  CourseFeedback:       'coursefeedbacks',
   User:                 'users',
   CourseTemplate:       'coursetemplates',
   MonthlyStatSnapshot:  'monthlystatshots',
@@ -137,6 +138,7 @@ export const localClient = {
   entities: {
     Course:              makeEntityClient('Course'),
     Booking:             makeEntityClient('Booking'),
+    CourseFeedback:      makeEntityClient('CourseFeedback'),
     User:                makeEntityClient('User'),
     CourseTemplate:      makeEntityClient('CourseTemplate'),
     MonthlyStatSnapshot: makeEntityClient('MonthlyStatSnapshot'),

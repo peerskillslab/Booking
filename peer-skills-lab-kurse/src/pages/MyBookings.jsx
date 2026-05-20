@@ -6,7 +6,8 @@ import PullToRefreshIndicator from "@/components/ui/PullToRefreshIndicator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Loader2, BookOpen, XCircle } from "lucide-react";
+import { Calendar, Clock, Loader2, BookOpen, XCircle, MessageSquare } from "lucide-react";
+import FeedbackDialog from "@/components/feedback/FeedbackDialog";
 import { format, isBefore, subHours } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +27,8 @@ import {
 
 export default function MyBookings() {
   const [user, setUser] = useState(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
   const queryClient = useQueryClient();
 
   const handleRefresh = async () => {
@@ -52,6 +55,12 @@ export default function MyBookings() {
     enabled: !!user?.email,
   });
   const courseMap = Object.fromEntries(courses.map((c) => [c.id, c]));
+
+  const { data: userFeedbacks = [] } = useQuery({
+    queryKey: ["myFeedbacks", user?.email],
+    queryFn: () => peerskillslab.entities.CourseFeedback.filter({ user_email: user?.email }),
+    enabled: !!user?.email,
+  });
 
   const cancelMutation = useMutation({
     mutationFn: async (booking) => {
@@ -160,44 +169,76 @@ export default function MyBookings() {
                           </div>
                         </div>
 
-                        {booking.status === "confirmed" && (() => {
+                        {(() => {
                           const course = courseMap[booking.course_id];
                           const courseStart = course?.date
                             ? new Date(`${course.date}T${course.time || '00:00'}`)
                             : null;
+                          const isPast = courseStart && isBefore(courseStart, new Date());
                           const canCancel = courseStart === null || isBefore(new Date(), subHours(courseStart, 72));
+                          const alreadyFeedback = userFeedbacks.some(f => f.course_id === booking.course_id);
+
                           return (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
+                            <div className="flex items-center gap-2">
+                              {isPast && booking.status === "confirmed" && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  disabled={!canCancel}
-                                  className={canCancel ? "text-destructive hover:text-destructive hover:bg-destructive/10" : "text-muted-foreground opacity-50 cursor-not-allowed"}
-                                  title={!canCancel ? "Stornierung nur bis 72h vor Kursbeginn möglich" : ""}
+                                  onClick={() => {
+                                    setSelectedBooking(booking);
+                                    setFeedbackOpen(true);
+                                  }}
+                                  disabled={alreadyFeedback}
+                                  className={alreadyFeedback ? "text-muted-foreground opacity-50" : "text-primary hover:text-primary hover:bg-primary/10"}
+                                  title={alreadyFeedback ? "Rückmeldung bereits abgegeben" : ""}
                                 >
-                                  <XCircle className="w-4 h-4 mr-1.5" />
-                                  Stornieren
+                                  {alreadyFeedback ? (
+                                    <>
+                                      <span className="w-4 h-4 mr-1.5 text-green-600">✓</span>
+                                      Abgegeben
+                                    </>
+                                  ) : (
+                                    <>
+                                      <MessageSquare className="w-4 h-4 mr-1.5" />
+                                      Rückmeldung
+                                    </>
+                                  )}
                                 </Button>
-                              </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Buchung stornieren?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Möchtest du deine Buchung für „{booking.course_title}" wirklich stornieren?
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => cancelMutation.mutate(booking)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  Ja, stornieren
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                              )}
+                              {booking.status === "confirmed" && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      disabled={!canCancel}
+                                      className={canCancel ? "text-destructive hover:text-destructive hover:bg-destructive/10" : "text-muted-foreground opacity-50 cursor-not-allowed"}
+                                      title={!canCancel ? "Stornierung nur bis 72h vor Kursbeginn möglich" : ""}
+                                    >
+                                      <XCircle className="w-4 h-4 mr-1.5" />
+                                      Stornieren
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Buchung stornieren?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Möchtest du deine Buchung für „{booking.course_title}" wirklich stornieren?
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => cancelMutation.mutate(booking)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Ja, stornieren
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                            </div>
                           );
                         })()}
                       </CardContent>
@@ -207,6 +248,18 @@ export default function MyBookings() {
               })}
             </AnimatePresence>
           </div>
+        )}
+
+        {selectedBooking && courseMap[selectedBooking.course_id] && (
+          <FeedbackDialog
+            open={feedbackOpen}
+            onOpenChange={setFeedbackOpen}
+            course={courseMap[selectedBooking.course_id]}
+            user={user}
+            onSubmitted={() => {
+              queryClient.invalidateQueries({ queryKey: ["myFeedbacks"] });
+            }}
+          />
         )}
       </div>
     </div>

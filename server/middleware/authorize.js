@@ -45,9 +45,20 @@ function isAdmin(user) {
   return user && user.role === 'admin';
 }
 
+function canReadFeedback(user, feedback) {
+  if (!user) return false;
+  return user.role === 'admin' || feedback.instructor === user.full_name;
+}
+
+function canWriteFeedback(user, feedback) {
+  if (!user) return false;
+  return feedback.user_email === user.email || user.role === 'admin';
+}
+
 module.exports = {
   canReadCourse, canWriteCourse, canDeleteCourse,
   canReadBooking, canWriteBooking,
   canReadTemplate, canWriteTemplate,
+  canReadFeedback, canWriteFeedback,
   isAdmin,
 };
