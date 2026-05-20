@@ -187,6 +187,10 @@ export default function AdminCourses() {
     return true;
   });
 
+  const today = getTodayStr();
+  const upcomingCourses = filteredCourses.filter((c) => c.date >= today);
+  const pastCourses = filteredCourses.filter((c) => c.date < today);
+
   const hasFilters = search || filterCategory !== "all" || filterDate;
 
   if (!user) return null;
@@ -237,9 +241,14 @@ export default function AdminCourses() {
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-8">
             <p className="text-sm text-muted-foreground">{filteredCourses.length} von {courses.length} Kursen</p>
-            {filteredCourses.map((course, i) => (
+
+            {upcomingCourses.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">Kommende Kurse ({upcomingCourses.length})</h2>
+                <div className="space-y-3">
+                  {upcomingCourses.map((course, i) => (
               <motion.div
                 key={course.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -314,8 +323,100 @@ export default function AdminCourses() {
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
-            ))}
+                  </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {pastCourses.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold mb-3 text-muted-foreground">Vergangene Kurse ({pastCourses.length})</h2>
+                <div className="space-y-3 opacity-60">
+                  {pastCourses.map((course, i) => (
+                    <motion.div
+                      key={course.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                    >
+                      <Card className="border-border/60">
+                        <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <span className="font-semibold truncate">{course.title}</span>
+                              <Badge variant="secondary" className="text-xs">{course.category}</Badge>
+                              <Badge
+                                className={`text-xs border ${
+                                  course.status === "active"
+                                    ? "bg-primary/10 text-primary border-primary/20"
+                                    : course.status === "cancelled"
+                                    ? "bg-destructive/10 text-destructive border-destructive/20"
+                                    : "bg-muted text-muted-foreground border-border"
+                                }`}
+                              >
+                                {course.status}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                              {course.date && (
+                                <span>{format(new Date(course.date), "dd.MM.yyyy", { locale: de })}</span>
+                              )}
+                              <span className="flex items-center gap-1">
+                                <Users className="w-3.5 h-3.5" />
+                                {course.current_participants || 0}/{course.max_participants}
+                              </span>
+                              {course.instructor && (
+                                <span>Tutor: {course.instructor}</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => {
+                              setSelectedCourse(course);
+                              setParticipantsDialogOpen(true);
+                            }}>
+                              <Eye className="w-3.5 h-3.5 mr-1" /> Teilnehmende
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => openEdit(course)}>
+                              <Pencil className="w-3.5 h-3.5 mr-1" /> Bearbeiten
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Kurs löschen?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    „{course.title}" wird unwiderruflich gelöscht.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => deleteMutation.mutate(course.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Löschen
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {filteredCourses.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">Keine Kurse gefunden</p>
+            )}
           </div>
         )}
       </div>
