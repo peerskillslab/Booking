@@ -48,6 +48,15 @@ async function initDb() {
     throw err;
   }
 
+  // Incremental migrations (safe to run repeatedly)
+  try {
+    await pool.query('ALTER TABLE courses ADD COLUMN IF NOT EXISTS kurs_nr INTEGER');
+    console.log('✓ Migrations applied');
+  } catch (err) {
+    console.error('✗ Migration failed:', err);
+    throw err;
+  }
+
   return pool;
 }
 

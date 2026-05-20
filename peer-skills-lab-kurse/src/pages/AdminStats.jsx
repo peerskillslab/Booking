@@ -153,18 +153,25 @@ export default function AdminStats() {
   const tutorMap = {};
   currentMonthCourses.forEach((c) => {
     const name = c.instructor || "Unbekannt";
-    if (!tutorMap[name]) tutorMap[name] = { courses: 0, participants: 0, held: 0, cancelled: 0 };
+    if (!tutorMap[name]) tutorMap[name] = { courses: 0, participants: 0 };
     tutorMap[name].courses += 1;
     tutorMap[name].participants += c.current_participants || 0;
-    const isPast = c.date && new Date(`${c.date}T00:00:00`) < now;
-    if (isPast) {
-      if ((c.current_participants || 0) >= 3) tutorMap[name].held += 1;
-      else tutorMap[name].cancelled += 1;
-    }
   });
   const tutorData = Object.entries(tutorMap)
     .map(([name, stats]) => ({ name, ...stats }))
     .sort((a, b) => b.courses - a.courses);
+
+  // Durchgeführte Kurse nach Tutor:in (alle vergangenen Kurse, zeitunabhängig)
+  const pastTutorMap = {};
+  pastCourses.forEach((c) => {
+    const name = c.instructor || "Unbekannt";
+    if (!pastTutorMap[name]) pastTutorMap[name] = { held: 0, cancelled: 0 };
+    if ((c.current_participants || 0) >= 3) pastTutorMap[name].held += 1;
+    else pastTutorMap[name].cancelled += 1;
+  });
+  const pastTutorData = Object.entries(pastTutorMap)
+    .map(([name, s]) => ({ name, ...s }))
+    .sort((a, b) => a.name.localeCompare(b.name, "de"));
 
   // Reset – alle Daten löschen
   const handleReset = async () => {
@@ -445,7 +452,7 @@ export default function AdminStats() {
                           </span>
                           <span className="font-medium text-foreground">{tutor.name}</span>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <BookOpen className="w-3.5 h-3.5" />
                             {tutor.courses} Kurse
@@ -454,12 +461,6 @@ export default function AdminStats() {
                             <Users className="w-3.5 h-3.5" />
                             {tutor.participants} Teilnehmende
                           </span>
-                          {tutor.held > 0 && (
-                            <span className="text-green-700 font-medium">✓ {tutor.held} stattgef.</span>
-                          )}
-                          {tutor.cancelled > 0 && (
-                            <span className="text-amber-700 font-medium">✗ {tutor.cancelled} ausgef.</span>
-                          )}
                         </div>
                       </div>
                     ))
@@ -467,6 +468,28 @@ export default function AdminStats() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Durchgeführte Kurse nach Tutor:in (alle vergangenen Kurse) */}
+            {pastTutorData.length > 0 && (
+              <Card className="border-border/60">
+                <CardHeader>
+                  <CardTitle className="text-lg">Durchgeführte Kurse nach Tutor:in</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="divide-y divide-border/60">
+                    {pastTutorData.map((t) => (
+                      <div key={t.name} className="flex items-center justify-between py-3">
+                        <span className="font-medium text-foreground">{t.name}</span>
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="text-green-700 font-medium">✓ {t.held} durchgeführt</span>
+                          <span className="text-amber-700 font-medium">✗ {t.cancelled} nicht stattgef.</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Archivierte Monats-Snapshots */}
             {snapshots.length > 0 && (
