@@ -22,12 +22,7 @@ router.get('/', requireAuth, async (req, res) => {
 
     let sql = 'SELECT * FROM bookings';
     if (conditions.length) {
-      // Convert buildWhere placeholders (?) to PostgreSQL numbered placeholders ($1, $2, ...)
-      const convertedConditions = conditions.map((cond, idx) => {
-        let placeholder = 1;
-        return cond.replace(/\?/g, () => `$${placeholder++}`);
-      });
-      sql += ` WHERE ${convertedConditions.join(' AND ')}`;
+      sql += ` WHERE ${conditions.join(' AND ')}`;
     }
     sql += ` ORDER BY ${sort.col} ${sort.dir}`;
 

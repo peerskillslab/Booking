@@ -55,13 +55,13 @@ export default function MyBookings() {
 
   const cancelMutation = useMutation({
     mutationFn: async (booking) => {
-      // First update the participant count
+      // First update the booking status
+      await peerskillslab.entities.Booking.update(booking.id, { status: "cancelled" });
+      // Then update the participant count
       await peerskillslab.functions.invoke("updateCourseParticipants", {
         course_id: booking.course_id,
         increment: -1,
       });
-      // Then update the booking status
-      await peerskillslab.entities.Booking.update(booking.id, { status: "cancelled" });
     },
     onSuccess: async () => {
       // Invalidate all relevant queries
@@ -165,9 +165,7 @@ export default function MyBookings() {
                           const courseStart = course?.date
                             ? new Date(`${course.date}T${course.time || '00:00'}`)
                             : null;
-                          const canCancel = courseStart
-                            ? isBefore(new Date(), subHours(courseStart, 72))
-                            : false;
+                          const canCancel = courseStart === null || isBefore(new Date(), subHours(courseStart, 72));
                           return (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>

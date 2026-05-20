@@ -28,8 +28,7 @@ export default function CourseDetail() {
   const { data: course, isLoading, refetch } = useQuery({
     queryKey: ["course", courseId],
     queryFn: async () => {
-      const courses = await peerskillslab.entities.Course.list();
-      return courses.find(c => c.id === courseId);
+      return peerskillslab.entities.Course.get(courseId);
     },
     enabled: !!courseId,
   });
@@ -37,12 +36,11 @@ export default function CourseDetail() {
   const { data: userBookings = [] } = useQuery({
     queryKey: ["userBookings", courseId, user?.email],
     queryFn: async () => {
-      const allBookings = await peerskillslab.entities.Booking.list();
-      return allBookings.filter(b =>
-        b.course_id === courseId &&
-        b.user_email === user?.email &&
-        b.status === "confirmed"
-      );
+      return peerskillslab.entities.Booking.filter({
+        course_id: courseId,
+        user_email: user?.email || "",
+        status: "confirmed",
+      });
     },
     enabled: !!courseId && !!user?.email,
   });
@@ -51,8 +49,8 @@ export default function CourseDetail() {
   const spotsLeft = (course?.max_participants || 0) - (course?.current_participants || 0);
   const isFull = spotsLeft <= 0;
   const isOwnCourse = user && course && (
-    (user.full_name && user.full_name === course.instructor) ||
-    user.email === course.instructor
+    user.email === course.created_by ||
+    user.role === 'admin'
   );
 
   if (isLoading) {

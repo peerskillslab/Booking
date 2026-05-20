@@ -34,21 +34,31 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
       });
       if (allBookings.length > 0) throw new Error("DUPLICATE");
 
-      await peerskillslab.entities.Booking.create({
-        course_id: course.id,
-        course_title: course.title,
-        user_email: user?.email || "",
-        user_name: name,
-        status: "confirmed",
-        notes,
-        price_paid: 0,
-      });
-
-      const participantUpdate = await peerskillslab.functions.invoke("updateCourseParticipants", {
+      // Increment participant count first (atomically checks capacity)
+      await peerskillslab.functions.invoke("updateCourseParticipants", {
         course_id: course.id,
         increment: 1,
       });
-      if (participantUpdate.data?.error) throw new Error(participantUpdate.data.error);
+
+      try {
+        // Then create the booking
+        await peerskillslab.entities.Booking.create({
+          course_id: course.id,
+          course_title: course.title,
+          user_email: user?.email || "",
+          user_name: name,
+          status: "confirmed",
+          notes,
+          price_paid: 0,
+        });
+      } catch (err) {
+        // If booking creation fails, rollback the participant count
+        await peerskillslab.functions.invoke("updateCourseParticipants", {
+          course_id: course.id,
+          increment: -1,
+        });
+        throw err;
+      }
     },
 
     // Optimistic update: bump participant count immediately
@@ -70,6 +80,8 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
       if (ctx?.previous) queryClient.setQueryData(["courses"], ctx.previous);
       if (err.message === "DUPLICATE") {
         alert("Du hast diesen Kurs bereits gebucht!");
+      } else if (err.message === "course_full") {
+        alert("Der Kurs ist leider voll geworden.");
       } else {
         alert("Fehler beim Buchen: " + err.message);
       }
