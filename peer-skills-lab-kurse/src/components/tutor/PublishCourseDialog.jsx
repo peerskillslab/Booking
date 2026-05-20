@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import TimeInput from "@/components/ui/TimeInput";
 import RoomReservationDialog from "./RoomReservationDialog";
 
@@ -19,6 +19,7 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
   const [location, setLocation] = useState("");
   const [maxParticipants, setMaxParticipants] = useState(10);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState(null);
   const [showRoomReservation, setShowRoomReservation] = useState(false);
   const [createdCourse, setCreatedCourse] = useState(null);
 
@@ -29,6 +30,7 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
       setMaxParticipants(template.max_participants || 10);
     }
     setDone(false);
+    setError(null);
   }, [template, open]);
 
   const publishMutation = useMutation({
@@ -61,6 +63,10 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
       setCreatedCourse(course);
       setDone(true);
       onPublished();
+      setError(null);
+    },
+    onError: (err) => {
+      setError(err?.message || "Fehler beim Ausschreiben des Kurses");
     },
   });
 
@@ -107,6 +113,13 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
                 {isMultiSession && ` (${sessionCount} Termine)`}
               </DialogDescription>
             </DialogHeader>
+
+            {error && (
+              <div className="flex gap-3 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-destructive">{error}</p>
+              </div>
+            )}
 
             <div className="grid gap-6 py-4">
               {isMultiSession ? (
