@@ -6,7 +6,7 @@ import PullToRefreshIndicator from "@/components/ui/PullToRefreshIndicator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Loader2, BookOpen, XCircle, MessageSquare } from "lucide-react";
+import { Calendar, Clock, Loader2, BookOpen, XCircle, MessageSquare, AlertTriangle } from "lucide-react";
 import FeedbackDialog from "@/components/feedback/FeedbackDialog";
 import { format, isBefore, subHours } from "date-fns";
 import { de } from "date-fns/locale";
@@ -50,9 +50,15 @@ function getCourseStartDate(course) {
   }
 }
 
-function BookingRow({ booking, course, status, action }) {
+function BookingRow({ booking, course, status, action, lowParticipants }) {
   return (
-    <Card className="border-border/60 hover:shadow-md transition-shadow">
+    <Card className={`hover:shadow-md transition-shadow ${lowParticipants ? "border-amber-300" : "border-border/60"}`}>
+      {lowParticipants && (
+        <div className="flex items-center gap-2 px-5 pt-3 pb-0 text-amber-700 text-sm">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>Dieser Kurs findet möglicherweise nicht statt – aktuell nur {course.current_participants} Teilnehmende angemeldet.</span>
+        </div>
+      )}
       <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
@@ -256,6 +262,11 @@ export default function MyBookings() {
                         </AlertDialog>
                       ) : null;
 
+                      const lowParticipants =
+                        booking.status === "confirmed" &&
+                        course?.current_participants != null &&
+                        course.current_participants < 3;
+
                       return (
                         <motion.div
                           key={booking.id}
@@ -268,6 +279,7 @@ export default function MyBookings() {
                             course={course}
                             status={STATUS_LABELS[booking.status] || STATUS_LABELS.pending}
                             action={action}
+                            lowParticipants={lowParticipants}
                           />
                         </motion.div>
                       );
@@ -325,6 +337,7 @@ export default function MyBookings() {
                             course={courseMap[booking.course_id]}
                             status={STATUS_LABELS[booking.status] || STATUS_LABELS.pending}
                             action={action}
+                            lowParticipants={false}
                           />
                         </motion.div>
                       );
