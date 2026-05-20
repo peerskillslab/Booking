@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, BookOpen, Users, TrendingUp, Award, Download, Archive, Trash2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
@@ -53,12 +53,6 @@ export default function AdminStats() {
   const { data: snapshots = [], isLoading: snapshotsLoading } = useQuery({
     queryKey: ["statsSnapshots"],
     queryFn: () => peerskillslab.entities.MonthlyStatSnapshot.list("-created_date"),
-    enabled: !!currentUser,
-  });
-
-  const { data: allFeedbacks = [] } = useQuery({
-    queryKey: ["statsFeedbacks"],
-    queryFn: () => peerskillslab.entities.CourseFeedback.list("-created_date"),
     enabled: !!currentUser,
   });
 
@@ -171,17 +165,6 @@ export default function AdminStats() {
     .map(([name, stats]) => ({ name, ...stats }))
     .sort((a, b) => b.courses - a.courses);
 
-  // Feedbacks nach Tutor:in gruppiert (alphabetisch)
-  const feedbacksByTutor = allFeedbacks.reduce((acc, fb) => {
-    const key = fb.instructor || "Unbekannt";
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(fb);
-    return acc;
-  }, {});
-  const tutorFeedbackEntries = Object.entries(feedbacksByTutor).sort(([a], [b]) =>
-    a.localeCompare(b, "de")
-  );
-
   // CSV Export (aktueller Monat) – einzelne Kurse
   const handleExportCSV = () => {
     const monthLabel = format(now, "MMMM yyyy", { locale: de });
@@ -208,32 +191,6 @@ export default function AdminStats() {
     const a = document.createElement("a");
     a.href = url;
     a.download = `statistik_${format(now, "yyyy-MM")}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // CSV Export \u2013 alle Feedbacks nach Tutor:in
-  const handleExportFeedbackCSV = () => {
-    const rows = [
-      ["Tutor:in", "Kursname", "Was hat gut gefallen", "Was verbessern", "Sterne (1-5)", "Weiterempfehlung", "Datum"],
-      ...[...allFeedbacks]
-        .sort((a, b) => (a.instructor || "").localeCompare(b.instructor || "", "de"))
-        .map((fb) => [
-          fb.instructor || "\u2014",
-          fb.course_title || "\u2014",
-          fb.q1_good || "\u2014",
-          fb.q2_improve || "\u2014",
-          fb.q3_helpful ?? "\u2014",
-          fb.q4_recommend || "\u2014",
-          fb.created_date ? format(new Date(fb.created_date), "dd.MM.yyyy", { locale: de }) : "\u2014",
-        ]),
-    ];
-    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `feedbacks_${format(now, "yyyy-MM-dd")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -470,60 +427,6 @@ export default function AdminStats() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Rückmeldungen nach Tutor:in */}
-            {tutorFeedbackEntries.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-foreground">Rückmeldungen nach Tutor:in</h2>
-                  <Button variant="outline" size="sm" onClick={handleExportFeedbackCSV}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Als CSV herunterladen
-                  </Button>
-                </div>
-                <div className="space-y-4">
-                  {tutorFeedbackEntries.map(([tutor, feedbacks]) => {
-                    const avgStars = (feedbacks.reduce((s, f) => s + (f.q3_helpful || 0), 0) / feedbacks.length).toFixed(1);
-                    return (
-                      <Card key={tutor} className="border-border/60">
-                        <CardHeader className="pb-2">
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">{tutor}</CardTitle>
-                            <CardDescription>
-                              {feedbacks.length} Rückmeldung{feedbacks.length !== 1 ? "en" : ""} · ⌀ {avgStars} ★
-                            </CardDescription>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="divide-y divide-border/50">
-                            {feedbacks.map((fb) => (
-                              <div key={fb.id} className="py-3 text-sm space-y-1">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="font-medium text-foreground">{fb.course_title}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {"★".repeat(fb.q3_helpful || 0)}{"☆".repeat(5 - (fb.q3_helpful || 0))} · {fb.q4_recommend}
-                                  </span>
-                                </div>
-                                {fb.q1_good && (
-                                  <p className="text-muted-foreground">
-                                    <span className="font-medium text-foreground">+ </span>{fb.q1_good}
-                                  </p>
-                                )}
-                                {fb.q2_improve && (
-                                  <p className="text-muted-foreground">
-                                    <span className="font-medium text-foreground">△ </span>{fb.q2_improve}
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* Archivierte Monats-Snapshots */}
             {snapshots.length > 0 && (

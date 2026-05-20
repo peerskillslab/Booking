@@ -7,8 +7,7 @@ import PullToRefreshIndicator from "@/components/ui/PullToRefreshIndicator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Loader2, BookOpen, XCircle, MessageSquare, AlertTriangle } from "lucide-react";
-import FeedbackDialog from "@/components/feedback/FeedbackDialog";
+import { Calendar, Clock, Loader2, BookOpen, XCircle, ExternalLink, AlertTriangle } from "lucide-react";
 import { format, isBefore, subHours } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -98,8 +97,6 @@ function BookingRow({ booking, course, status, action, lowParticipantsMessage })
 
 export default function MyBookings() {
   const [user, setUser] = useState(null);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState(null);
   const queryClient = useQueryClient();
 
   const handleRefresh = useCallback(async () => {
@@ -129,17 +126,6 @@ export default function MyBookings() {
   const courseMap = useMemo(
     () => Object.fromEntries(courses.map((c) => [c.id, c])),
     [courses]
-  );
-
-  const { data: userFeedbacks = [] } = useQuery({
-    queryKey: ["myFeedbacks", user?.email],
-    queryFn: () => peerskillslab.entities.CourseFeedback.filter({ user_email: user?.email }),
-    enabled: !!user?.email,
-  });
-
-  const feedbackedCourseIds = useMemo(
-    () => new Set(userFeedbacks.map((fb) => fb.course_id)),
-    [userFeedbacks]
   );
 
   const cancelMutation = useMutation({
@@ -304,30 +290,15 @@ export default function MyBookings() {
                 <div className="space-y-4">
                   <AnimatePresence>
                     {pastBookings.map((booking, i) => {
-                      const alreadyFeedback = feedbackedCourseIds.has(booking.course_id);
                       const action = booking.status === "confirmed" ? (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
-                            setSelectedBooking(booking);
-                            setFeedbackOpen(true);
-                          }}
-                          disabled={alreadyFeedback}
-                          className={alreadyFeedback ? "text-muted-foreground opacity-50" : "text-primary hover:text-primary hover:bg-primary/10"}
-                          title={alreadyFeedback ? "Rückmeldung bereits abgegeben" : ""}
+                          onClick={() => window.open("https://forms.cloud.microsoft/e/sZ3XW4XpMy", "_blank")}
+                          className="text-primary hover:text-primary hover:bg-primary/10"
                         >
-                          {alreadyFeedback ? (
-                            <>
-                              <span className="w-4 h-4 mr-1.5 text-green-600">✓</span>
-                              Abgegeben
-                            </>
-                          ) : (
-                            <>
-                              <MessageSquare className="w-4 h-4 mr-1.5" />
-                              Rückmeldung
-                            </>
-                          )}
+                          <ExternalLink className="w-4 h-4 mr-1.5" />
+                          Rückmeldung
                         </Button>
                       ) : null;
 
@@ -355,17 +326,6 @@ export default function MyBookings() {
           </div>
         )}
 
-        {selectedBooking && courseMap[selectedBooking.course_id] && (
-          <FeedbackDialog
-            open={feedbackOpen}
-            onOpenChange={setFeedbackOpen}
-            course={courseMap[selectedBooking.course_id]}
-            user={user}
-            onSubmitted={() => {
-              queryClient.invalidateQueries({ queryKey: ["myFeedbacks"] });
-            }}
-          />
-        )}
       </div>
     </div>
   );
