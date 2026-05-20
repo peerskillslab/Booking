@@ -25,6 +25,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+const MIN_PARTICIPANTS_THRESHOLD = 3;
+
 const STATUS_LABELS = {
   confirmed: { label: "Bestätigt", className: "bg-primary/10 text-primary border-primary/20" },
   cancelled: { label: "Storniert", className: "bg-destructive/10 text-destructive border-destructive/20" },
@@ -50,13 +52,13 @@ function getCourseStartDate(course) {
   }
 }
 
-function BookingRow({ booking, course, status, action, lowParticipants }) {
+function BookingRow({ booking, course, status, action, lowParticipantsMessage }) {
   return (
-    <Card className={`hover:shadow-md transition-shadow ${lowParticipants ? "border-amber-300" : "border-border/60"}`}>
-      {lowParticipants && (
+    <Card className={`hover:shadow-md transition-shadow ${lowParticipantsMessage ? "border-amber-300" : "border-border/60"}`}>
+      {lowParticipantsMessage && (
         <div className="flex items-center gap-2 px-5 pt-3 pb-0 text-amber-700 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>Dieser Kurs findet möglicherweise nicht statt – aktuell nur {course.current_participants} Teilnehmende angemeldet.</span>
+          <span>{lowParticipantsMessage}</span>
         </div>
       )}
       <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -118,7 +120,7 @@ export default function MyBookings() {
   });
 
   const { data: courses = [] } = useQuery({
-    queryKey: ["myBookingsCourses"],
+    queryKey: ["myBookingsCourses", user?.email],
     queryFn: () => peerskillslab.entities.Course.list("-date"),
     enabled: !!user?.email,
   });
@@ -149,6 +151,7 @@ export default function MyBookings() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["myBookings"] });
+      await queryClient.invalidateQueries({ queryKey: ["myBookingsCourses"] });
       await queryClient.invalidateQueries({ queryKey: ["courses"] });
       await queryClient.invalidateQueries({ queryKey: ["adminCourses"] });
     },
@@ -262,10 +265,12 @@ export default function MyBookings() {
                         </AlertDialog>
                       ) : null;
 
-                      const lowParticipants =
+                      const lowParticipantsMessage =
                         booking.status === "confirmed" &&
                         course?.current_participants != null &&
-                        course.current_participants < 3;
+                        course.current_participants < MIN_PARTICIPANTS_THRESHOLD
+                          ? `Dieser Kurs findet möglicherweise nicht statt – aktuell nur ${course.current_participants} Teilnehmende angemeldet.`
+                          : null;
 
                       return (
                         <motion.div
@@ -279,7 +284,7 @@ export default function MyBookings() {
                             course={course}
                             status={STATUS_LABELS[booking.status] || STATUS_LABELS.pending}
                             action={action}
-                            lowParticipants={lowParticipants}
+                            lowParticipantsMessage={lowParticipantsMessage}
                           />
                         </motion.div>
                       );
@@ -337,7 +342,7 @@ export default function MyBookings() {
                             course={courseMap[booking.course_id]}
                             status={STATUS_LABELS[booking.status] || STATUS_LABELS.pending}
                             action={action}
-                            lowParticipants={false}
+                            lowParticipantsMessage={null}
                           />
                         </motion.div>
                       );
