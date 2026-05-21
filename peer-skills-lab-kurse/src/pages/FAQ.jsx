@@ -64,7 +64,7 @@ const FAQS = [
       },
       {
         q: "Wie kann ich dem Verein beitreten?",
-        a: "Im Moment nehmen wir nur Tutor:innen Mitglieder unseres Vereins.",
+        a: "Im Moment sind nur Tutor:innen Mitglieder unseres Vereins.",
       },
     ],
   },
