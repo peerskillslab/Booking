@@ -425,7 +425,7 @@ export default function AboutUs() {
           <span style={{ width: 28, height: 1, background: "var(--ink-3)", display: "block" }} />
           <span style={{ letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 500 }}>Über uns · seit 2025</span>
         </div>
-        <h1 style={{ fontWeight: 600, fontSize: "clamp(36px, 10vw, 168px)", lineHeight: 1.0, letterSpacing: "-0.03em", fontKerning: "none", fontVariantLigatures: "none", margin: "0 0 56px", wordBreak: "break-word" }}>
+        <h1 style={{ fontWeight: 600, fontSize: "clamp(36px, 10vw, 168px)", lineHeight: 1.0, letterSpacing: "0.02em", fontKerning: "none", fontVariantLigatures: "none", margin: "0 0 56px", wordBreak: "break-word" }}>
           Peer produced<br />
           <span style={{ color: A.main }}>proficiency.</span>
         </h1>
