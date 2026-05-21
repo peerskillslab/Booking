@@ -14,15 +14,15 @@ const FAQS = [
     items: [
       {
         q: "Was ist das Peer Skills Lab?",
-        a: "Platzhalter – hier kommt die Antwort.",
+        a: "Wir sind ein Verein von Medizinstudierenden, bei dem du praktische Fertigkeiten mithilfe von Peers erarbeiten kannst. Zusätzlich setzen wir uns für eine bessere Lehre an der Fakultät ein und versuchen, gleiche Anstellungsbedingungen für alle studierenden Tutor:innen zu erreichen.",
       },
       {
         q: "Für wen sind die Kurse gedacht?",
-        a: "Platzhalter – hier kommt die Antwort.",
+        a: "Die Kurse richten sich an alle Studierenden der Humanmedizin in Bern. Du darfst unsere Kurse besuchen, sobald du den kurrikulären Kurs der Universität besucht hast. Dies gilt nicht für ausserkurriculäre Themen wie die fortgeschrittenen Nahttechniken der YSSA.",
       },
       {
         q: "Ist das Peer Skills Lab ein offizieller Teil des Studiums?",
-        a: "Platzhalter – hier kommt die Antwort.",
+        a: "Nein, wir sind ein weitgehend unabhängiger Verein. Unsere Kurse sind alle freiwillig. Einige kurriculäre Kurse werden jedoch von unseren Tutor:innen unterrichtet.",
       },
     ],
   },
@@ -31,19 +31,23 @@ const FAQS = [
     items: [
       {
         q: "Wie buche ich einen Kurs?",
-        a: "Platzhalter – hier kommt die Antwort.",
+        a: "Registriere dich auf unserer Webseite und wähle einen Kurs den du buchen möchtest. So einfach ist es.",
       },
       {
         q: "Bis wann kann ich eine Buchung stornieren?",
-        a: "Platzhalter – hier kommt die Antwort.",
+        a: "Buchungen können bis 72 Stunden vor Kursbeginn selbstständig storniert werden. Kurzfristige Absagen aus Krankheitsgründen oder aus anderen wichtigen Gründen müssen per E-Mail an info@peerskillslab.ch erfolgen.",
       },
       {
         q: "Was passiert, wenn ein Kurs ausgebucht ist?",
-        a: "Platzhalter – hier kommt die Antwort.",
+        a: "Die Kurse werden wiederholt angeboten. Falls ein Kurs, der dich interessiert, ausgebucht ist, warte, bis eine unserer Tutor:innen oder Tutoren den Kurs erneut ausschreibt.",
       },
       {
         q: "Wie viel kosten die Kurse?",
-        a: "Platzhalter – hier kommt die Antwort.",
+        a: "Alle unsere Kurse sind für Studierende kostenlos.",
+      },
+      {
+        q: "Wo finden die Kurse statt?",
+        a: "Die Kurse finden im BISS der Uni Ziegler statt. Sollten sie an einem anderen Ort stattfinden, werden unsere Tutor:innen dies kommunizieren.",
       },
     ],
   },
@@ -52,15 +56,15 @@ const FAQS = [
     items: [
       {
         q: "Wie kann ich selbst Tutor:in werden?",
-        a: "Platzhalter – hier kommt die Antwort.",
+        a: "Wir sind immer wieder auf der Suche nach neuen, motivierten Tutor:innen. Wenn du dich also dafür interessierst, bei uns mitzumachen, oder wenn du Ideen für neue Kursangebote hast, melde einfach direkt bei uns.",
       },
       {
         q: "Welche Voraussetzungen brauche ich, um zu unterrichten?",
-        a: "Platzhalter – hier kommt die Antwort.",
+        a: "Derzeit können wir nur Studierende ab dem vierten Studienjahr als Tutor:innen engagieren. Eine Mitarbeit im Vorstand ist jedoch auch früher möglich.",
       },
       {
         q: "Wie kann ich dem Verein beitreten?",
-        a: "Platzhalter – hier kommt die Antwort.",
+        a: "Im Moment nehmen wir nur Tutor:innen Mitglieder unseres Vereins.",
       },
     ],
   },
