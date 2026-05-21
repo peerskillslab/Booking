@@ -56,7 +56,7 @@ const FAQS = [
     items: [
       {
         q: "Wie kann ich selbst Tutor:in werden?",
-        a: "Wir sind immer wieder auf der Suche nach neuen, motivierten Tutor:innen. Wenn du dich also dafür interessierst, bei uns mitzumachen, oder wenn du Ideen für neue Kursangebote hast, melde einfach direkt bei uns.",
+        a: "Wir sind immer wieder auf der Suche nach neuen, motivierten Tutor:innen. Wenn du dich also dafür interessierst, bei uns mitzumachen, oder wenn du Ideen für neue Kursangebote hast, melde dich einfach direkt bei uns.",
       },
       {
         q: "Welche Voraussetzungen brauche ich, um zu unterrichten?",
