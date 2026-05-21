@@ -16,6 +16,7 @@ import Impressum from './pages/Impressum';
 import FAQ from './pages/FAQ';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { useInactivityLogout } from '@/lib/useInactivityLogout';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -37,8 +38,9 @@ const PageTransitionWrapper = ({ children }) => (
 );
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, authError } = useAuth();
+  const { isLoadingAuth, authError, logout } = useAuth();
   const location = useLocation();
+  useInactivityLogout(logout);
 
   if (isLoadingAuth) {
     return (
