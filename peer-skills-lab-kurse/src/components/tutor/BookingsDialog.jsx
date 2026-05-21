@@ -84,8 +84,15 @@ export default function BookingsDialog({ open, onOpenChange, course, onBookingAd
               <div className="bg-muted/50 rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
                 {bookings.map((booking) => (
                   <div key={booking.id} className="flex justify-between items-start text-sm p-2 hover:bg-muted/70 rounded">
-                    <div>
-                      <p className="font-medium text-foreground">{booking.user_name}</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-foreground">{booking.user_name}</p>
+                        {booking.studienjahr && (
+                          <span className="text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                            {booking.studienjahr}. Jahr
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground">{booking.user_email}</p>
                     </div>
                   </div>

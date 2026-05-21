@@ -20,7 +20,7 @@ router.get('/', requireAuth, async (req, res) => {
     const sort = parseSort(req.query.sort, ALLOWED_SORT) || { col: 'created_date', dir: 'DESC' };
     const { conditions, values } = buildWhere(req.query, ALLOWED_COLS);
 
-    let sql = 'SELECT * FROM bookings';
+    let sql = 'SELECT b.*, u.studienjahr FROM bookings b LEFT JOIN users u ON b.user_email = u.email';
     if (conditions.length) {
       sql += ` WHERE ${conditions.join(' AND ')}`;
     }
