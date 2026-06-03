@@ -295,7 +295,7 @@ export default function TutorDashboard() {
                               size="sm"
                               onClick={() => downloadICalFile(course)}
                               title="Zu Kalender hinzufügen">
-                                  <Calendar className="w-3.5 h-3.5 mr-1" /> .ics
+                                  <Calendar className="w-3.5 h-3.5 mr-1" /> Kalendereintrag hinzufügen
                                 </Button>
                                 <Button
                               variant="outline"

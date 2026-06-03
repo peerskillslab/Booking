@@ -231,7 +231,7 @@ export default function MyBookings() {
                             title="Zu Kalender hinzufügen"
                           >
                             <Download className="w-4 h-4 mr-1.5" />
-                            .ics
+                            Kalendereintrag hinzufügen
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
