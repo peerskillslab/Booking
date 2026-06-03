@@ -9,14 +9,19 @@ export function generateICalFile(course) {
       // Format: dd.MM.yyyy
       const [day, month, year] = dateStr.split('.');
       const pad = (n) => String(n).padStart(2, '0');
-      startDateTime = new Date(`${year}-${pad(month)}-${pad(day)}T${course.time || '00:00'}:00Z`);
-    } else {
+      // Create date in local timezone, not UTC
+      const isoDate = `${year}-${pad(month)}-${pad(day)}`;
+      const time = course.time || '00:00';
+      startDateTime = new Date(`${isoDate}T${time}:00`);
+    } else if (dateStr.includes('-')) {
       // Format: yyyy-MM-dd
-      startDateTime = new Date(`${dateStr}T${course.time || '00:00'}:00Z`);
+      const time = course.time || '00:00';
+      startDateTime = new Date(`${dateStr}T${time}:00`);
     }
   }
 
   if (isNaN(startDateTime.getTime())) {
+    console.warn('Invalid date for course:', course);
     startDateTime = new Date();
   }
 
