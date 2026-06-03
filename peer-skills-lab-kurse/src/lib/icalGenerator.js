@@ -2,18 +2,21 @@ export function generateICalFile(course) {
   const eventId = `${course.id}@peerskillslab.ch`;
 
   // Parse date safely — handle dd.MM.yyyy format
-  let startDateTime;
+  let startDateTime = new Date();
   if (course.date) {
     const dateStr = course.date;
     if (dateStr.includes('.')) {
       // Format: dd.MM.yyyy
       const [day, month, year] = dateStr.split('.');
-      startDateTime = new Date(`${year}-${month}-${day}T${course.time || '00:00'}:00`);
+      const pad = (n) => String(n).padStart(2, '0');
+      startDateTime = new Date(`${year}-${pad(month)}-${pad(day)}T${course.time || '00:00'}:00Z`);
     } else {
       // Format: yyyy-MM-dd
-      startDateTime = new Date(`${dateStr}T${course.time || '00:00'}:00`);
+      startDateTime = new Date(`${dateStr}T${course.time || '00:00'}:00Z`);
     }
-  } else {
+  }
+
+  if (isNaN(startDateTime.getTime())) {
     startDateTime = new Date();
   }
 
