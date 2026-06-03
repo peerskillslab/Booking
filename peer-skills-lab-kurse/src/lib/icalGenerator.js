@@ -1,8 +1,21 @@
 export function generateICalFile(course) {
   const eventId = `${course.id}@peerskillslab.ch`;
-  const startDateTime = course.date && course.time
-    ? new Date(`${course.date}T${course.time || '00:00'}`)
-    : new Date(course.date);
+
+  // Parse date safely — handle dd.MM.yyyy format
+  let startDateTime;
+  if (course.date) {
+    const dateStr = course.date;
+    if (dateStr.includes('.')) {
+      // Format: dd.MM.yyyy
+      const [day, month, year] = dateStr.split('.');
+      startDateTime = new Date(`${year}-${month}-${day}T${course.time || '00:00'}:00`);
+    } else {
+      // Format: yyyy-MM-dd
+      startDateTime = new Date(`${dateStr}T${course.time || '00:00'}:00`);
+    }
+  } else {
+    startDateTime = new Date();
+  }
 
   const startStr = startDateTime.toISOString().replace(/[-:]/g, '').slice(0, -5) + 'Z';
 
