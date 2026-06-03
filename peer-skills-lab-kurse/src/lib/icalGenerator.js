@@ -52,7 +52,7 @@ UID:${eventId}
 DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, -5)}Z
 DTSTART:${startStr}
 DURATION:PT${course.duration_minutes || 120}M
-SUMMARY:${course.title}
+SUMMARY:Peer Skills Lab ${course.title}
 DESCRIPTION:${course.description || ''}
 LOCATION:${course.location || 'Raum 135 (1 OG, rechte Flurseite)'}
 ORGANIZER:${course.instructor || 'PeerSkills Lab'}
