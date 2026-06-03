@@ -27,14 +27,23 @@ END:VCALENDAR`;
 }
 
 export function downloadICalFile(course) {
-  const ical = generateICalFile(course);
-  const blob = new Blob([ical], { type: 'text/calendar' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${course.title.replace(/\s+/g, '_')}.ics`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  try {
+    const ical = generateICalFile(course);
+    const blob = new Blob([ical], { type: 'text/calendar; charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${(course.title || 'course').replace(/[^\w\s-]/g, '').replace(/\s+/g, '_')}.ics`;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    setTimeout(() => {
+      link.click();
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+    }, 0);
+  } catch (error) {
+    console.error('Error downloading iCal file:', error);
+  }
 }
