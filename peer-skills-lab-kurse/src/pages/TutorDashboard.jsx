@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, BookOpen, CalendarPlus, Pencil, Trash2, Loader2, Users, Clock, Archive, Mail } from "lucide-react";
+import { Plus, BookOpen, CalendarPlus, Pencil, Trash2, Loader2, Users, Clock, Archive, Mail, Calendar } from "lucide-react";
+import { downloadICalFile } from "@/lib/icalGenerator";
 import { format, isPast, endOfDay } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion } from "framer-motion";
@@ -289,6 +290,13 @@ export default function TutorDashboard() {
                                 </div>
                               </div>
                               <div className="flex gap-2">
+                                <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => downloadICalFile(course)}
+                              title="Zu Kalender hinzufügen">
+                                  <Calendar className="w-3.5 h-3.5 mr-1" /> .ics
+                                </Button>
                                 <Button
                               variant="outline"
                               size="sm"

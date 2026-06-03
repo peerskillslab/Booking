@@ -7,7 +7,8 @@ import PullToRefreshIndicator from "@/components/ui/PullToRefreshIndicator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Loader2, BookOpen, XCircle, ExternalLink, AlertTriangle } from "lucide-react";
+import { Calendar, Clock, Loader2, BookOpen, XCircle, ExternalLink, AlertTriangle, Download } from "lucide-react";
+import { downloadICalFile } from "@/lib/icalGenerator";
 import { format, isBefore, subHours } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -222,19 +223,29 @@ export default function MyBookings() {
                       const courseStart = getCourseStartDate(course);
                       const canCancel = courseStart === null || isBefore(new Date(), subHours(courseStart, 72));
                       const action = booking.status === "confirmed" ? (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              disabled={!canCancel}
-                              className={canCancel ? "text-destructive hover:text-destructive hover:bg-destructive/10" : "text-muted-foreground opacity-50 cursor-not-allowed"}
-                              title={!canCancel ? "Stornierung nur bis 72h vor Kursbeginn möglich" : ""}
-                            >
-                              <XCircle className="w-4 h-4 mr-1.5" />
-                              Stornieren
-                            </Button>
-                          </AlertDialogTrigger>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => downloadICalFile(course)}
+                            title="Zu Kalender hinzufügen"
+                          >
+                            <Download className="w-4 h-4 mr-1.5" />
+                            .ics
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={!canCancel}
+                                className={canCancel ? "text-destructive hover:text-destructive hover:bg-destructive/10" : "text-muted-foreground opacity-50 cursor-not-allowed"}
+                                title={!canCancel ? "Stornierung nur bis 72h vor Kursbeginn möglich" : ""}
+                              >
+                                <XCircle className="w-4 h-4 mr-1.5" />
+                                Stornieren
+                              </Button>
+                            </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Buchung stornieren?</AlertDialogTitle>
@@ -252,7 +263,8 @@ export default function MyBookings() {
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
-                        </AlertDialog>
+                          </AlertDialog>
+                        </div>
                       ) : null;
 
                       const lowParticipantsMessage =
