@@ -82,7 +82,8 @@ const TEAM = [
   { name: "Lorenz",   role: "Co-Founder", tone: 3, img: "/team/lorenz.jpg" },
   { name: "Anabelle", role: "Vorstand",   tone: 4, img: "/team/anabelle.jpg" },
   { name: "Mira",     role: "Vorstand",   tone: 5, img: "/team/mira.jpg" },
-  { name: "Surya",    role: "Vorstand",      tone: 0, img: "/team/surya.jpg" },
+  { name: "Surya",    role: "Vorstand",   tone: 0, img: "/team/surya.jpg" },
+  { name: "Liam",     role: "Vorstand",   tone: 1, img: "/team/liam.jpg" },
   { name: "Elena",    role: "Peer-Tutorin", tone: 1, img: "/team/elena.jpg" },
   { name: "Luzia",    role: "Peer-Tutorin", tone: 2, img: "/team/luzia.jpg" },
 ];
