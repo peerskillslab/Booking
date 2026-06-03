@@ -138,10 +138,10 @@ export default function FAQ() {
       <div className="faq-container">
         <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--ink-3)", fontSize: 14, marginBottom: 32 }}>
           <span style={{ width: 28, height: 1, background: "var(--ink-3)", display: "block" }} />
-          <span style={{ letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 500 }}>FAQ</span>
+          <span style={{ textTransform: "uppercase", fontWeight: 500 }}>FAQ</span>
         </div>
 
-        <h1 style={{ fontWeight: 600, fontSize: "clamp(32px, 7vw, 72px)", lineHeight: 0.95, letterSpacing: "-0.035em", margin: "0 0 16px", wordBreak: "break-word" }}>
+        <h1 style={{ fontWeight: 600, fontSize: "clamp(32px, 7vw, 72px)", lineHeight: 0.95, margin: "0 0 16px", wordBreak: "break-word" }}>
           Häufige<br />
           <span style={{ color: A.main }}>Fragen.</span>
         </h1>
@@ -153,7 +153,7 @@ export default function FAQ() {
         <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
           {FAQS.map((section) => (
             <div key={section.category}>
-              <div style={{ fontSize: 13, letterSpacing: "0.13em", textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 4 }}>
+              <div style={{ fontSize: 13, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 4 }}>
                 {section.category}
               </div>
               <div>

@@ -8,9 +8,7 @@ export default {
       fontFamily: {
         sans: ["'Eina01'", "'Nunito'", "sans-serif"],
       },
-      letterSpacing: {
-        brand: "-0.065em",
-      },
+      letterSpacing: {},
       lineHeight: {
         brand: "1.4",
       },

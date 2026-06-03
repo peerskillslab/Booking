@@ -65,7 +65,7 @@
 
   /* Typography */
   --font-family: 'Eina01', 'Nunito', sans-serif;
-  --letter-spacing: -0.065em;
+  --letter-spacing: 0;
   --line-height: 1.4;
 }
 

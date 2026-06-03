@@ -145,10 +145,10 @@ function HowCards() {
   return (
     <section className="au-section">
       <div className="au-how-header" style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 32 }}>
-        <h2 className="au-h2" style={{ fontWeight: 600, letterSpacing: "-0.025em", lineHeight: 1.0, margin: 0, maxWidth: 720 }}>
+        <h2 className="au-h2" style={{ fontWeight: 600, lineHeight: 1.0, margin: 0, maxWidth: 720 }}>
           Vier Prinzipien,<br />die alles tragen.
         </h2>
-        <div style={{ fontSize: 13.5, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 500, color: "var(--ink-3)" }}>Wie es funktioniert</div>
+        <div style={{ fontSize: 13.5, textTransform: "uppercase", fontWeight: 500, color: "var(--ink-3)" }}>Wie es funktioniert</div>
       </div>
       <div className="au-how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
         {steps.map(s => {
@@ -159,7 +159,7 @@ function HowCards() {
                 <div style={{ width: 48, height: 48, borderRadius: 12, background: A.soft, color: A.deep, display: "flex", alignItems: "center", justifyContent: "center" }}><I width="22" height="22" /></div>
                 <span style={{ fontSize: 14, color: "var(--ink-3)", fontWeight: 500 }}>{s.n}</span>
               </div>
-              <h3 style={{ fontSize: 21, fontWeight: 600, margin: 0, letterSpacing: "-0.01em", lineHeight: 1.2 }}>{s.title}</h3>
+              <h3 style={{ fontSize: 21, fontWeight: 600, margin: 0, lineHeight: 1.2 }}>{s.title}</h3>
               <p style={{ fontSize: 14.5, lineHeight: 1.55, margin: 0, color: "var(--ink-2)" }}>{s.body}</p>
             </div>
           );
@@ -183,8 +183,8 @@ function StatsBlock() {
         <div style={{ position: "absolute", bottom: -120, left: -40, width: 220, height: 220, borderRadius: "50%", background: A.main, opacity: 0.15 }} />
         <div className="au-stats-header" style={{ position: "relative", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "end" }}>
           <div>
-            <div style={{ fontSize: 13.5, letterSpacing: "0.14em", textTransform: "uppercase", opacity: 0.65, fontWeight: 500, marginBottom: 14 }}>Stand heute</div>
-            <h2 className="au-h2" style={{ fontWeight: 600, letterSpacing: "-0.025em", lineHeight: 1.05, margin: 0, maxWidth: 540 }}>In Zahlen,</h2>
+            <div style={{ fontSize: 13.5, textTransform: "uppercase", opacity: 0.65, fontWeight: 500, marginBottom: 14 }}>Stand heute</div>
+            <h2 className="au-h2" style={{ fontWeight: 600, lineHeight: 1.05, margin: 0, maxWidth: 540 }}>In Zahlen,</h2>
           </div>
           <p style={{ fontSize: 16, lineHeight: 1.55, margin: 0, opacity: 0.85 }}>
             Wir fragen nur, was uns hilft zu sehen, ob die Kurse wirklich gebucht werden und ob die Teilnehmenden danach das Gefühl haben, etwas mitgenommen zu haben.
@@ -193,7 +193,7 @@ function StatsBlock() {
         <div className="au-stats-numbers" style={{ position: "relative", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 32, marginTop: 56, paddingTop: 40, borderTop: "1px solid rgba(245,242,232,0.18)" }}>
           {stats.map((s, i) => (
             <div key={i}>
-              <div className="au-stat-n" style={{ fontWeight: 600, letterSpacing: "-0.04em", lineHeight: 0.92 }}>{s.n}</div>
+              <div className="au-stat-n" style={{ fontWeight: 600, lineHeight: 0.92 }}>{s.n}</div>
               <div style={{ fontSize: 16, fontWeight: 500, marginTop: 14 }}>{s.label}</div>
               <div style={{ fontSize: 13.5, opacity: 0.65, marginTop: 4 }}>{s.sub}</div>
             </div>
@@ -209,8 +209,8 @@ function TeamSection() {
     <section className="au-section">
       <div className="au-team-header" style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 32 }}>
         <div>
-          <div style={{ fontSize: 13.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 14 }}>Köpfe</div>
-          <h2 className="au-h2" style={{ fontWeight: 600, letterSpacing: "-0.025em", lineHeight: 1.0, margin: 0 }}>Viele Peers,<br />ein gemeinsames Ziel.</h2>
+          <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 14 }}>Köpfe</div>
+          <h2 className="au-h2" style={{ fontWeight: 600, lineHeight: 1.0, margin: 0 }}>Viele Peers,<br />ein gemeinsames Ziel.</h2>
         </div>
         <p className="au-team-sub" style={{ maxWidth: 360, fontSize: 15, color: "var(--ink-2)", lineHeight: 1.55, margin: 0 }}>
           Werde ein Teil unseres Teams! Wir sind immer auf der Suche nach motivierten Peer-Tutor*innen, die Lust haben, praktische Skills zu unterrichten. Schreib uns einfach eine Mail oder komm zu einer unserer Vereinssitzungen vorbei.
@@ -246,8 +246,8 @@ function PartnersBand() {
     <section className="au-section">
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22 }} className="au-partners-inner">
         <div className="au-partners-header" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 28 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-0.015em", margin: 0 }}>Partner & Unterstützer:innen</h2>
-          <span style={{ fontSize: 13.5, color: "var(--ink-3)", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>6 Institutionen</span>
+          <h2 style={{ fontSize: 32, fontWeight: 600, margin: 0 }}>Partner & Unterstützer:innen</h2>
+          <span style={{ fontSize: 13.5, color: "var(--ink-3)", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>6 Institutionen</span>
         </div>
         <div className="au-partners-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
           {PARTNERS.map((p, i) => {
@@ -285,7 +285,7 @@ function ContactRow({ label, value, icon: I, href }) {
     <>
       <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--sage)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink)", flexShrink: 0 }}><I width="18" height="18" /></div>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 12, color: "var(--ink-3)", letterSpacing: "0.06em", textTransform: "uppercase" }}>{label}</div>
+        <div style={{ fontSize: 12, color: "var(--ink-3)", textTransform: "uppercase" }}>{label}</div>
         <div style={{ fontSize: 14.5, fontWeight: 500 }}>{value}</div>
       </div>
     </>
@@ -308,8 +308,8 @@ function CoursesBlock() {
     <section className="au-section">
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22 }} className="au-courses-inner">
         <div className="au-partners-header" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 28 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-0.015em", margin: 0 }}>Unsere Kurse</h2>
-          <span style={{ fontSize: 13.5, color: "var(--ink-3)", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>8 Kurse</span>
+          <h2 style={{ fontSize: 32, fontWeight: 600, margin: 0 }}>Unsere Kurse</h2>
+          <span style={{ fontSize: 13.5, color: "var(--ink-3)", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>8 Kurse</span>
         </div>
         <div className="au-courses-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
           {COURSES.map((c, i) => {
@@ -320,7 +320,7 @@ function CoursesBlock() {
                   <I width="22" height="22" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em", lineHeight: 1.2, marginBottom: 10 }}>{c.name}</div>
+                  <div style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.2, marginBottom: 10 }}>{c.name}</div>
                   <p style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink-2)", margin: 0 }}>{c.body}</p>
                 </div>
               </div>
@@ -336,7 +336,7 @@ function JoinBlock() {
   return (
     <section className="au-section au-section-join">
       <div className="au-join-right" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22, display: "flex", flexDirection: "column", gap: 18 }}>
-        <div style={{ fontSize: 13.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500 }}>Direkt erreichen</div>
+        <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500 }}>Direkt erreichen</div>
         <div className="au-contact-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
           <ContactRow label="Allgemein"  value="info@peerskillslab.ch" icon={Icon.Mail}      href="mailto:info@peerskillslab.ch" />
           <ContactRow label="Instagram"  value="@peerskillslab"         icon={Icon.Instagram} href="https://www.instagram.com/peerskillslab_bern" />
@@ -424,11 +424,11 @@ export default function AboutUs() {
       <section className="au-hero-padding" style={{ padding: "64px 56px 32px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--ink-3)", fontSize: 14, marginBottom: 32 }}>
           <span style={{ width: 28, height: 1, background: "var(--ink-3)", display: "block" }} />
-          <span style={{ letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 500 }}>Über uns · seit 2025</span>
+          <span style={{ textTransform: "uppercase", fontWeight: 500 }}>Über uns · seit 2025</span>
         </div>
-        <h1 style={{ fontWeight: 600, fontSize: "clamp(36px, 10vw, 168px)", lineHeight: 1.0, letterSpacing: "-0.03em", fontKerning: "none", fontVariantLigatures: "none", margin: "0 0 56px", wordBreak: "break-word" }}>
+        <h1 style={{ fontWeight: 600, fontSize: "clamp(36px, 10vw, 168px)", lineHeight: 1.0, fontKerning: "none", fontVariantLigatures: "none", margin: "0 0 56px", wordBreak: "break-word" }}>
           Peer produced<br />
-          <span style={{ color: A.main, letterSpacing: "-0.03em" }}>proficiency.</span>
+          <span style={{ color: A.main }}>proficiency.</span>
         </h1>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 64 }}>
           <Link to="/FAQ" style={{ textDecoration: "none" }}>
