@@ -1,27 +1,37 @@
 export function generateICalFile(course) {
   const eventId = `${course.id}@peerskillslab.ch`;
 
+  console.log('Generating iCal for course:', {
+    id: course.id,
+    date: course.date,
+    time: course.time,
+    title: course.title
+  });
+
   // Parse date safely — handle dd.MM.yyyy format
   let startDateTime = new Date();
   if (course.date) {
-    const dateStr = course.date;
+    const dateStr = String(course.date).trim();
     if (dateStr.includes('.')) {
       // Format: dd.MM.yyyy
       const [day, month, year] = dateStr.split('.');
       const pad = (n) => String(n).padStart(2, '0');
       // Create date in local timezone, not UTC
       const isoDate = `${year}-${pad(month)}-${pad(day)}`;
-      const time = course.time || '00:00';
-      startDateTime = new Date(`${isoDate}T${time}:00`);
+      const time = String(course.time || '00:00').trim();
+      const dateTimeStr = `${isoDate}T${time}`;
+      console.log('Parsing date string:', dateTimeStr);
+      startDateTime = new Date(dateTimeStr);
+      console.log('Parsed date:', startDateTime.toISOString());
     } else if (dateStr.includes('-')) {
       // Format: yyyy-MM-dd
-      const time = course.time || '00:00';
-      startDateTime = new Date(`${dateStr}T${time}:00`);
+      const time = String(course.time || '00:00').trim();
+      startDateTime = new Date(`${dateStr}T${time}`);
     }
   }
 
   if (isNaN(startDateTime.getTime())) {
-    console.warn('Invalid date for course:', course);
+    console.warn('Invalid date for course:', course, 'using current date');
     startDateTime = new Date();
   }
 
