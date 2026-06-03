@@ -8,19 +8,18 @@ import { de } from "date-fns/locale";
 export default function RoomReservationDialog({ open, onOpenChange, course }) {
   if (!course) return null;
 
-  const emailSubject = `Raum reservieren für "${course.title}"`;
+  const emailSubject = `Raum 135 reservieren für "${course.title}"`;
   const emailBody = `Guten Tag,
 
-ich möchte einen Raum für meinen Kurs im Peer Skills Lab reservieren:
+ich möchte den Raum 135 (1 OG, rechte Flurseite) für meinen Kurs im Peer Skills Lab reservieren:
 
 Kursinformationen:
 - Kurs: ${course.title}
 - Datum: ${format(new Date(course.date), "dd.MM.yyyy", { locale: de })}
 - Uhrzeit: ${course.time || "Nach Absprache"}
-- Ort: ${course.location || "Wird festgelegt"}
 - Max. Teilnehmer: ${course.max_participants}
 
-Bitte reserviert einen passenden Raum für die angegebene Zeit.
+Bitte reserviert den Raum 135 für die angegebene Zeit.
 
 Vielen Dank!`;
 
@@ -49,7 +48,7 @@ Vielen Dank!`;
             <span className="font-medium">Uhrzeit:</span> {course.time || "Nach Absprache"}
           </p>
           <p className="text-sm text-muted-foreground">
-            <span className="font-medium">Ort:</span> {course.location || "Wird festgelegt"}
+            <span className="font-medium">Ort:</span> Raum 135 (1 OG, rechte Flurseite)
           </p>
           <p className="text-sm text-muted-foreground">
             <span className="font-medium">Max. Teilnehmer:</span> {course.max_participants}
