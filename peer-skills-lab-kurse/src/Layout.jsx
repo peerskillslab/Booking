@@ -153,13 +153,18 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Footer */}
         <div className="psl-sidebar-foot">
-          <span className="psl-avatar">{initials}</span>
-          <div>
-            <div className="psl-foot-name">{user?.full_name || user?.email || "Gast"}</div>
-            <div className="psl-foot-role" style={{ textTransform: "capitalize" }}>
-              {user?.role === "admin" ? "Admin" : user?.role === "tutor" ? "Tutor:in" : "Student:in"}
+          <Link to="/MyProfile" style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, textDecoration: "none", borderRadius: 7, padding: "2px 4px", margin: "-2px -4px", transition: "background 0.15s" }}
+            onMouseEnter={e => e.currentTarget.style.background = "var(--psl-fill)"}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          >
+            <span className="psl-avatar">{initials}</span>
+            <div style={{ minWidth: 0 }}>
+              <div className="psl-foot-name">{user?.full_name || user?.email || "Gast"}</div>
+              <div className="psl-foot-role" style={{ textTransform: "capitalize" }}>
+                {user?.role === "admin" ? "Admin" : user?.role === "tutor" ? "Tutor:in" : "Student:in"}
+              </div>
             </div>
-          </div>
+          </Link>
           <button className="psl-foot-btn" onClick={() => peerskillslab.auth.logout()} title="Abmelden">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
               strokeLinecap="round" strokeLinejoin="round">

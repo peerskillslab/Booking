@@ -22,10 +22,12 @@ JWT_SECRET="${JWT_SECRET:-$(openssl rand -hex 32)}"
 
 # ── Update-Modus ──────────────────────────────────────────────────────────────
 if [ "$1" = "update" ]; then
-  echo "=== Image in ACR neu bauen ==="
+  TAG="$(date +%Y%m%d-%H%M)"
+  echo "=== Image in ACR neu bauen (Tag: $TAG) ==="
   az acr build \
     --registry $ACR_NAME \
-    --image $APP_NAME:latest \
+    --image "$APP_NAME:$TAG" \
+    --image "$APP_NAME:latest" \
     --resource-group $RESOURCE_GROUP \
     .
 
@@ -33,7 +35,7 @@ if [ "$1" = "update" ]; then
   az containerapp update \
     --name $APP_NAME \
     --resource-group $RESOURCE_GROUP \
-    --image "$ACR_NAME.azurecr.io/$APP_NAME:latest"
+    --image "$ACR_NAME.azurecr.io/$APP_NAME:$TAG"
 
   APP_URL=$(az containerapp show \
     --name $APP_NAME \

@@ -10,7 +10,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Users, User, Search } from "lucide-react";
+import { Loader2, Users, User, Search, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const ROLES = [
@@ -29,6 +29,7 @@ export default function AdminUsers() {
   const [currentUser, setCurrentUser] = useState(null);
   const [search, setSearch] = useState("");
   const [pendingRoleChange, setPendingRoleChange] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -52,6 +53,14 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
       setPendingRoleChange(null);
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: (id) => peerskillslab.entities.User.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
+      setPendingDelete(null);
     },
   });
 
@@ -144,25 +153,35 @@ export default function AdminUsers() {
                                   <div className="text-sm text-muted-foreground">{u.email}</div>
                                 </div>
                               </div>
-                              <Select
-                                value={u.role || "student"}
-                                onValueChange={(newRole) => {
-                                  if (newRole === (u.role || "student")) return;
-                                  setPendingRoleChange({ id: u.id, name: u.full_name || u.email, newRole });
-                                }}
-                                disabled={u.id === currentUser.id}
-                              >
-                                <SelectTrigger className="w-36 h-8 text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {ROLES.map((r) => (
-                                    <SelectItem key={r.value} value={r.value} className="text-xs">
-                                      {r.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <div className="flex items-center gap-2">
+                                <Select
+                                  value={u.role || "student"}
+                                  onValueChange={(newRole) => {
+                                    if (newRole === (u.role || "student")) return;
+                                    setPendingRoleChange({ id: u.id, name: u.full_name || u.email, newRole });
+                                  }}
+                                  disabled={u.id === currentUser.id}
+                                >
+                                  <SelectTrigger className="w-36 h-8 text-xs">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {ROLES.map((r) => (
+                                      <SelectItem key={r.value} value={r.value} className="text-xs">
+                                        {r.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <button
+                                  onClick={() => setPendingDelete({ id: u.id, name: u.full_name || u.email })}
+                                  disabled={u.id === currentUser.id}
+                                  title="Nutzer:in löschen"
+                                  className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
                             </CardContent>
                           </Card>
                         </motion.div>
@@ -174,6 +193,27 @@ export default function AdminUsers() {
             })}
           </div>
         )}
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open) setPendingDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Nutzer:in löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>{pendingDelete?.name}</strong> wird unwiderruflich gelöscht. Alle Buchungen dieser Person bleiben in der Datenbank erhalten.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteUserMutation.mutate(pendingDelete.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Ja, löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Role change confirmation dialog */}
       <AlertDialog open={!!pendingRoleChange} onOpenChange={(open) => { if (!open) setPendingRoleChange(null); }}>
