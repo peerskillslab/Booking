@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function MyProfile() {
-  const { user, navigateToLogin } = useAuth();
+  const { user, navigateToLogin, checkAppState } = useAuth();
   const [fullName, setFullName] = useState("");
   const [studienjahr, setStudienjahr] = useState("1");
   const [loading, setLoading] = useState(false);
@@ -64,10 +64,11 @@ export default function MyProfile() {
     setStatus(null);
 
     try {
-      await peerskillslab.auth.updateMe({ 
+      await peerskillslab.auth.updateMe({
         full_name: fullName,
         studienjahr: parseInt(studienjahr)
       });
+      await checkAppState();
       setStatus("success");
       setMessage("Profil erfolgreich aktualisiert!");
       setTimeout(() => setStatus(null), 3000);

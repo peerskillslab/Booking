@@ -139,7 +139,7 @@ export default function Layout({ children, currentPageName }) {
                 const active = location.pathname === item.path ||
                   (item.path !== "/" && location.pathname.startsWith(item.path));
                 return (
-                  <Link key={item.path} to={item.path} style={{ textDecoration: "none" }}>
+                  <Link key={item.path} to={item.path} style={{ textDecoration: "none" }} title={item.label}>
                     <div className={`psl-nav-item${active ? " active" : ""}`}>
                       <NavIcon name={item.icon} />
                       <span>{item.label}</span>

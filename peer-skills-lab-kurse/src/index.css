@@ -197,6 +197,65 @@
 .psl-foot-btn:hover { background: var(--psl-fill-hover); color: var(--psl-text); }
 .psl-foot-btn svg { width: 16px; height: 16px; }
 
+/* ---------- Mobile: icon-only sidebar (≤ 640px) ---------- */
+@media (max-width: 640px) {
+  .psl-sidebar {
+    width: 58px;
+  }
+  /* Hide traffic lights — too much vertical waste on small screens */
+  .psl-traffic {
+    display: none;
+  }
+  /* Show only brand mark, no text */
+  .psl-brand {
+    padding: 14px 0 10px;
+    justify-content: center;
+  }
+  .psl-brand-name,
+  .psl-brand-sub {
+    display: none;
+  }
+  /* Nav: center icons, hide labels and group headings */
+  .psl-nav {
+    padding: 4px 6px 12px;
+  }
+  .psl-nav-group-label {
+    display: none;
+  }
+  .psl-nav-item {
+    justify-content: center;
+    padding: 8px 0;
+    gap: 0;
+  }
+  .psl-nav-item span {
+    display: none;
+  }
+  .psl-nav-item svg {
+    width: 22px;
+    height: 22px;
+  }
+  /* Footer: avatar only + logout button, no name/role */
+  .psl-sidebar-foot {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 0 10px;
+  }
+  .psl-sidebar-foot > a {
+    flex: none;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+  }
+  .psl-foot-name,
+  .psl-foot-role {
+    display: none;
+  }
+  .psl-foot-btn {
+    margin-left: 0;
+  }
+}
+
 /* ---------- Content area ---------- */
 .psl-content {
   flex: 1;
