@@ -88,6 +88,14 @@ CREATE TABLE IF NOT EXISTS course_feedbacks (
   FOREIGN KEY (course_id) REFERENCES courses(id)
 );
 
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id         TEXT PRIMARY KEY,
+  user_id    TEXT NOT NULL REFERENCES users(id),
+  token      TEXT UNIQUE NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at    TIMESTAMPTZ
+);
+
 -- Indexes for common filter/sort operations
 CREATE INDEX IF NOT EXISTS idx_courses_status       ON courses(status);
 CREATE INDEX IF NOT EXISTS idx_courses_date         ON courses(date);

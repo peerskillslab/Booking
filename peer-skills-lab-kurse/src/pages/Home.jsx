@@ -65,103 +65,85 @@ export default function Home() {
     return unsubscribe;
   }, [refetch]);
 
+  const CAT_COLORS = {
+    "CST Abdomen": "#C0563B", "CST HKL": "#C0394B", "CST Gynäkologie": "#B5519E",
+    "CST Lunge": "#3E86C7", "CST Neurologie": "#7A5CC4", "CST Bewegungsapparat": "#2F9E6E",
+    "POCUS": "#C9962B", "Venenpunktion": "#2D8C9E", "YSSA": "#8A8D2F",
+  };
+
+  const categories = [...new Set(courses.map(c => c.category).filter(Boolean))];
+
   return (
-    <div
-      ref={containerRef}
-      className="min-h-screen bg-background"
-      style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" }}
-      {...handlers}
-    >
-      <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={isRefreshing} />
-      <HeroSection searchQuery={searchQuery} onSearchChange={setSearchQuery} />
-
-      <div className="max-w-7xl mx-auto px-4 md:px-6 pb-20">
-        {/* Toolbar: category filter + view toggle */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
-
-          {/* View toggle */}
-          <div className="flex items-center gap-1 bg-muted rounded-xl p-1 self-start sm:self-auto shrink-0">
-            <button
-              onClick={() => {
-                setView("grid");
-                setSelectedDate(null);
-              }}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-                view === "grid"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <LayoutGrid className="w-4 h-4" />
-              Kacheln
-            </button>
-            <button
-              onClick={() => setView("calendar")}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
-                view === "calendar"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <CalendarDays className="w-4 h-4" />
-              Kalender
-            </button>
-          </div>
+    <div className="psl-page">
+      {/* Search + view toggle */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 7, height: 30, padding: "0 10px",
+          background: "var(--psl-fill)", boxShadow: "inset 0 0 0 0.5px var(--psl-hairline)",
+          borderRadius: "var(--psl-r-ctl)", flex: 1, maxWidth: 280,
+          fontFamily: "var(--psl-font)",
+        }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14, color: "var(--psl-text-3)", flexShrink: 0 }}>
+            <circle cx="11" cy="11" r="6.5" /><path d="m20 20-3.5-3.5" />
+          </svg>
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Kurse suchen"
+            style={{ border: "none", background: "none", outline: "none", fontSize: 12.5, color: "var(--psl-text)", width: "100%", fontFamily: "var(--psl-font)" }}
+          />
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 text-primary animate-spin" />
-          </div>
-        ) : (
-          <AnimatePresence mode="wait">
-            {view === "calendar" ? (
-              <motion.div
-                key="calendar-view"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                <CourseCalendar
-                  courses={calendarCourses}
-                  selectedDate={selectedDate}
-                  onSelectDate={setSelectedDate}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="grid-view"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-              >
-                {filteredCourses.length === 0 ? (
-                  <div className="text-center py-20">
-                    <p className="text-5xl mb-4">🔍</p>
-                    <h3 className="text-xl font-semibold text-foreground mb-2">
-                      Keine Kurse gefunden
-                    </h3>
-                    <p className="text-muted-foreground">
-                      Versuche es mit einer anderen Suche oder Kategorie.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredCourses.map((course, i) => (
-                      <CourseCard key={course.id} course={course} index={i} />
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        )}
+        <div style={{
+          display: "inline-flex", padding: 2, gap: 2,
+          background: "var(--psl-fill)", borderRadius: "var(--psl-r-ctl)",
+          boxShadow: "inset 0 0 0 0.5px var(--psl-hairline)",
+        }}>
+          {[["grid", "Kacheln"], ["calendar", "Kalender"]].map(([v, label]) => (
+            <button key={v} onClick={() => { setView(v); if (v === "grid") setSelectedDate(null); }}
+              style={{
+                height: 24, padding: "0 11px", borderRadius: 5, border: "none", cursor: "pointer",
+                fontSize: 12.5, fontWeight: 500, fontFamily: "var(--psl-font)",
+                color: view === v ? "var(--psl-text)" : "var(--psl-text-2)",
+                background: view === v ? "var(--psl-card-bg)" : "transparent",
+                boxShadow: view === v ? "0 0.5px 2px rgba(0,0,0,.16), 0 0 0 0.5px var(--psl-hairline)" : "none",
+              }}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Category filter pills */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 20 }}>
+        <button className={`psl-pill${selectedCategory === "all" ? " on" : ""}`}
+          onClick={() => setSelectedCategory("all")}>Alle</button>
+        {categories.map(cat => (
+          <button key={cat} className={`psl-pill${selectedCategory === cat ? " on" : ""}`}
+            onClick={() => setSelectedCategory(cat)}>
+            <span className="psl-cat-dot" style={{ background: CAT_COLORS[cat] || "#888" }} />
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {isLoading ? (
+        <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
+          <Loader2 className="w-7 h-7 text-primary animate-spin" />
+        </div>
+      ) : view === "calendar" ? (
+        <CourseCalendar courses={calendarCourses} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+      ) : filteredCourses.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "48px 0", color: "var(--psl-text-3)" }}>
+          <p style={{ fontSize: 13 }}>Keine Kurse gefunden. Versuche es mit einer anderen Suche oder Kategorie.</p>
+        </div>
+      ) : (
+        <div className="psl-course-grid">
+          {filteredCourses.map(course => (
+            <CourseCard key={course.id} course={course} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

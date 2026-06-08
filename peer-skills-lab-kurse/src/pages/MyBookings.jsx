@@ -182,14 +182,7 @@ export default function MyBookings() {
   if (!user) return null;
 
   return (
-    <div
-      ref={containerRef}
-      className="min-h-screen bg-background"
-      style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" }}
-      {...handlers}
-    >
-      <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={isRefreshing} />
-      <div className="max-w-4xl mx-auto px-4 md:px-6 py-12">
+    <div ref={containerRef} className="psl-page">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-3xl font-bold text-foreground mb-2">Meine Buchungen</h1>
           <p className="text-muted-foreground mb-8">Übersicht aller gebuchten Kurse</p>
@@ -341,7 +334,6 @@ export default function MyBookings() {
           </div>
         )}
 
-      </div>
     </div>
   );
 }

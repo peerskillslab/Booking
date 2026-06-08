@@ -1,14 +1,24 @@
 // @ts-nocheck
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { saveToken } from '@/api/peerskillslabClient';
 import { useAuth } from '@/lib/AuthContext';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
+function useThemeInit() {
+  useEffect(() => {
+    const stored = localStorage.getItem('psl-theme');
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    document.documentElement.setAttribute('data-theme', stored || (mq.matches ? 'dark' : 'light'));
+  }, []);
+}
+
 export default function Login() {
   const { loginSuccess } = useAuth();
   const navigate = useNavigate();
+  useThemeInit();
+
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,7 +46,7 @@ export default function Login() {
       if (!res.ok) throw new Error(data.error || 'Fehler');
 
       saveToken(data.token);
-      loginSuccess(data.user);   // setzt user/isAuthenticated synchron im Context
+      loginSuccess(data.user);
 
       const returnUrl = sessionStorage.getItem('returnUrl') || '/';
       sessionStorage.removeItem('returnUrl');
@@ -53,33 +63,68 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-md p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">PeerSkills</h1>
-        <p className="text-sm text-gray-500 mb-6">
-          {mode === 'login' ? 'Einloggen' : 'Registrieren'}
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'var(--psl-wallpaper, linear-gradient(155deg,#d6d9df 0%,#c3c7d0 48%,#b6bccb 100%))',
+      fontFamily: 'var(--psl-font, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif)',
+      padding: 24,
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: 360,
+        background: 'var(--psl-content-bg, #fff)',
+        borderRadius: 16,
+        boxShadow: '0 28px 70px rgba(0,0,0,.28), 0 8px 22px rgba(0,0,0,.18), 0 0 0 0.5px rgba(0,0,0,.12)',
+        padding: 36,
+        textAlign: 'center',
+      }}>
+
+        {/* Brand mark */}
+        <div style={{
+          width: 56, height: 56, borderRadius: 14,
+          background: 'linear-gradient(165deg,#5c8c1a 0%,#466E0E 72%)',
+          display: 'grid', placeItems: 'center', margin: '0 auto 18px',
+          boxShadow: '0 2px 8px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.28)',
+          color: '#fff',
+        }}>
+          <svg viewBox="0 0 120 120" fill="none" style={{ width: '72%', height: '72%' }}>
+            <path d="M60 28 L102 46 L60 64 L18 46 Z" fill="currentColor" stroke="currentColor" strokeWidth="6" strokeLinejoin="round" />
+            <path d="M40 54 V68 C40 75, 80 75, 80 68 V54" stroke="currentColor" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+            <path d="M95 50 L95 70" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+            <circle cx="95" cy="76" r="4.5" fill="currentColor" />
+          </svg>
+        </div>
+
+        <h1 style={{ fontSize: 21, fontWeight: 700, letterSpacing: '-.4px', color: 'var(--psl-text, #1d1d1f)', margin: 0 }}>
+          Peer Skills Lab
+        </h1>
+        <p style={{ fontSize: 13, color: 'var(--psl-text-2, #5f5f63)', margin: '5px 0 24px' }}>
+          {mode === 'login' ? 'Peer-to-Peer Clinical Skills Training' : 'Konto erstellen'}
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 11, textAlign: 'left' }}>
           {mode === 'register' && (
             <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--psl-text-2, #5f5f63)' }}>Name</label>
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
                   placeholder="Vor- und Nachname"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"
+                  style={inputStyle}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Studienjahr</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--psl-text-2, #5f5f63)' }}>Studienjahr</label>
                 <select
                   value={studienjahr}
                   onChange={e => setStudienjahr(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-800 bg-white"
+                  style={inputStyle}
                 >
                   {[1, 2, 3, 4, 5, 6].map(y => (
                     <option key={y} value={y}>{y}. Jahr</option>
@@ -88,19 +133,29 @@ export default function Login() {
               </div>
             </>
           )}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--psl-text-2, #5f5f63)' }}>E-Mail</label>
             <input
               type="email"
               required
+              autoFocus={mode === 'login'}
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="name@beispiel.ch"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"
+              style={inputStyle}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--psl-text-2, #5f5f63)' }}>Passwort</label>
+              {mode === 'login' && (
+                <Link to="/forgot-password" style={{ fontSize: 11.5, color: 'var(--psl-text-3, #8a8a8e)', textDecoration: 'none' }}>
+                  Passwort vergessen?
+                </Link>
+              )}
+            </div>
             <input
               type="password"
               required
@@ -108,35 +163,45 @@ export default function Login() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="Mindestens 8 Zeichen"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"
+              style={inputStyle}
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+            <div style={{
+              fontSize: 12.5, color: '#d1413a',
+              background: 'rgba(209,65,58,.08)',
+              borderRadius: 7, padding: '8px 11px',
+            }}>
+              {error}
+            </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-slate-800 text-white rounded-lg py-2 text-sm font-medium hover:bg-slate-700 disabled:opacity-50 transition-colors"
+            style={{
+              height: 38, borderRadius: 7, border: 'none', cursor: loading ? 'default' : 'pointer',
+              background: 'var(--psl-accent, #466E0E)',
+              color: 'var(--psl-accent-text, #fff)',
+              fontSize: 14, fontWeight: 550,
+              opacity: loading ? 0.65 : 1,
+              marginTop: 4,
+              fontFamily: 'inherit',
+            }}
           >
-            {loading ? 'Bitte warten...' : mode === 'login' ? 'Einloggen' : 'Registrieren'}
+            {loading ? 'Bitte warten…' : mode === 'login' ? 'Anmelden' : 'Registrieren'}
           </button>
         </form>
 
-        <p className="mt-5 text-center text-sm text-gray-500">
+        <p style={{ marginTop: 18, fontSize: 12.5, color: 'var(--psl-text-3, #8a8a8e)', textAlign: 'center' }}>
           {mode === 'login' ? (
             <>Noch kein Konto?{' '}
-              <button onClick={() => setMode('register')} className="text-slate-800 font-medium hover:underline">
-                Registrieren
-              </button>
+              <button onClick={() => setMode('register')} style={linkBtnStyle}>Registrieren</button>
             </>
           ) : (
             <>Bereits registriert?{' '}
-              <button onClick={() => setMode('login')} className="text-slate-800 font-medium hover:underline">
-                Einloggen
-              </button>
+              <button onClick={() => setMode('login')} style={linkBtnStyle}>Einloggen</button>
             </>
           )}
         </p>
@@ -144,3 +209,21 @@ export default function Login() {
     </div>
   );
 }
+
+const inputStyle = {
+  width: '100%', height: 32, padding: '0 11px',
+  borderRadius: 7, fontSize: 13,
+  color: 'var(--psl-text, #1d1d1f)',
+  background: 'var(--psl-content-bg, #fff)',
+  boxShadow: 'inset 0 0 0 0.5px var(--psl-hairline-strong, rgba(0,0,0,.14))',
+  border: 'none', outline: 'none',
+  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+  boxSizing: 'border-box',
+};
+
+const linkBtnStyle = {
+  border: 'none', background: 'none', cursor: 'pointer',
+  fontSize: 12.5, fontWeight: 600,
+  color: 'var(--psl-accent, #466E0E)',
+  fontFamily: 'inherit',
+};

@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { getPool } = require('../db/database');
 const { authenticate, requireAuth, JWT_SECRET } = require('../middleware/authenticate');
 const { newId } = require('../utils');
+const { sendResetEmail } = require('../emailService');
 
 const router = express.Router();
 
@@ -101,6 +102,71 @@ router.patch('/me', requireAuth, async (req, res) => {
 
 // POST /api/auth/logout  (client just drops the token; this is a no-op)
 router.post('/logout', (req, res) => res.json({ ok: true }));
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'email erforderlich' });
+
+    const pool = getPool();
+    const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
+    const user = userResult.rows[0];
+
+    if (user) {
+      await pool.query(
+        'DELETE FROM password_reset_tokens WHERE user_id = $1 AND used_at IS NULL',
+        [user.id]
+      );
+      const token = newId();
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      await pool.query(
+        'INSERT INTO password_reset_tokens (id, user_id, token, expires_at) VALUES ($1, $2, $3, $4)',
+        [newId(), user.id, token, expiresAt.toISOString()]
+      );
+      const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:5173';
+      try {
+        await sendResetEmail(user.email, token, appBaseUrl);
+      } catch (mailErr) {
+        console.error('Reset-Mail fehlgeschlagen:', mailErr.message);
+      }
+    }
+
+    // Immer 200 – kein Hinweis ob E-Mail existiert
+    res.json({ message: 'Falls diese E-Mail-Adresse registriert ist, erhältst du in Kürze einen Link.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) return res.status(400).json({ error: 'token und password erforderlich' });
+
+    const pool = getPool();
+    const tokenResult = await pool.query(
+      'SELECT * FROM password_reset_tokens WHERE token = $1',
+      [token]
+    );
+    const resetToken = tokenResult.rows[0];
+
+    if (!resetToken) return res.status(400).json({ error: 'Ungültiger oder abgelaufener Link.' });
+    if (resetToken.used_at) return res.status(400).json({ error: 'Dieser Link wurde bereits verwendet.' });
+    if (new Date(resetToken.expires_at) < new Date()) return res.status(400).json({ error: 'Dieser Link ist abgelaufen. Bitte fordere einen neuen an.' });
+
+    const hash = await bcrypt.hash(password, 10);
+    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, resetToken.user_id]);
+    await pool.query('UPDATE password_reset_tokens SET used_at = NOW() WHERE id = $1', [resetToken.id]);
+
+    res.json({ message: 'Passwort erfolgreich geändert.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 function sanitize(user) {
   if (!user) return null;

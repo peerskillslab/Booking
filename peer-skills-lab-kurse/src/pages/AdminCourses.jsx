@@ -197,8 +197,7 @@ export default function AdminCourses() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-12">
+    <div className="psl-page">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Kurse verwalten</h1>
@@ -426,7 +425,6 @@ export default function AdminCourses() {
             )}
           </div>
         )}
-      </div>
 
       {/* Participants Dialog */}
       <Dialog open={participantsDialogOpen} onOpenChange={() => {

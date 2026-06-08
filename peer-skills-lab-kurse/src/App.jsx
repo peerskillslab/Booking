@@ -10,6 +10,8 @@ import AdminUsers from './pages/AdminUsers';
 import AdminStats from './pages/AdminStats';
 import MyProfile from './pages/MyProfile';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import AboutUs from './pages/AboutUs';
 import Datenschutz from './pages/Datenschutz';
 import Impressum from './pages/Impressum';
@@ -17,6 +19,7 @@ import FAQ from './pages/FAQ';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { useInactivityLogout } from '@/lib/useInactivityLogout';
+import PublicLayout from './PublicLayout';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -95,10 +98,12 @@ function App() {
           <Routes>
             {/* Public routes — accessible without login */}
             <Route path="/login" element={<Login />} />
-            <Route path="/AboutUs" element={<LayoutWrapper currentPageName="AboutUs"><PageTransitionWrapper><AboutUs /></PageTransitionWrapper></LayoutWrapper>} />
-            <Route path="/Datenschutz" element={<LayoutWrapper currentPageName="Datenschutz"><PageTransitionWrapper><Datenschutz /></PageTransitionWrapper></LayoutWrapper>} />
-            <Route path="/Impressum" element={<LayoutWrapper currentPageName="Impressum"><PageTransitionWrapper><Impressum /></PageTransitionWrapper></LayoutWrapper>} />
-            <Route path="/FAQ" element={<LayoutWrapper currentPageName="FAQ"><PageTransitionWrapper><FAQ /></PageTransitionWrapper></LayoutWrapper>} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/AboutUs" element={<PublicLayout><PageTransitionWrapper><AboutUs /></PageTransitionWrapper></PublicLayout>} />
+            <Route path="/Datenschutz" element={<PublicLayout><PageTransitionWrapper><Datenschutz /></PageTransitionWrapper></PublicLayout>} />
+            <Route path="/Impressum" element={<PublicLayout><PageTransitionWrapper><Impressum /></PageTransitionWrapper></PublicLayout>} />
+            <Route path="/FAQ" element={<PublicLayout><PageTransitionWrapper><FAQ /></PageTransitionWrapper></PublicLayout>} />
             <Route path="/*" element={<AuthenticatedApp />} />
           </Routes>
         </Router>

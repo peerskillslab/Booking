@@ -76,8 +76,7 @@ export default function AdminUsers() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 md:px-6 py-12">
+    <div className="psl-page">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <Users className="w-5 h-5 text-primary" />
@@ -175,7 +174,6 @@ export default function AdminUsers() {
             })}
           </div>
         )}
-      </div>
 
       {/* Role change confirmation dialog */}
       <AlertDialog open={!!pendingRoleChange} onOpenChange={(open) => { if (!open) setPendingRoleChange(null); }}>

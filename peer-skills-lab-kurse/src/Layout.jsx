@@ -1,258 +1,201 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { peerskillslab } from "@/api/peerskillslabClient";
-import { Button } from "@/components/ui/button";
-import { BookOpen, CalendarCheck, Settings, LogOut, Menu, X, User, TrendingUp, PlusCircle, ArrowLeft, Info } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/AuthContext";
 
-// Root pages that show the logo; anything else shows a Back button on mobile
-const ROOT_PAGES = ["/", "/MyBookings", "/TutorDashboard", "/MyProfile", "/AdminCourses", "/AdminUsers", "/AdminStats", "/AboutUs", "/Datenschutz", "/Impressum", "/FAQ"];
+// ── Icons ────────────────────────────────────────────────────────────────────
+const Ico = ({ d, ...p }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
+    strokeLinecap="round" strokeLinejoin="round" {...p}>
+    <path d={d} />
+  </svg>
+);
 
+const icons = {
+  book:     "M4 5.5A1.5 1.5 0 0 1 5.5 4H13a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5.5A1.5 1.5 0 0 0 4 20.5z M4 17.5A1.5 1.5 0 0 1 5.5 16H14",
+  bookmark: "M6 4.5h12v16l-6-4-6 4z",
+  gear:     "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M12 2.5v3M12 18.5v3M21.5 12h-3M5.5 12h-3M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1M18.7 18.7l-2.1-2.1M7.4 7.4 5.3 5.3",
+  pencil:   "M4 20l1-4L16 5a2 2 0 0 1 3 3L8 19z M14 7l3 3",
+  users:    "M9 8a3.2 3.2 0 1 0 0-6.4A3.2 3.2 0 0 0 9 8z M3.5 19a5.5 5.5 0 0 1 11 0 M16 5.5a3 3 0 0 1 0 5.6M16.5 19a5.5 5.5 0 0 0-1.4-3.7",
+  chart:    "M4 20V4M20 20H4 M7 12h3v5H7z M12 8h3v9h-3z M17 5h3v12h-3z",
+  logout:   "M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M9 16l4-4-4-4M13 12H3",
+  sun:      "M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z M12 2v2.5M12 19.5V22M22 12h-2.5M4.5 12H2M19 5l-1.8 1.8M6.8 17.2 5 19M19 19l-1.8-1.8M6.8 6.8 5 5",
+  moon:     "M20 14.5A8 8 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z",
+};
+
+function NavIcon({ name }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
+      strokeLinecap="round" strokeLinejoin="round" style={{ width: 19, height: 19, flexShrink: 0 }}>
+      {icons[name]?.split(" M ").map((seg, i) => (
+        <path key={i} d={i === 0 ? seg : "M " + seg} />
+      ))}
+    </svg>
+  );
+}
+
+// ── Brand mark (Doktorhut) ────────────────────────────────────────────────────
+function BrandMark({ size = 26 }) {
+  return (
+    <div className="psl-brand-mark" style={{ width: size, height: size, borderRadius: size * 0.27 }}>
+      <svg viewBox="0 0 120 120" fill="none" className="psl-brand-glyph">
+        <path d="M60 28 L102 46 L60 64 L18 46 Z" fill="currentColor" stroke="currentColor" strokeWidth="6" strokeLinejoin="round" />
+        <path d="M40 54 V68 C40 75, 80 75, 80 68 V54" stroke="currentColor" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        <path d="M95 50 L95 70" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+        <circle cx="95" cy="76" r="4.5" fill="currentColor" />
+      </svg>
+    </div>
+  );
+}
+
+// ── Theme logic ───────────────────────────────────────────────────────────────
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  document.documentElement.classList.toggle("dark", t === "dark");
+}
+
+function useTheme() {
+  const stored = typeof localStorage !== "undefined" ? localStorage.getItem("psl-theme") : null;
+  const [theme, setThemeState] = useState(stored || "light");
+
+  useEffect(() => { applyTheme(theme); }, [theme]);
+
+  const toggle = useCallback(() => {
+    setThemeState(prev => {
+      const next = prev === "dark" ? "light" : "dark";
+      localStorage.setItem("psl-theme", next);
+      return next;
+    });
+  }, []);
+
+  return [theme, toggle];
+}
+
+// ── Nav model ─────────────────────────────────────────────────────────────────
+function navGroups(user) {
+  return [
+    {
+      label: "Lernen",
+      items: [
+        { label: "Kurse",          path: "/",           icon: "book" },
+        { label: "Meine Buchungen",path: "/MyBookings",  icon: "bookmark" },
+      ],
+    },
+    ...(user?.role === "admin" || user?.role === "tutor" ? [{
+      label: "Verwaltung",
+      items: [
+        { label: "Kurse verwalten",   path: "/AdminCourses", icon: "gear" },
+        { label: "Kurs ausschreiben", path: "/TutorDashboard", icon: "pencil" },
+        ...(user?.role === "admin" ? [
+          { label: "Nutzer:innen",    path: "/AdminUsers",  icon: "users" },
+          { label: "Statistiken",     path: "/AdminStats",  icon: "chart" },
+        ] : []),
+      ],
+    }] : []),
+  ];
+}
+
+// ── Layout ────────────────────────────────────────────────────────────────────
 export default function Layout({ children, currentPageName }) {
-  const { user, navigateToLogin } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [theme, toggleTheme] = useTheme();
 
-  const isRootPage = ROOT_PAGES.includes(location.pathname);
+  const groups = navGroups(user);
+  const initials = user?.full_name
+    ? user.full_name.split(" ").map(s => s[0]).join("").slice(0, 2).toUpperCase()
+    : user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
-  const bottomTabs = [
-    { label: "Kurse", path: "/", icon: BookOpen },
-    { label: "Buchungen", path: "/MyBookings", icon: CalendarCheck },
-    ...(user?.role === "admin" || user?.role === "tutor" ? [{ label: "Kurs ausschreiben", path: "/TutorDashboard", icon: PlusCircle }] : []),
-    { label: "Profil", path: "/MyProfile", icon: User },
-  ];
-
-  const handleTabClick = (e, path) => {
-    if (location.pathname === path) {
-      e.preventDefault();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  const navItems = user ? [
-    { label: "Kurse", page: "Home", icon: BookOpen },
-    { label: "Meine Buchungen", page: "MyBookings", icon: CalendarCheck },
-    ...(user?.role === "admin" || user?.role === "tutor" ? [{ label: "Kurs ausschreiben", page: "TutorDashboard", icon: PlusCircle }] : []),
-    ...(user?.role === "admin" ? [
-      { label: "Verwaltung", page: "AdminCourses", icon: Settings },
-      { label: "Nutzer:innen", page: "AdminUsers", icon: User },
-      { label: "Statistiken", page: "AdminStats", icon: TrendingUp },
-    ] : []),
-  ] : [];
-
+  const isDark = theme === "dark";
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/40" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-        <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 md:h-16 lg:h-20 flex items-center justify-between">
-          {/* On mobile: show Back button on sub-pages, logo on root pages */}
-          <div className="flex items-center">
-            {!isRootPage && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden mr-1 -ml-2"
-                onClick={() => navigate(-1)}
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-            )}
-            <Link to={createPageUrl("Home")} className="flex items-center">
-              <img
-                src="/images/PSL_Logo.jpeg.png"
-                alt="Peer Skills Lab"
-                className="h-10 md:h-12 lg:h-16 w-auto object-contain"
-              />
-            </Link>
-            <Link to={createPageUrl("AboutUs")} className="hidden md:block ml-2">
-              <Button
-                variant={currentPageName === "AboutUs" ? "secondary" : "ghost"}
-                size="sm"
-                className="text-sm lg:text-base px-3"
-              >
-                <Info className="w-4 h-4 mr-1.5" />
-                Über uns
-              </Button>
-            </Link>
+    <div className="psl-app">
+      {/* ── Sidebar ── */}
+      <aside className="psl-sidebar">
+        {/* Traffic lights */}
+        <div className="psl-traffic">
+          <span className="psl-light r" />
+          <span className="psl-light y" />
+          <span className="psl-light g" />
+        </div>
+
+        {/* Brand */}
+        <div className="psl-brand">
+          <BrandMark />
+          <div>
+            <div className="psl-brand-name">Peer Skills Lab</div>
+            <div className="psl-brand-sub">Clinical Skills Training</div>
           </div>
+        </div>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link key={item.page} to={createPageUrl(item.page)}>
-                <Button
-                  variant={currentPageName === item.page ? "secondary" : "ghost"}
-                  size="sm"
-                  className="text-sm lg:text-base px-3"
-                >
-                  <item.icon className="w-4 h-4 mr-1.5" />
-                  {item.label}
-                </Button>
-              </Link>
-            ))}
-          </nav>
-
-          <div className="hidden md:flex items-center gap-3">
-            {!user && (
-              <div className="flex items-center gap-2">
-                <span style={{ fontSize: 13, fontWeight: 700, color: "#4A5A30", whiteSpace: "nowrap" }}>
-                  Jetzt anmelden & Kurse buchen
-                </span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#466E0E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            )}
-            {user ? (
-              <>
-                <Link to="/MyProfile">
-                  <Button variant="ghost" size="sm" className="text-sm lg:text-base px-3">
-                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center mr-2">
-                      <User className="w-3 h-3 text-primary" />
+        {/* Navigation */}
+        <nav className="psl-nav">
+          {groups.map(group => (
+            <div key={group.label}>
+              <div className="psl-nav-group-label">{group.label}</div>
+              {group.items.map(item => {
+                const active = location.pathname === item.path ||
+                  (item.path !== "/" && location.pathname.startsWith(item.path));
+                return (
+                  <Link key={item.path} to={item.path} style={{ textDecoration: "none" }}>
+                    <div className={`psl-nav-item${active ? " active" : ""}`}>
+                      <NavIcon name={item.icon} />
+                      <span>{item.label}</span>
                     </div>
-                    {user.full_name || user.email}
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => peerskillslab.auth.logout()}
-                  className="text-muted-foreground"
-                >
-                  <LogOut className="w-4 h-4 lg:w-5 lg:h-5" />
-                </Button>
-              </>
-            ) : (
-              <Link to="/login">
-                <Button size="sm" className="text-sm lg:text-base px-3">Anmelden</Button>
-              </Link>
-            )}
-          </div>
-
-          {/* Mobile annotation - only when not logged in */}
-          {!user && (
-            <div className="md:hidden flex items-center gap-0.5" style={{ marginRight: '-30px' }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#4A5A30", whiteSpace: "nowrap" }}>
-                Jetzt anmelden & Kurse buchen
-              </span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#466E0E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+                  </Link>
+                );
+              })}
             </div>
-          )}
+          ))}
+        </nav>
 
-          {/* Mobile menu button */}
+        {/* Footer */}
+        <div className="psl-sidebar-foot">
+          <span className="psl-avatar">{initials}</span>
+          <div>
+            <div className="psl-foot-name">{user?.full_name || user?.email || "Gast"}</div>
+            <div className="psl-foot-role" style={{ textTransform: "capitalize" }}>
+              {user?.role === "admin" ? "Admin" : user?.role === "tutor" ? "Tutor:in" : "Student:in"}
+            </div>
+          </div>
+          <button className="psl-foot-btn" onClick={() => peerskillslab.auth.logout()} title="Abmelden">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
+              strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M9 16l4-4-4-4M13 12H3" />
+            </svg>
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Main ── */}
+      <div className="psl-content">
+        {/* Toolbar */}
+        <div className="psl-toolbar">
+          <span className="psl-tb-title">{currentPageName || "Peer Skills Lab"}</span>
+          <span className="psl-tb-spacer" />
+          <div className="psl-tb-divider" />
           <button
-            className="md:hidden p-2 select-none"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="psl-tb-icon-btn"
+            onClick={toggleTheme}
+            title={isDark ? "Hell darstellen" : "Dunkel darstellen"}
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
+              strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+              {isDark
+                ? <path d="M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z M12 2v2.5M12 19.5V22M22 12h-2.5M4.5 12H2M19 5l-1.8 1.8M6.8 17.2 5 19M19 19l-1.8-1.8M6.8 6.8 5 5" />
+                : <path d="M20 14.5A8 8 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z" />
+              }
+            </svg>
           </button>
         </div>
 
-        {/* Mobile menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="md:hidden border-t border-border/40 overflow-hidden"
-            >
-              <nav className="p-4 space-y-1">
-                <Link to={createPageUrl("AboutUs")} onClick={() => setMobileMenuOpen(false)}>
-                  <Button
-                    variant={currentPageName === "AboutUs" ? "secondary" : "ghost"}
-                    className="w-full justify-start"
-                  >
-                    <Info className="w-4 h-4 mr-2" />
-                    Über uns
-                  </Button>
-                </Link>
-                {navItems.map((item) => (
-                  <Link
-                    key={item.page}
-                    to={createPageUrl(item.page)}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Button
-                      variant={currentPageName === item.page ? "secondary" : "ghost"}
-                      className="w-full justify-start"
-                    >
-                      <item.icon className="w-4 h-4 mr-2" />
-                      {item.label}
-                    </Button>
-                  </Link>
-                ))}
-                <div className="pt-2 border-t border-border/40 space-y-2">
-                  {user ? (
-                    <>
-                      <Link to="/MyProfile" onClick={() => setMobileMenuOpen(false)} className="w-full block">
-                        <Button variant="ghost" className="w-full justify-start">
-                          <User className="w-4 h-4 mr-2" />
-                          {user.full_name || user.email}
-                        </Button>
-                      </Link>
-                      <Button variant="ghost" className="w-full justify-start" onClick={() => peerskillslab.auth.logout()}>
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Abmelden
-                      </Button>
-                    </>
-                  ) : (
-                    <Link to="/login" className="w-full block" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full">Anmelden</Button>
-                    </Link>
-                  )}
-                </div>
-              </nav>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </header>
-
-      {/* Main content - add bottom padding on mobile for tab bar */}
-      <main style={{ paddingBottom: user ? 'calc(64px + env(safe-area-inset-bottom))' : undefined }}>
-        {children}
-      </main>
-
-      {/* Global Footer – desktop only */}
-      <footer className="hidden md:flex border-t border-border/40 px-14 py-8 justify-between items-center text-sm text-muted-foreground">
-        <div className="flex items-center gap-6">
-          <span>Peer Skills Lab</span>
-          <Link to="/Datenschutz" className="hover:text-foreground transition-colors">Datenschutz</Link>
-          <Link to="/Impressum" className="hover:text-foreground transition-colors">Impressum</Link>
+        {/* Page content */}
+        <div className="psl-scroll">
+          {children}
         </div>
-        <span>Made with ♥ by med students.</span>
-      </footer>
-
-      {/* Bottom Tab Bar – mobile only */}
-      {user && (
-        <nav
-          className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border/40 flex"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-        >
-          {bottomTabs.map((tab) => {
-            const isActive = location.pathname === tab.path;
-            return (
-              <Link
-                key={tab.path}
-                to={tab.path}
-                onClick={(e) => handleTabClick(e, tab.path)}
-                className={`flex-1 flex flex-col items-center justify-center py-2 gap-1 select-none transition-colors ${
-                  isActive ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                <tab.icon className="w-5 h-5" />
-                <span className="text-[10px] font-semibold">{tab.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-      )}
+      </div>
     </div>
   );
 }
