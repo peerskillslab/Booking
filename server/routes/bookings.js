@@ -52,8 +52,9 @@ router.get('/:id', requireAuth, async (req, res) => {
 
 // POST /api/entities/bookings
 router.post('/', requireAuth, async (req, res) => {
+  const pool = getPool();
+  const client = await pool.connect();
   try {
-    const pool = getPool();
     const { course_id, course_title, user_email } = req.body;
     if (!course_id || !course_title || !user_email) {
       return res.status(400).json({ error: 'course_id, course_title, user_email sind erforderlich' });
@@ -64,9 +65,29 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'forbidden' });
     }
 
+    const status = req.body.status || 'confirmed';
     const id = newId();
     const now = new Date().toISOString();
-    const result = await pool.query(`
+
+    await client.query('BEGIN');
+
+    if (status === 'confirmed') {
+      const courseRes = await client.query(
+        'SELECT current_participants, max_participants FROM courses WHERE id = $1 FOR UPDATE',
+        [course_id]
+      );
+      if (!courseRes.rows[0]) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'course_not_found' });
+      }
+      const course = courseRes.rows[0];
+      if (course.current_participants >= course.max_participants) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({ error: 'course_full' });
+      }
+    }
+
+    const result = await client.query(`
       INSERT INTO bookings
         (id, course_id, course_title, user_email, user_name, status, notes, price_paid, created_by, created_date)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
@@ -74,16 +95,27 @@ router.post('/', requireAuth, async (req, res) => {
     `, [
       id, course_id, course_title, user_email,
       req.body.user_name || null,
-      req.body.status || 'confirmed',
+      status,
       req.body.notes || null,
       req.body.price_paid ?? 0,
       req.user.email, now
     ]);
 
+    if (status === 'confirmed') {
+      await client.query(
+        'UPDATE courses SET current_participants = current_participants + 1 WHERE id = $1',
+        [course_id]
+      );
+    }
+
+    await client.query('COMMIT');
     res.status(201).json(result.rows[0]);
   } catch (err) {
+    try { await client.query('ROLLBACK'); } catch {}
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
   }
 });
 
@@ -121,7 +153,33 @@ router.patch('/:id', requireAuth, async (req, res) => {
     values.push(req.params.id);
     const placeholderCount = keys.length;
 
-    await pool.query(`UPDATE bookings SET ${setClause} WHERE id = $${placeholderCount + 1}`, values);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(`UPDATE bookings SET ${setClause} WHERE id = $${placeholderCount + 1}`, values);
+
+      // Keep current_participants in sync when status changes
+      if (updates.status && updates.status !== booking.status) {
+        if (updates.status === 'cancelled' && booking.status === 'confirmed') {
+          await client.query(
+            'UPDATE courses SET current_participants = GREATEST(0, current_participants - 1) WHERE id = $1',
+            [booking.course_id]
+          );
+        } else if (updates.status === 'confirmed' && booking.status === 'cancelled') {
+          await client.query(
+            'UPDATE courses SET current_participants = current_participants + 1 WHERE id = $1',
+            [booking.course_id]
+          );
+        }
+      }
+
+      await client.query('COMMIT');
+    } catch (err) {
+      try { await client.query('ROLLBACK'); } catch {}
+      throw err;
+    } finally {
+      client.release();
+    }
 
     const resultFinal = await pool.query('SELECT * FROM bookings WHERE id = $1', [req.params.id]);
     res.json(resultFinal.rows[0]);
@@ -141,6 +199,14 @@ router.delete('/:id', requireAuth, async (req, res) => {
     if (!canWriteBooking(req.user, booking)) return res.status(403).json({ error: 'forbidden' });
 
     await pool.query('DELETE FROM bookings WHERE id = $1', [req.params.id]);
+
+    if (booking.status === 'confirmed') {
+      await pool.query(
+        'UPDATE courses SET current_participants = GREATEST(0, current_participants - 1) WHERE id = $1',
+        [booking.course_id]
+      );
+    }
+
     res.json({ ok: true });
   } catch (err) {
     console.error(err);

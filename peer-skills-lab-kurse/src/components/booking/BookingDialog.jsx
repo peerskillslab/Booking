@@ -34,31 +34,16 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
       });
       if (allBookings.length > 0) throw new Error("DUPLICATE");
 
-      // Increment participant count first (atomically checks capacity)
-      await peerskillslab.functions.invoke("updateCourseParticipants", {
+      // Create booking — backend checks capacity and increments current_participants atomically
+      await peerskillslab.entities.Booking.create({
         course_id: course.id,
-        increment: 1,
+        course_title: course.title,
+        user_email: user?.email || "",
+        user_name: name,
+        status: "confirmed",
+        notes,
+        price_paid: 0,
       });
-
-      try {
-        // Then create the booking
-        await peerskillslab.entities.Booking.create({
-          course_id: course.id,
-          course_title: course.title,
-          user_email: user?.email || "",
-          user_name: name,
-          status: "confirmed",
-          notes,
-          price_paid: 0,
-        });
-      } catch (err) {
-        // If booking creation fails, rollback the participant count
-        await peerskillslab.functions.invoke("updateCourseParticipants", {
-          course_id: course.id,
-          increment: -1,
-        });
-        throw err;
-      }
     },
 
     // Optimistic update: bump participant count immediately
@@ -90,6 +75,7 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
     onSuccess: () => {
       setStep("success");
       queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: ["course"] });
       queryClient.invalidateQueries({ queryKey: ["myBookings"] });
       queryClient.invalidateQueries({ queryKey: ["adminCourses"] });
       if (onBooked) onBooked();

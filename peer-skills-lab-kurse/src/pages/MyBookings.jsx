@@ -7,7 +7,7 @@ import PullToRefreshIndicator from "@/components/ui/PullToRefreshIndicator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Loader2, BookOpen, XCircle, ExternalLink, AlertTriangle, Download } from "lucide-react";
+import { Calendar, Clock, Loader2, BookOpen, XCircle, ExternalLink, AlertTriangle, Download, RotateCcw } from "lucide-react";
 import { downloadICalFile } from "@/lib/icalGenerator";
 import { format, isBefore, subHours } from "date-fns";
 import { de } from "date-fns/locale";
@@ -135,10 +135,6 @@ export default function MyBookings() {
   const cancelMutation = useMutation({
     mutationFn: async (booking) => {
       await peerskillslab.entities.Booking.update(booking.id, { status: "cancelled" });
-      await peerskillslab.functions.invoke("updateCourseParticipants", {
-        course_id: booking.course_id,
-        increment: -1,
-      });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["myBookings"] });
@@ -153,16 +149,38 @@ export default function MyBookings() {
     },
   });
 
-  const { upcomingBookings, pastBookings } = useMemo(() => {
+  const { upcomingBookings, cancelledBookings, pastBookings } = useMemo(() => {
     const now = new Date();
     const upcoming = [];
     const past = [];
 
+    // Courses with an active confirmed booking — suppress cancelled entries for these
+    const confirmedCourseIds = new Set(
+      bookings.filter((b) => b.status === "confirmed").map((b) => b.course_id)
+    );
+
+    // Deduplicate cancelled: one entry per course, only future courses
+    const cancelledByCourse = {};
+
     bookings.forEach((booking) => {
+      if (booking.status === "cancelled") {
+        if (!confirmedCourseIds.has(booking.course_id)) {
+          const course = courseMap[booking.course_id];
+          const courseStart = getCourseStartDate(course);
+          if (!courseStart || !isBefore(courseStart, now)) {
+            if (!cancelledByCourse[booking.course_id]) {
+              cancelledByCourse[booking.course_id] = booking;
+            }
+          }
+        }
+        return;
+      }
+
       if (booking.status !== "confirmed") {
         upcoming.push(booking);
         return;
       }
+
       const course = courseMap[booking.course_id];
       if (!course) {
         upcoming.push(booking);
@@ -176,7 +194,11 @@ export default function MyBookings() {
       }
     });
 
-    return { upcomingBookings: upcoming, pastBookings: past };
+    return {
+      upcomingBookings: upcoming,
+      cancelledBookings: Object.values(cancelledByCourse),
+      pastBookings: past,
+    };
   }, [bookings, courseMap]);
 
   if (!user) return null;
@@ -192,7 +214,7 @@ export default function MyBookings() {
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
           </div>
-        ) : bookings.length === 0 ? (
+        ) : bookings.length === 0 || (upcomingBookings.length === 0 && cancelledBookings.length === 0 && pastBookings.length === 0) ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
             <BookOpen className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-foreground mb-2">Noch keine Buchungen</h3>
@@ -280,6 +302,50 @@ export default function MyBookings() {
                             status={STATUS_LABELS[booking.status] || STATUS_LABELS.pending}
                             action={action}
                             lowParticipantsMessage={lowParticipantsMessage}
+                          />
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
+
+            {cancelledBookings.length > 0 && (
+              <div>
+                <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-destructive" />
+                  Stornierte Buchungen
+                </h2>
+                <div className="space-y-4">
+                  <AnimatePresence>
+                    {cancelledBookings.map((booking, i) => {
+                      const course = courseMap[booking.course_id];
+                      const action = (
+                        <Link to={createPageUrl("CourseDetail") + `?id=${booking.course_id}`}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-primary border-primary/30 hover:bg-primary/10"
+                          >
+                            <RotateCcw className="w-4 h-4 mr-1.5" />
+                            Wieder anmelden
+                          </Button>
+                        </Link>
+                      );
+                      return (
+                        <motion.div
+                          key={booking.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.05 }}
+                        >
+                          <BookingRow
+                            booking={booking}
+                            course={course}
+                            status={STATUS_LABELS.cancelled}
+                            action={action}
+                            lowParticipantsMessage={null}
                           />
                         </motion.div>
                       );
