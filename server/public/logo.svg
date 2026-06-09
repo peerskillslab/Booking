@@ -1,0 +1,8 @@
+<svg viewBox="0 0 1024 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Green text: "Peer Skills Lab" -->
+  <text x="512" y="256" font-family="Arial, sans-serif" font-size="180" font-weight="bold" fill="#4a7c3d" text-anchor="middle" dominant-baseline="middle">
+    Peer Skills Lab
+  </text>
+  <!-- Blue heart (approximate) -->
+  <path d="M 800 200 Q 850 150 900 150 Q 950 150 950 200 Q 950 250 800 350 Q 650 250 650 200 Q 650 150 700 150 Q 750 150 800 200" fill="#4a8a99"/>
+</svg>

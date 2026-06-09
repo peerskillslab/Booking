@@ -1,20 +1,34 @@
+console.log('=== Starting PeerSkills Server ===');
+
 try {
   require('dotenv').config();
+  console.log('✓ dotenv loaded');
 } catch (err) {
   console.log('Note: .env file not found (OK in production)');
 }
 
+console.log('Loading dependencies...');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { initDb } = require('./db/database');
+
+console.log('Loading database module...');
+let initDb;
+try {
+  const db = require('./db/database');
+  initDb = db.initDb;
+  console.log('✓ Database module loaded');
+} catch (err) {
+  console.error('✗ Database module failed:', err.message);
+  process.exit(1);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-console.log(`Starting PeerSkills Server...`);
 console.log(`Port: ${PORT}`);
-console.log(`DATABASE_URL: ${process.env.DATABASE_URL ? 'configured' : 'NOT SET'}`);
+console.log(`Database: ${process.env.DATABASE_URL ? 'configured' : 'NOT SET'}`);
+console.log('=== Setup complete ===');
 
 // CORS nur für API-Routen: erlaubt localhost (dev) und jede https-Domain (ngrok, prod)
 const apiCors = cors({
@@ -46,10 +60,17 @@ app.use('/api/entities/monthlystatshots', apiCors, require('./routes/monthlyStat
 app.use('/api/functions',                 apiCors, require('./routes/functions'));
 
 // --- Statische Frontend-Dateien (kein CORS nötig) ---
-const DIST = path.join(__dirname, '..', 'peer-skills-lab-kurse', 'dist');
+const DIST = path.join(__dirname, 'public');
+console.log(`Frontend path: ${DIST}`);
+console.log(`Frontend exists: ${require('fs').existsSync(DIST)}`);
+
 if (require('fs').existsSync(DIST)) {
+  console.log('✓ Serving frontend from', DIST);
   app.use(express.static(DIST));
   app.get('*', (req, res) => res.sendFile(path.join(DIST, 'index.html')));
+} else {
+  console.warn('⚠ Frontend not found at', DIST);
+  app.get('/', (req, res) => res.send('Frontend not found'));
 }
 
 // --- Start ---

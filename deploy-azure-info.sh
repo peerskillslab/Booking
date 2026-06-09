@@ -74,10 +74,16 @@ echo "Schritt 6: Frontend bauen"
 cd peer-skills-lab-kurse && npm install && npm run build && cd ..
 
 echo ""
+echo "Schritt 6b: Frontend in server-Ordner kopieren"
+mkdir -p server/public
+cp -r peer-skills-lab-kurse/dist/* server/public/
+
+echo ""
 echo "Schritt 7: Code zippen und deployen"
 cd server
-zip -r ../deploy.zip . -x "node_modules/*" -x "db/peerskills.db"
+zip -r ../deploy.zip . -x "node_modules/*" "db/peerskills.db" "public/*"
 cd ..
+zip -r deploy.zip server/public
 az webapp deployment source config-zip \
   --resource-group $RESOURCE_GROUP \
   --name $APP_NAME \
