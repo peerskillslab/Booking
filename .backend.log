@@ -1,0 +1,45 @@
+
+> peerskills-server@1.0.0 dev
+> node --watch index.js
+
+(node:805) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PeerSkills Server läuft auf http://localhost:3001
+✗ Database connection failed: Error: Connection terminated due to connection timeout
+    at /Users/simonschneider/Booking/server/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async initDb (/Users/simonschneider/Booking/server/db/database.js:26:20) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (/Users/simonschneider/Booking/server/node_modules/pg/lib/client.js:180:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (/Users/simonschneider/Booking/server/node_modules/pg/lib/connection.js:61:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:350:12)
+}
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+Error: Connection terminated due to connection timeout
+    at /Users/simonschneider/Booking/server/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async initDb (/Users/simonschneider/Booking/server/db/database.js:26:20) {
+  [cause]: Error: Connection terminated unexpectedly
+      at Connection.<anonymous> (/Users/simonschneider/Booking/server/node_modules/pg/lib/client.js:180:73)
+      at Object.onceWrapper (node:events:630:28)
+      at Connection.emit (node:events:509:28)
+      at Socket.<anonymous> (/Users/simonschneider/Booking/server/node_modules/pg/lib/connection.js:61:12)
+      at Socket.emit (node:events:509:28)
+      at TCP.<anonymous> (node:net:350:12)
+}
+
+Node.js v24.15.0
+Failed running 'index.js'. Waiting for file changes before restarting...
