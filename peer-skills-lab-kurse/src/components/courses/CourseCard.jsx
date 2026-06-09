@@ -5,70 +5,81 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
 const CAT_COLORS = {
-  "CST Abdomen":        "#C0563B",
-  "CST HKL":            "#C0394B",
-  "CST Gynäkologie":    "#B5519E",
-  "CST Lunge":          "#3E86C7",
-  "CST Neurologie":     "#7A5CC4",
-  "CST Bewegungsapparat": "#2F9E6E",
-  "POCUS":              "#C9962B",
-  "Venenpunktion":      "#2D8C9E",
-  "YSSA":               "#8A8D2F",
+  "CST Abdomen":           "#C0563B",
+  "CST HKL":               "#C0394B",
+  "CST Gynäkologie":       "#B5519E",
+  "CST Lunge":             "#3E86C7",
+  "CST Neurologie":        "#7A5CC4",
+  "CST Bewegungsapparat":  "#2F9E6E",
+  "POCUS":                 "#C9962B",
+  "Venenpunktion":         "#2D8C9E",
+  "YSSA":                  "#8A8D2F",
 };
 
-function bannerBg(category) {
-  const c = CAT_COLORS[category] || "#466E0E";
-  return `linear-gradient(140deg, ${c}, color-mix(in srgb, ${c} 62%, #000 18%))`;
+const LEVEL_LABELS = {
+  "Anfänger":       "ANFÄNGER",
+  "Fortgeschritten":"FORTGESCHRITTEN",
+  "Experte":        "EXPERTE",
+  "Alle Level":     "ALLE LEVEL",
+};
+
+function initials(name) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 export default function CourseCard({ course }) {
-  const spotsLeft = (course.max_participants || 0) - (course.current_participants || 0);
-  const isFull = spotsLeft <= 0;
+  const current = course.current_participants || 0;
+  const max = course.max_participants || 0;
+  const isFull = max > 0 && current >= max;
+  const pct = max > 0 ? Math.min(100, (current / max) * 100) : 0;
   const catColor = CAT_COLORS[course.category] || "#466E0E";
 
-  const dateStr = course.date
-    ? (() => { try { return format(new Date(course.date), "dd. MMM yyyy", { locale: de }); } catch { return course.date; } })()
-    : null;
+  let dayAbbr = null, dayNum = null, monthAbbr = null;
+  if (course.date) {
+    try {
+      const d = new Date(course.date);
+      dayAbbr  = format(d, "EEE", { locale: de }).toUpperCase().replace(".", "");
+      dayNum   = format(d, "d");
+      monthAbbr = format(d, "MMM", { locale: de }).toUpperCase().replace(".", "");
+    } catch {}
+  }
+
+  const levelLabel = course.level ? (LEVEL_LABELS[course.level] || course.level.toUpperCase()) : null;
 
   return (
     <Link to={createPageUrl("CourseDetail") + `?id=${course.id}`} style={{ textDecoration: "none" }}>
-      <div className="psl-course-card">
-        {/* Banner */}
-        <div className="psl-cc-banner" style={{ background: bannerBg(course.category) }}>
-          {course.image_url ? (
-            <img src={course.image_url} alt={course.title}
-              style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }} />
-          ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.4"
-              strokeLinecap="round" strokeLinejoin="round"
-              style={{ width: 36, height: 36, opacity: 0.8 }}>
-              <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H13a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5.5A1.5 1.5 0 0 0 4 20.5z" />
-              <path d="M4 17.5A1.5 1.5 0 0 1 5.5 16H14" />
-            </svg>
+      <div className="psl-course-card" style={{ "--cat-color": catColor }}>
+
+        {/* Header: date box + badges */}
+        <div className="psl-cc-header">
+          {dayAbbr && (
+            <div className="psl-cc-datebox">
+              <span className="psl-cc-day-abbr">{dayAbbr}</span>
+              <span className="psl-cc-day-num">{dayNum}.</span>
+              <span className="psl-cc-month">{monthAbbr}</span>
+            </div>
           )}
-          <span className="psl-cc-cat">{course.category}</span>
-          <span className="psl-cc-status" style={{ color: isFull ? "#b1442f" : "#1d6b2f" }}>
-            {isFull ? "Voll" : "Frei"}
-          </span>
+          <div className="psl-cc-badges">
+            <span className="psl-cc-cat-badge" style={{ color: catColor, background: `color-mix(in srgb, ${catColor} 14%, transparent)` }}>
+              <span className="psl-cc-cat-dot" style={{ background: catColor }} />
+              {course.category}
+            </span>
+            {levelLabel && (
+              <span className="psl-cc-level-badge">{levelLabel}</span>
+            )}
+          </div>
         </div>
 
         {/* Body */}
         <div className="psl-cc-body">
-          <div>
-            <div className="psl-cc-title">{course.title}</div>
-            {course.short_description && (
-              <div className="psl-cc-desc">{course.short_description}</div>
-            )}
-          </div>
+          <div className="psl-cc-title">{course.title}</div>
+          {course.short_description && (
+            <div className="psl-cc-desc">{course.short_description}</div>
+          )}
           <div className="psl-cc-meta">
-            {dateStr && (
-              <div className="psl-cc-meta-row">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3.5" y="4.5" width="17" height="16" rx="2.5" /><path d="M3.5 9h17M8 2.5v4M16 2.5v4" />
-                </svg>
-                {dateStr}
-              </div>
-            )}
             {course.time && (
               <div className="psl-cc-meta-row">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -77,28 +88,44 @@ export default function CourseCard({ course }) {
                 {course.time}
               </div>
             )}
-            {course.instructor && (
+            {course.location && (
               <div className="psl-cc-meta-row">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="8" r="3.6" /><path d="M5 20a7 7 0 0 1 14 0" />
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                  <circle cx="12" cy="9" r="2.5" />
                 </svg>
-                {course.instructor}
+                {course.location}
               </div>
             )}
           </div>
-          <div className="psl-cc-foot">
-            <span className="psl-cc-seats">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="8" cy="9" r="2.6" /><circle cx="16" cy="9" r="2.6" />
-                <path d="M3 19a5 5 0 0 1 10 0M13 19a5 5 0 0 1 8-4" />
-              </svg>
-              {isFull ? "Warteliste" : `${spotsLeft} Plätze frei`}
-            </span>
-            {course.kurs_nr && (
-              <span className="psl-badge mono">K-{String(course.kurs_nr).padStart(3, "0")}</span>
-            )}
+        </div>
+
+        {/* Footer: instructor + seats */}
+        <div className="psl-cc-foot">
+          <div className="psl-cc-instructor">
+            <div className="psl-cc-avatar" style={{ background: catColor }}>
+              {initials(course.instructor)}
+            </div>
+            <div className="psl-cc-instructor-info">
+              <span className="psl-cc-instructor-name">{course.instructor || "—"}</span>
+              <span className="psl-cc-instructor-role">Kursleitung</span>
+            </div>
+          </div>
+          <div className="psl-cc-seats-wrap">
+            <div className="psl-cc-seats-count" style={{ color: isFull ? "#ef4444" : "var(--psl-text-2)" }}>
+              {current}/{max}
+              {isFull && <span className="psl-cc-full-badge">voll</span>}
+            </div>
+            <div className="psl-cc-progress-track">
+              <div className="psl-cc-progress-bar"
+                style={{
+                  width: `${pct}%`,
+                  background: isFull ? "#ef4444" : catColor,
+                }} />
+            </div>
           </div>
         </div>
+
       </div>
     </Link>
   );

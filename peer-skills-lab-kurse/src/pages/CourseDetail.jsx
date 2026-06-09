@@ -76,30 +76,14 @@ export default function CourseDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header image or gradient */}
-      <div className="relative h-64 md:h-80 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10 overflow-hidden">
-        {course.image_url ? (
-          <img
-            src={course.image_url}
-            alt={course.title}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-8xl opacity-20">📚</span>
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-        <div className="absolute top-4 left-4 md:top-6 md:left-6">
+      <div className="max-w-5xl mx-auto px-4 md:px-6 pt-6 pb-20">
+        <div className="mb-5">
           <Link to={createPageUrl("Home")}>
-            <Button variant="secondary" size="sm" className="bg-card/80 backdrop-blur-sm">
+            <Button variant="secondary" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" /> Zurück
             </Button>
           </Link>
         </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-4 md:px-6 -mt-20 relative z-10 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -117,9 +101,6 @@ export default function CourseDetail() {
                   <Badge variant="secondary">{course.level}</Badge>
                 )}
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2 tracking-tight">
-                {course.title}
-              </h1>
               {course.instructor && (
                 <p className="text-muted-foreground flex items-center gap-2">
                   <User className="w-4 h-4" /> mit {course.instructor}

@@ -85,11 +85,12 @@ function navGroups(user) {
     ...(user?.role === "admin" || user?.role === "tutor" ? [{
       label: "Verwaltung",
       items: [
-        { label: "Kurse verwalten",   path: "/AdminCourses", icon: "gear" },
+        { label: "Kurse verwalten",   path: "/AdminCourses",   icon: "gear" },
+        { label: "Meine Kurse",       path: "/MeineKurse",     icon: "bookmark" },
         { label: "Kurs ausschreiben", path: "/TutorDashboard", icon: "pencil" },
         ...(user?.role === "admin" ? [
-          { label: "Nutzer:innen",    path: "/AdminUsers",  icon: "users" },
-          { label: "Statistiken",     path: "/AdminStats",  icon: "chart" },
+          { label: "Nutzer:innen",    path: "/AdminUsers",     icon: "users" },
+          { label: "Statistiken",     path: "/AdminStats",     icon: "chart" },
         ] : []),
       ],
     }] : []),
@@ -178,7 +179,17 @@ export default function Layout({ children, currentPageName }) {
       <div className="psl-content">
         {/* Toolbar */}
         <div className="psl-toolbar">
-          <span className="psl-tb-title">{currentPageName || "Peer Skills Lab"}</span>
+          <span className="psl-tb-title">{{
+    "Home": "Kurse",
+    "CourseDetail": "Kursdetails",
+    "MyBookings": "Meine Buchungen",
+    "AdminCourses": "Kurse verwalten",
+    "MeineKurse": "Meine Kurse",
+    "TutorDashboard": "Kurs ausschreiben",
+    "AdminUsers": "Nutzer:innen",
+    "AdminStats": "Statistiken",
+    "MyProfile": "Profil",
+  }[currentPageName] || currentPageName || "Peer Skills Lab"}</span>
           <span className="psl-tb-spacer" />
           <div className="psl-tb-divider" />
           <button

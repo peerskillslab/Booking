@@ -51,6 +51,7 @@ import Home from './pages/Home';
 import CourseDetail from './pages/CourseDetail';
 import MyBookings from './pages/MyBookings';
 import AdminCourses from './pages/AdminCourses';
+import MeineKurse from './pages/MeineKurse';
 import __Layout from './Layout.jsx';
 
 
@@ -59,6 +60,7 @@ export const PAGES = {
     "CourseDetail": CourseDetail,
     "MyBookings": MyBookings,
     "AdminCourses": AdminCourses,
+    "MeineKurse": MeineKurse,
 }
 
 export const pagesConfig = {
