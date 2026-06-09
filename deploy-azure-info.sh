@@ -7,7 +7,7 @@ set -e
 
 RESOURCE_GROUP="peerskills-info-rg"
 APP_NAME="peerskills-info-app"          # muss global eindeutig sein
-LOCATION="switzerlandnorth"             # Azure-Rechenzentrum Zürich
+LOCATION="westeurope"                   # Azure-Rechenzentrum Amsterdam
 PLAN_NAME="peerskills-info-plan"
 ADMIN_EMAIL="info@peerskillslab.ch"
 JWT_SECRET="$(openssl rand -hex 32)"    # sicheres Zufallspasswort
