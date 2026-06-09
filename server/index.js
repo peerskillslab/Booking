@@ -41,7 +41,7 @@ if (require('fs').existsSync(DIST)) {
 }
 
 // --- Start ---
-initDb();
+initDb(); // non-blocking, runs in background
 app.listen(PORT, () => {
   console.log(`PeerSkills Server läuft auf http://localhost:${PORT}`);
 });

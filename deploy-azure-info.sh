@@ -16,7 +16,7 @@ if [ "$1" = "update" ]; then
   echo "=== Update: Frontend bauen und deployen ==="
   cd peer-skills-lab-kurse && npm run build && cd ..
   cd server
-  zip -r ../deploy.zip . -x "node_modules/*" -x "db/peerskills.db"
+  zip -r ../deploy.zip . -x "node_modules/*"
   cd ..
   az webapp deployment source config-zip \
     --resource-group $RESOURCE_GROUP \
@@ -57,7 +57,6 @@ az webapp config appsettings set \
   --settings \
     NODE_ENV=production \
     JWT_SECRET="$JWT_SECRET" \
-    DB_PATH="/home/peerskills.db" \
     FRONTEND_ORIGIN="https://$APP_NAME.azurewebsites.net" \
     PORT=8080 \
     ADMIN_EMAIL="$ADMIN_EMAIL"
@@ -67,11 +66,8 @@ echo "JWT_SECRET gespeichert: $JWT_SECRET"
 echo "(Diesen Wert sicher aufbewahren!)"
 
 echo ""
-echo "Schritt 5: Persistenten Speicher aktivieren (/home bleibt bei Restarts)"
-az webapp config set \
-  --name $APP_NAME \
-  --resource-group $RESOURCE_GROUP \
-  --generic-configurations '{"WEBSITES_ENABLE_APP_SERVICE_STORAGE": "true"}'
+echo "Schritt 5: App-Konfiguration"
+# (Datenbankverbindung läuft über PostgreSQL Azure)"
 
 echo ""
 echo "Schritt 6: Frontend bauen"

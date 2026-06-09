@@ -18,44 +18,40 @@ async function initDb() {
     // Connection pool config
     max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000,  // erhöht von 2000 auf 10000ms
   });
 
-  // Test connection
-  try {
-    const client = await pool.connect();
-    console.log('✓ Database connected');
-    client.release();
-  } catch (err) {
-    console.error('✗ Database connection failed:', err);
-    throw err;
-  }
+  // Test connection (non-blocking for startup)
+  pool.connect()
+    .then(client => {
+      console.log('✓ Database connected');
+      client.release();
+    })
+    .catch(err => {
+      console.error('⚠ Database connection failed:', err.message);
+    });
 
-  // Run schema
-  try {
-    const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
-    const statements = schema
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => s && !s.startsWith('--'));
+  // Run schema (non-blocking for startup)
+  const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
+  const statements = schema
+    .split(';')
+    .map(s => s.trim())
+    .filter(s => s && !s.startsWith('--'));
 
-    for (const statement of statements) {
-      await pool.query(statement);
+  (async () => {
+    try {
+      for (const statement of statements) {
+        await pool.query(statement);
+      }
+      console.log('✓ Database schema initialized');
+
+      // Incremental migrations
+      await pool.query('ALTER TABLE courses ADD COLUMN IF NOT EXISTS kurs_nr INTEGER');
+      console.log('✓ Migrations applied');
+    } catch (err) {
+      console.error('⚠ Schema/Migration error:', err.message);
     }
-    console.log('✓ Database schema initialized');
-  } catch (err) {
-    console.error('✗ Schema initialization failed:', err);
-    throw err;
-  }
-
-  // Incremental migrations (safe to run repeatedly)
-  try {
-    await pool.query('ALTER TABLE courses ADD COLUMN IF NOT EXISTS kurs_nr INTEGER');
-    console.log('✓ Migrations applied');
-  } catch (err) {
-    console.error('✗ Migration failed:', err);
-    throw err;
-  }
+  })();
 
   return pool;
 }
