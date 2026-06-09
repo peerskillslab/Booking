@@ -6,50 +6,50 @@ const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://localhost/peerski
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
 let pool;
+let initialized = false;
 
 function getPool() {
-  if (!pool) throw new Error('Database not initialized. Call initDb() first.');
+  if (!pool) {
+    initDb();
+  }
   return pool;
 }
 
-async function initDb() {
+function initDb() {
+  if (initialized) return pool;
+  initialized = true;
+
   pool = new Pool({
     connectionString: DATABASE_URL,
-    // Connection pool config
     max: 20,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,  // erhöht von 2000 auf 10000ms
+    connectionTimeoutMillis: 5000,
   });
 
-  // Test connection (non-blocking for startup)
-  pool.connect()
-    .then(client => {
-      console.log('✓ Database connected');
-      client.release();
-    })
-    .catch(err => {
-      console.error('⚠ Database connection failed:', err.message);
-    });
+  console.log('Database pool initialized');
 
-  // Run schema (non-blocking for startup)
-  const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
-  const statements = schema
-    .split(';')
-    .map(s => s.trim())
-    .filter(s => s && !s.startsWith('--'));
-
+  // Initialize schema and test connection in background (non-blocking)
   (async () => {
     try {
+      const client = await pool.connect();
+      console.log('✓ Database connected');
+      client.release();
+
+      const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
+      const statements = schema
+        .split(';')
+        .map(s => s.trim())
+        .filter(s => s && !s.startsWith('--'));
+
       for (const statement of statements) {
         await pool.query(statement);
       }
       console.log('✓ Database schema initialized');
 
-      // Incremental migrations
       await pool.query('ALTER TABLE courses ADD COLUMN IF NOT EXISTS kurs_nr INTEGER');
       console.log('✓ Migrations applied');
     } catch (err) {
-      console.error('⚠ Schema/Migration error:', err.message);
+      console.error('⚠ Database error:', err.message);
     }
   })();
 

@@ -1,4 +1,9 @@
-require('dotenv').config();
+try {
+  require('dotenv').config();
+} catch (err) {
+  console.log('Note: .env file not found (OK in production)');
+}
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -6,6 +11,10 @@ const { initDb } = require('./db/database');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+console.log(`Starting PeerSkills Server...`);
+console.log(`Port: ${PORT}`);
+console.log(`DATABASE_URL: ${process.env.DATABASE_URL ? 'configured' : 'NOT SET'}`);
 
 // CORS nur für API-Routen: erlaubt localhost (dev) und jede https-Domain (ngrok, prod)
 const apiCors = cors({
@@ -21,6 +30,9 @@ const apiCors = cors({
 });
 
 app.use(express.json());
+
+// --- Health Check (schnell, blockiert nicht) ---
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // --- API Routes (mit CORS) ---
 app.use('/api/setup',                     apiCors, require('./routes/setup'));
