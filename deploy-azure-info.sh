@@ -50,6 +50,7 @@ az webapp create \
 
 echo ""
 echo "Schritt 4: Umgebungsvariablen setzen"
+sleep 3  # Warte kurz, bis Web App vollständig erstellt ist
 az webapp config appsettings set \
   --name $APP_NAME \
   --resource-group $RESOURCE_GROUP \
