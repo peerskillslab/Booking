@@ -7,7 +7,7 @@ import PullToRefreshIndicator from "@/components/ui/PullToRefreshIndicator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Loader2, BookOpen, XCircle, ExternalLink, AlertTriangle, Download, RotateCcw } from "lucide-react";
+import { Calendar, Clock, Loader2, BookOpen, XCircle, ExternalLink, AlertTriangle, Download, RotateCcw, Mail } from "lucide-react";
 import { downloadICalFile } from "@/lib/icalGenerator";
 import { format, isBefore, subHours } from "date-fns";
 import { de } from "date-fns/locale";
@@ -237,6 +237,16 @@ export default function MyBookings() {
                       const course = courseMap[booking.course_id];
                       const courseStart = getCourseStartDate(course);
                       const canCancel = courseStart === null || isBefore(new Date(), subHours(courseStart, 72));
+                      const handleContactTutor = () => {
+                        const tutorEmail = course?.created_by;
+                        const tutorName = course?.instructor || 'Tutor:in';
+                        const subject = encodeURIComponent(`Frage zu meiner Buchung: ${booking.course_title}`);
+                        const body = encodeURIComponent(
+                          `Hallo ${tutorName},\n\nIch habe eine Frage oder Mitteilung zu meiner Buchung für "${booking.course_title}":\n\n`
+                        );
+                        window.location.href = `mailto:${tutorEmail}?subject=${subject}&body=${body}`;
+                      };
+
                       const action = booking.status === "confirmed" ? (
                         <div className="flex gap-2">
                           <Button
@@ -248,6 +258,17 @@ export default function MyBookings() {
                             <Download className="w-4 h-4 mr-1.5" />
                             Kalendereintrag hinzufügen
                           </Button>
+                          {course?.created_by && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleContactTutor}
+                              title="Tutor kontaktieren"
+                            >
+                              <Mail className="w-4 h-4 mr-1.5" />
+                              Tutor kontaktieren
+                            </Button>
+                          )}
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button
