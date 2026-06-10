@@ -160,6 +160,7 @@ export default function Login() {
               type="password"
               required
               minLength={8}
+              pattern="[\s\S]{8,}"
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="Mindestens 8 Zeichen"
