@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useAuth } from "@/lib/AuthContext";
+import Logo from "@/components/Logo";
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 const Ico = ({ d, ...p }) => (
@@ -35,19 +36,6 @@ function NavIcon({ name }) {
   );
 }
 
-// ── Brand mark (Doktorhut) ────────────────────────────────────────────────────
-function BrandMark({ size = 26 }) {
-  return (
-    <div className="psl-brand-mark" style={{ width: size, height: size, borderRadius: size * 0.27 }}>
-      <svg viewBox="0 0 120 120" fill="none" className="psl-brand-glyph">
-        <path d="M60 28 L102 46 L60 64 L18 46 Z" fill="currentColor" stroke="currentColor" strokeWidth="6" strokeLinejoin="round" />
-        <path d="M40 54 V68 C40 75, 80 75, 80 68 V54" stroke="currentColor" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-        <path d="M95 50 L95 70" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
-        <circle cx="95" cy="76" r="4.5" fill="currentColor" />
-      </svg>
-    </div>
-  );
-}
 
 // ── Theme logic ───────────────────────────────────────────────────────────────
 function applyTheme(t) {
@@ -124,7 +112,7 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Brand */}
         <div className="psl-brand">
-          <BrandMark />
+          <Logo size={40} />
           <div>
             <div className="psl-brand-name">Peer Skills Lab</div>
             <div className="psl-brand-sub">Clinical Skills Training</div>
