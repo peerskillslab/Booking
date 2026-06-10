@@ -74,7 +74,22 @@ router.get('/me', requireAuth, (req, res) => {
 router.patch('/me', requireAuth, async (req, res) => {
   try {
     const pool = getPool();
-    const { full_name, studienjahr, password } = req.body;
+    const { full_name, studienjahr, password, current_password } = req.body;
+
+    // If changing password, require and verify current password
+    if (password) {
+      if (!current_password) {
+        return res.status(400).json({ error: 'current_password required to change password' });
+      }
+
+      const userResult = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+      const user = userResult.rows[0];
+      const isValid = await bcrypt.compare(current_password, user.password_hash);
+
+      if (!isValid) {
+        return res.status(401).json({ error: 'current_password is incorrect' });
+      }
+    }
 
     const updates = {};
     if (full_name !== undefined) updates.full_name = full_name;

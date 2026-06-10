@@ -30,6 +30,56 @@ export default function MyProfile() {
   const [status, setStatus] = useState(null); // success | error
   const [message, setMessage] = useState("");
 
+  // Password change fields
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordStatus, setPasswordStatus] = useState(null); // success | error
+  const [passwordMessage, setPasswordMessage] = useState("");
+
+
+  const handleChangePassword = async () => {
+    // Validate
+    if (!currentPassword.trim()) {
+      setPasswordStatus("error");
+      setPasswordMessage("Gib dein aktuelles Passwort ein.");
+      return;
+    }
+    if (!newPassword.trim() || newPassword.length < 8) {
+      setPasswordStatus("error");
+      setPasswordMessage("Neues Passwort muss mindestens 8 Zeichen lang sein.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordStatus("error");
+      setPasswordMessage("Neue Passwörter stimmen nicht überein.");
+      return;
+    }
+
+    setPasswordLoading(true);
+    setPasswordStatus(null);
+
+    try {
+      await peerskillslab.auth.updateMe({
+        current_password: currentPassword,
+        password: newPassword
+      });
+      setPasswordStatus("success");
+      setPasswordMessage("Passwort erfolgreich geändert!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => setPasswordStatus(null), 3000);
+    } catch (error) {
+      console.error("Fehler beim Passwort ändern:", error);
+      const errorMsg = error.response?.data?.error || "Fehler beim Ändern des Passworts.";
+      setPasswordStatus("error");
+      setPasswordMessage(errorMsg);
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const handleDeleteAccount = () => {
     // Opens the user's email client with a pre-filled deletion request
@@ -161,6 +211,86 @@ export default function MyProfile() {
               >
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {loading ? "Speichert..." : "Änderungen speichern"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Change Password Card */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Passwort ändern</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Current Password */}
+              <div>
+                <Label htmlFor="currentPassword">Aktuelles Passwort</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Dein aktuelles Passwort"
+                  className="mt-1.5"
+                />
+              </div>
+
+              {/* New Password */}
+              <div>
+                <Label htmlFor="newPassword">Neues Passwort</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Mindestens 8 Zeichen"
+                  className="mt-1.5"
+                />
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <Label htmlFor="confirmPassword">Passwort bestätigen</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Wiederhole dein neues Passwort"
+                  className="mt-1.5"
+                />
+              </div>
+
+              {/* Status Message */}
+              <AnimatePresence>
+                {passwordStatus && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className={`flex items-center gap-2 p-3 rounded-lg ${
+                      passwordStatus === "success"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {passwordStatus === "success" ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5" />
+                    )}
+                    <span>{passwordMessage}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Change Password Button */}
+              <Button
+                onClick={handleChangePassword}
+                disabled={passwordLoading}
+                className="w-full"
+              >
+                {passwordLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {passwordLoading ? "Ändert..." : "Passwort ändern"}
               </Button>
             </CardContent>
           </Card>

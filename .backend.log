@@ -247,3 +247,27 @@ See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode de
 (Use `node --trace-warnings ...` to show where the warning was created)
 PeerSkills Server läuft auf http://localhost:3001
 ⚠ Database error: Connection terminated due to connection timeout
+Restarting 'index.js'
+=== Starting PeerSkills Server ===
+✓ dotenv loaded
+Loading dependencies...
+Loading database module...
+✓ Database module loaded
+Port: 3001
+Database: configured
+=== Setup complete ===
+Frontend path: /Users/simonschneider/Booking/server/public
+Frontend exists: true
+✓ Serving frontend from /Users/simonschneider/Booking/server/public
+Database pool initialized
+(node:28452) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PeerSkills Server läuft auf http://localhost:3001
+⚠ Database error: Connection terminated due to connection timeout
