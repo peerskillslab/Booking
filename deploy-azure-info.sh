@@ -15,6 +15,8 @@ JWT_SECRET="$(openssl rand -hex 32)"    # sicheres Zufallspasswort
 if [ "$1" = "update" ]; then
   echo "=== Update: Frontend bauen und deployen ==="
   cd peer-skills-lab-kurse && npm run build && cd ..
+  mkdir -p server/public
+  cp -r peer-skills-lab-kurse/dist/* server/public/
   cd server
   zip -r ../deploy.zip . -x "node_modules/*"
   cd ..
@@ -81,9 +83,8 @@ cp -r peer-skills-lab-kurse/dist/* server/public/
 echo ""
 echo "Schritt 7: Code zippen und deployen"
 cd server
-zip -r ../deploy.zip . -x "node_modules/*" "db/peerskills.db" "public/*"
+zip -r ../deploy.zip . -x "node_modules/*" "db/peerskills.db"
 cd ..
-zip -r deploy.zip server/public
 az webapp deployment source config-zip \
   --resource-group $RESOURCE_GROUP \
   --name $APP_NAME \
