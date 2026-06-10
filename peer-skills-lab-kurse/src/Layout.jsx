@@ -85,10 +85,10 @@ function navGroups(user) {
     ...(user?.role === "admin" || user?.role === "tutor" ? [{
       label: "Verwaltung",
       items: [
-        { label: "Kurse verwalten",   path: "/AdminCourses",   icon: "gear" },
         { label: "Meine Kurse",       path: "/MeineKurse",     icon: "bookmark" },
         { label: "Kurs ausschreiben", path: "/TutorDashboard", icon: "pencil" },
         ...(user?.role === "admin" ? [
+          { label: "Kurse verwalten", path: "/AdminCourses",   icon: "gear" },
           { label: "Nutzer:innen",    path: "/AdminUsers",     icon: "users" },
           { label: "Statistiken",     path: "/AdminStats",     icon: "chart" },
         ] : []),
