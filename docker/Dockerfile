@@ -25,8 +25,8 @@ RUN npm ci --omit=dev
 COPY server/ ./
 
 # Gebautes Frontend in den Server-Ordner kopieren
-# Express serviert es als statische Dateien
-COPY --from=frontend-builder /build/frontend/dist ../peer-skills-lab-kurse/dist
+# Express serviert es als statische Dateien von ./public
+COPY --from=frontend-builder /build/frontend/dist ./public
 
 ENV PORT=3001
 ENV NODE_ENV=production
