@@ -24,8 +24,9 @@ RUN npm ci --omit=dev
 COPY server/ ./
 
 # Gebautes Frontend in den Server-Ordner kopieren
-# Express serviert es als statische Dateien
-COPY --from=frontend-builder /build/frontend/dist ../peer-skills-lab-kurse/dist
+# Express serviert es als statische Dateien aus /app/public (siehe index.js);
+# die getrackten Dateien in server/public (Team-Fotos) bleiben dabei erhalten
+COPY --from=frontend-builder /build/frontend/dist ./public
 
 # Verzeichnis für die SQLite-Datenbank anlegen (wird als Volume gemountet)
 RUN mkdir -p /data

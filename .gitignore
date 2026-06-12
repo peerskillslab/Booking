@@ -19,4 +19,11 @@ peer-skills-lab-kurse/dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.backend.log
+.frontend.log
+.deploy-azure.log
+.dev-pids
+
+# Frontend-Build im Server (nur im Docker-Image; Team-Fotos bleiben getrackt)
 server/public/
+!server/public/team/
