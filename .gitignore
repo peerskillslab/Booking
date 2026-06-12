@@ -19,3 +19,4 @@ peer-skills-lab-kurse/dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+server/public/
