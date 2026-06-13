@@ -83,9 +83,9 @@ export default function TutorDashboard() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {templates.map((template, i) => (
-            <motion.div key={template.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-              <Card className="border-border/60 hover:border-primary/30 hover:shadow-md transition-all">
-                <CardContent className="p-5">
+            <motion.div key={template.id} className="h-full" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+              <Card className="h-full flex flex-col border-border/60 hover:border-primary/30 hover:shadow-md transition-all">
+                <CardContent className="p-5 flex flex-col flex-1">
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div>
                       <h3 className="font-semibold text-foreground leading-tight">{template.title}</h3>
@@ -95,7 +95,7 @@ export default function TutorDashboard() {
                   {template.short_description && (
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{template.short_description}</p>
                   )}
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4 mt-auto">
                     {template.duration_minutes && (
                       <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{template.duration_minutes} Min.</span>
                     )}

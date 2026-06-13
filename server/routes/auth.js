@@ -139,7 +139,12 @@ router.post('/forgot-password', async (req, res) => {
         'INSERT INTO password_reset_tokens (id, user_id, token, expires_at) VALUES ($1, $2, $3, $4)',
         [newId(), user.id, token, expiresAt.toISOString()]
       );
-      const appBaseUrl = process.env.APP_BASE_URL || 'http://localhost:5173';
+      // Basis-URL: explizit konfiguriert, in Produktion aus dem Request ableiten
+      // (hinter Azure Container Apps Ingress liefert x-forwarded-proto https),
+      // lokal das Vite-Frontend auf 5173 (API läuft separat auf 3001)
+      const requestOrigin = `${req.get('x-forwarded-proto') || req.protocol}://${req.get('host')}`;
+      const appBaseUrl = process.env.APP_BASE_URL
+        || (process.env.NODE_ENV === 'production' ? requestOrigin : 'http://localhost:5173');
       try {
         await sendResetEmail(user.email, token, appBaseUrl);
       } catch (mailErr) {

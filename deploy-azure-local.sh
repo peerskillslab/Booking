@@ -164,6 +164,13 @@ APP_URL=$(az containerapp show \
   --resource-group $RESOURCE_GROUP \
   --query "properties.configuration.ingress.fqdn" -o tsv 2>/dev/null)
 
+# Basis-URL für Links in E-Mails (z.B. Passwort-Reset) setzen –
+# erst jetzt möglich, da die FQDN vor dem Erstellen nicht bekannt ist
+az containerapp update \
+  --name $APP_NAME \
+  --resource-group $RESOURCE_GROUP \
+  --set-env-vars "APP_BASE_URL=https://$APP_URL"
+
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║  App läuft auf: https://${APP_URL}"
