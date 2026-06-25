@@ -9,7 +9,7 @@ router.use(authenticate);
 
 const ALLOWED_COLS = [
   'id','course_id','course_title','user_email','user_name',
-  'status','notes','price_paid','created_by','created_date',
+  'status','notes','price_paid','attended','created_by','created_date',
 ];
 const ALLOWED_SORT = ['created_date','status'];
 
@@ -140,10 +140,15 @@ router.patch('/:id', requireAuth, async (req, res) => {
       }
     }
 
-    const editable = ['status', 'notes', 'price_paid'];
+    const editable = ['status', 'notes', 'price_paid', 'attended'];
     const updates = {};
     for (const key of editable) {
-      if (req.body[key] !== undefined) updates[key] = req.body[key];
+      if (req.body[key] !== undefined) {
+        if (key === 'attended' && req.user.role !== 'admin' && req.user.role !== 'tutor') {
+          continue;
+        }
+        updates[key] = req.body[key];
+      }
     }
     if (Object.keys(updates).length === 0) return res.json(booking);
 

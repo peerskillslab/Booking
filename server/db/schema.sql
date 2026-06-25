@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   status       TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed','cancelled','pending')),
   notes        TEXT,
   price_paid   DOUBLE PRECISION DEFAULT 0,
+  attended     BOOLEAN DEFAULT FALSE,
   created_by   TEXT,
   created_date TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'),
   FOREIGN KEY (course_id) REFERENCES courses(id)

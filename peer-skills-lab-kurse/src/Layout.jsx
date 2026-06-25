@@ -68,6 +68,7 @@ function navGroups(user) {
       items: [
         { label: "Kurse",          path: "/",           icon: "book" },
         { label: "Meine Buchungen",path: "/MyBookings",  icon: "bookmark" },
+        { label: "Meine Statistik",path: "/MyStats",     icon: "chart" },
       ],
     },
     ...(user?.role === "admin" || user?.role === "tutor" ? [{

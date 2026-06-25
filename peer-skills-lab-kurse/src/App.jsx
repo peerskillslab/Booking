@@ -16,6 +16,7 @@ import AboutUs from './pages/AboutUs';
 import Datenschutz from './pages/Datenschutz';
 import Impressum from './pages/Impressum';
 import FAQ from './pages/FAQ';
+import MyStats from './pages/MyStats';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { useInactivityLogout } from '@/lib/useInactivityLogout';
@@ -84,6 +85,7 @@ const AuthenticatedApp = () => {
         <Route path="/AdminUsers" element={<LayoutWrapper currentPageName="AdminUsers"><PageTransitionWrapper><AdminUsers /></PageTransitionWrapper></LayoutWrapper>} />
         <Route path="/AdminStats" element={<LayoutWrapper currentPageName="AdminStats"><PageTransitionWrapper><AdminStats /></PageTransitionWrapper></LayoutWrapper>} />
         <Route path="/MyProfile" element={<LayoutWrapper currentPageName="MyProfile"><PageTransitionWrapper><MyProfile /></PageTransitionWrapper></LayoutWrapper>} />
+        <Route path="/MyStats" element={<LayoutWrapper currentPageName="MyStats"><PageTransitionWrapper><MyStats /></PageTransitionWrapper></LayoutWrapper>} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </AnimatePresence>

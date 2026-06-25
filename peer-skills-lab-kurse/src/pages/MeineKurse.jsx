@@ -11,6 +11,7 @@ import { format, isPast, endOfDay } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion } from "framer-motion";
 import BookingsDialog from "@/components/tutor/BookingsDialog";
+import AttendanceDialog from "@/components/tutor/AttendanceDialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -19,6 +20,7 @@ import {
 export default function MeineKurse() {
   const [user, setUser] = useState(null);
   const [bookingsDialogOpen, setBookingsDialogOpen] = useState(false);
+  const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const queryClient = useQueryClient();
 
@@ -127,6 +129,17 @@ export default function MeineKurse() {
               )}
             </div>
           )}
+          {isPastCourse && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedCourse(course);
+                setAttendanceDialogOpen(true);
+              }}>
+              <Users className="w-3.5 h-3.5 mr-1" /> Anwesenheiten bestätigen
+            </Button>
+          )}
         </CardContent>
       </Card>
     </motion.div>
@@ -179,17 +192,30 @@ export default function MeineKurse() {
       )}
 
       {selectedCourse && (
-        <BookingsDialog
-          open={bookingsDialogOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-              setSelectedCourse(null);
-              queryClient.invalidateQueries({ queryKey: ["tutorCourses", user?.email] });
-            }
-            setBookingsDialogOpen(open);
-          }}
-          course={selectedCourse}
-        />
+        <>
+          <BookingsDialog
+            open={bookingsDialogOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                setSelectedCourse(null);
+                queryClient.invalidateQueries({ queryKey: ["tutorCourses", user?.email] });
+              }
+              setBookingsDialogOpen(open);
+            }}
+            course={selectedCourse}
+          />
+          <AttendanceDialog
+            open={attendanceDialogOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                setSelectedCourse(null);
+                queryClient.invalidateQueries({ queryKey: ["tutorCourses", user?.email] });
+              }
+              setAttendanceDialogOpen(open);
+            }}
+            course={selectedCourse}
+          />
+        </>
       )}
     </div>
   );
