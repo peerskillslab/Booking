@@ -47,6 +47,7 @@ function initDb() {
       console.log('✓ Database schema initialized');
 
       await pool.query('ALTER TABLE courses ADD COLUMN IF NOT EXISTS kurs_nr INTEGER');
+      await pool.query('ALTER TABLE bookings ADD COLUMN IF NOT EXISTS attended BOOLEAN DEFAULT FALSE');
       console.log('✓ Migrations applied');
     } catch (err) {
       console.error('⚠ Database error:', err.message);
