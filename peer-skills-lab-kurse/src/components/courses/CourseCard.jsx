@@ -17,10 +17,13 @@ const CAT_COLORS = {
 };
 
 const LEVEL_LABELS = {
-  "Anfänger":       "ANFÄNGER",
-  "Fortgeschritten":"FORTGESCHRITTEN",
-  "Experte":        "EXPERTE",
-  "Alle Level":     "ALLE LEVEL",
+  "Alle Studienjahre":   "ALLE STUDIENJAHRE",
+  "ab 1. Studienjahr":   "AB 1. STUDI-JAHR",
+  "ab 2. Studienjahr":   "AB 2. STUDI-JAHR",
+  "ab 3. Studienjahr":   "AB 3. STUDI-JAHR",
+  "ab 4. Studienjahr":   "AB 4. STUDI-JAHR",
+  "ab 5. Studienjahr":   "AB 5. STUDI-JAHR",
+  "ab 6. Studienjahr":   "AB 6. STUDI-JAHR",
 };
 
 function initials(name) {

@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS courses (
   current_participants INTEGER NOT NULL DEFAULT 0,
   location             TEXT,
   image_url            TEXT,
-  level                TEXT CHECK (level IN ('Anfänger','Fortgeschritten','Experte','Alle Level')),
+  level                TEXT CHECK (level IN ('Alle Studienjahre','ab 1. Studienjahr','ab 2. Studienjahr','ab 3. Studienjahr','ab 4. Studienjahr','ab 5. Studienjahr','ab 6. Studienjahr')),
   status               TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','cancelled','completed','draft')),
   extra_dates          TEXT,
   kurs_nr              INTEGER,
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS course_templates (
   max_participants  INTEGER,
   location          TEXT,
   image_url         TEXT,
-  level             TEXT CHECK (level IN ('Anfänger','Fortgeschritten','Experte','Alle Level')),
+  level             TEXT CHECK (level IN ('Alle Studienjahre','ab 1. Studienjahr','ab 2. Studienjahr','ab 3. Studienjahr','ab 4. Studienjahr','ab 5. Studienjahr','ab 6. Studienjahr')),
   session_count     INTEGER DEFAULT 1,
   created_by        TEXT,
   created_date      TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')

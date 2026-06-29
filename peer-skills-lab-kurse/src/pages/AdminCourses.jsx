@@ -26,13 +26,13 @@ import { useToast } from "@/components/ui/use-toast";
 import ParticipantsList from "../components/admin/ParticipantsList";
 
 const CATEGORIES = ["CST Abdomen", "CST HKL", "CST Gynäkologie", "CST Lunge", "CST Neurologie", "CST Bewegungsapparat", "POCUS", "Venenpunktion", "YSSA"];
-const LEVELS = ["Anfänger", "Fortgeschritten", "Experte", "Alle Level"];
+const LEVELS = ["Alle Studienjahre", "ab 1. Studienjahr", "ab 2. Studienjahr", "ab 3. Studienjahr", "ab 4. Studienjahr", "ab 5. Studienjahr", "ab 6. Studienjahr"];
 
 const emptyCourse = {
   title: "", description: "", short_description: "", category: "CST Abdomen",
   instructor: "", date: "", time: "", duration_minutes: 60,
   max_participants: 10, location: "", image_url: "",
-  level: "Alle Level", status: "active",
+  level: "Alle Studienjahre", status: "active",
 };
 
 export default function AdminCourses() {
@@ -82,7 +82,7 @@ export default function AdminCourses() {
       await peerskillslab.entities.CourseTemplate.create({
         title: cat,
         category: cat,
-        level: "Alle Level",
+        level: "Alle Studienjahre",
         duration_minutes: 60,
         max_participants: 10,
       });
@@ -146,7 +146,7 @@ export default function AdminCourses() {
       max_participants: course.max_participants || 10,
       location: course.location || "",
       image_url: course.image_url || "",
-      level: course.level || "Alle Level",
+      level: course.level || "Alle Studienjahre",
       status: course.status || "active",
     });
     setDialogOpen(true);

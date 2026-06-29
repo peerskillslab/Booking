@@ -10,11 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Loader2 } from "lucide-react";
 
 const CATEGORIES = ["CST Abdomen", "CST HKL", "CST Gynäkologie", "CST Lunge", "CST Neurologie", "CST Bewegungsapparat", "POCUS", "Venenpunktion", "YSSA"];
-const LEVELS = ["Anfänger", "Fortgeschritten", "Experte", "Alle Level"];
+const LEVELS = ["Alle Studienjahre", "ab 1. Studienjahr", "ab 2. Studienjahr", "ab 3. Studienjahr", "ab 4. Studienjahr", "ab 5. Studienjahr", "ab 6. Studienjahr"];
 
 const empty = {
   title: "", short_description: "", description: "", category: "CST Abdomen",
-  level: "Alle Level", duration_minutes: 60, max_participants: 10,
+  level: "Alle Studienjahre", duration_minutes: 60, max_participants: 10,
   location: "", image_url: "", session_count: 1,
 };
 
@@ -28,7 +28,7 @@ export default function TemplateDialog({ open, onOpenChange, editingTemplate, on
         short_description: editingTemplate.short_description || "",
         description: editingTemplate.description || "",
         category: editingTemplate.category || "CST Abdomen",
-        level: editingTemplate.level || "Alle Level",
+        level: editingTemplate.level || "Alle Studienjahre",
         duration_minutes: editingTemplate.duration_minutes || 60,
         max_participants: editingTemplate.max_participants || 10,
         location: editingTemplate.location || "",
