@@ -48,6 +48,21 @@ function initDb() {
 
       await pool.query('ALTER TABLE courses ADD COLUMN IF NOT EXISTS kurs_nr INTEGER');
       await pool.query('ALTER TABLE bookings ADD COLUMN IF NOT EXISTS attended BOOLEAN DEFAULT FALSE');
+
+      // Migrate old level values to new study year values
+      try {
+        await pool.query("UPDATE courses SET level = 'Alle Studienjahre' WHERE level = 'Alle Level'");
+        await pool.query("UPDATE courses SET level = 'ab 1. Studienjahr' WHERE level = 'Anfänger'");
+        await pool.query("UPDATE courses SET level = 'ab 3. Studienjahr' WHERE level = 'Fortgeschritten'");
+        await pool.query("UPDATE courses SET level = 'ab 5. Studienjahr' WHERE level = 'Experte'");
+        await pool.query("UPDATE course_templates SET level = 'Alle Studienjahre' WHERE level = 'Alle Level'");
+        await pool.query("UPDATE course_templates SET level = 'ab 1. Studienjahr' WHERE level = 'Anfänger'");
+        await pool.query("UPDATE course_templates SET level = 'ab 3. Studienjahr' WHERE level = 'Fortgeschritten'");
+        await pool.query("UPDATE course_templates SET level = 'ab 5. Studienjahr' WHERE level = 'Experte'");
+      } catch (err) {
+        console.log('✓ Level migration already applied or not needed');
+      }
+
       console.log('✓ Migrations applied');
     } catch (err) {
       console.error('⚠ Database error:', err.message);
