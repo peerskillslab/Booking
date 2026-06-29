@@ -55,7 +55,7 @@ router.post('/', requireAuth, async (req, res) => {
     `, [
       id, title, rest.description || null, rest.short_description || null, category,
       rest.duration_minutes || null, rest.max_participants || null, rest.location || null,
-      rest.image_url || null, rest.level || null, req.user.email, now
+      rest.image_url || null, rest.level || 'Alle Studienjahre', req.user.email, now
     ]);
 
     res.status(201).json(result.rows[0]);

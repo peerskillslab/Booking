@@ -76,7 +76,7 @@ router.post('/', requireAuth, async (req, res) => {
       id, title, rest.description || null, rest.short_description || null, category,
       rest.instructor || null, date, rest.time || null, rest.duration_minutes || null,
       max_participants, rest.current_participants ?? 0, rest.location || null,
-      rest.image_url || null, rest.level || null, rest.status || 'active',
+      rest.image_url || null, rest.level || 'Alle Studienjahre', rest.status || 'active',
       rest.extra_dates || null, kurs_nr, req.user.email, now
     ]);
 
