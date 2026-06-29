@@ -106,3 +106,14 @@ CREATE INDEX IF NOT EXISTS idx_bookings_course_id   ON bookings(course_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_status      ON bookings(status);
 CREATE INDEX IF NOT EXISTS idx_feedbacks_course_id  ON course_feedbacks(course_id);
 CREATE INDEX IF NOT EXISTS idx_feedbacks_instructor ON course_feedbacks(instructor);
+
+-- Migration: Convert old level values to new study year values
+UPDATE courses SET level = 'Alle Studienjahre' WHERE level = 'Alle Level';
+UPDATE courses SET level = 'ab 1. Studienjahr' WHERE level = 'Anfänger';
+UPDATE courses SET level = 'ab 3. Studienjahr' WHERE level = 'Fortgeschritten';
+UPDATE courses SET level = 'ab 5. Studienjahr' WHERE level = 'Experte';
+
+UPDATE course_templates SET level = 'Alle Studienjahre' WHERE level = 'Alle Level';
+UPDATE course_templates SET level = 'ab 1. Studienjahr' WHERE level = 'Anfänger';
+UPDATE course_templates SET level = 'ab 3. Studienjahr' WHERE level = 'Fortgeschritten';
+UPDATE course_templates SET level = 'ab 5. Studienjahr' WHERE level = 'Experte';
