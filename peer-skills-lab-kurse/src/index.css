@@ -588,6 +588,292 @@ p, span, a, button, input, label, li {
   letter-spacing: var(--letter-spacing);
 }
 
+/* ========== Meine Statistik (MyStats) — Design Handoff ========== */
+
+@keyframes psl-stats-num-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes psl-stats-bar-grow {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--bar-width, 100%);
+  }
+}
+
+.psl-stats-hero-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+@media (max-width: 640px) {
+  .psl-stats-hero-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.psl-stats-hero-card {
+  background: linear-gradient(165deg, #5c8c1a 0%, #466E0E 72%);
+  border-radius: 20px;
+  padding: 32px 28px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 150px;
+}
+
+.psl-stats-hero-card::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.psl-stats-hero-card::after {
+  content: '';
+  position: absolute;
+  bottom: -50px;
+  left: -20px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.psl-stats-hero-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  position: relative;
+  z-index: 1;
+}
+
+.psl-stats-hero-number {
+  font-size: 72px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+  animation: psl-stats-num-pop 0.5s 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (max-width: 640px) {
+  .psl-stats-hero-number {
+    font-size: 56px;
+  }
+}
+
+.psl-stats-hero-subtext {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+.psl-stats-info-card {
+  background: var(--psl-card-bg);
+  border-radius: 20px;
+  padding: 28px 32px;
+  box-shadow: var(--psl-card-shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+
+.psl-stats-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.psl-stats-info-row.bordered {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--psl-hairline);
+}
+
+.psl-stats-info-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--psl-text-3);
+  margin-bottom: 4px;
+}
+
+.psl-stats-info-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--psl-text);
+}
+
+.psl-stats-info-meta {
+  font-size: 12px;
+  color: var(--psl-text-2);
+  margin-top: 2px;
+}
+
+.psl-stats-info-number {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--psl-accent);
+}
+
+.psl-stats-badge {
+  background: var(--psl-accent-soft);
+  color: var(--psl-accent);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 5px 13px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.psl-stats-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.psl-stats-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--psl-accent);
+  flex-shrink: 0;
+}
+
+.psl-stats-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--psl-text);
+  letter-spacing: -0.01em;
+}
+
+.psl-stats-card-list {
+  background: var(--psl-card-bg);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--psl-card-shadow);
+}
+
+.psl-stats-category-row,
+.psl-stats-course-row {
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-top: 1px solid var(--psl-hairline);
+}
+
+.psl-stats-card-list > :first-child {
+  border-top: none;
+}
+
+.psl-stats-bar-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.psl-stats-category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.psl-stats-category-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--psl-text);
+}
+
+.psl-stats-category-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--psl-accent);
+}
+
+.psl-stats-bar-track {
+  height: 6px;
+  background: var(--psl-fill-2);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.psl-stats-bar-fill {
+  height: 100%;
+  background: var(--psl-accent);
+  border-radius: 99px;
+  animation: psl-stats-bar-grow 0.9s 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.psl-stats-course-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: var(--psl-accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.psl-stats-course-icon svg {
+  width: 18px;
+  height: 18px;
+  color: var(--psl-accent);
+}
+
+.psl-stats-course-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.psl-stats-course-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--psl-text);
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.psl-stats-course-meta {
+  font-size: 12px;
+  color: var(--psl-text-2);
+}
+
+.psl-stats-course-sep {
+  color: var(--psl-hairline-strong);
+  margin: 0 4px;
+}
+
 @layer base {
   * {
     @apply border-border;

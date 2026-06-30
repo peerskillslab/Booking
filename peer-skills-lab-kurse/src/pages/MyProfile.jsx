@@ -25,10 +25,12 @@ import {
 export default function MyProfile() {
   const { user, navigateToLogin, checkAppState } = useAuth();
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [studienjahr, setStudienjahr] = useState("1");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null); // success | error
   const [message, setMessage] = useState("");
+  const [emailConfirmDialogOpen, setEmailConfirmDialogOpen] = useState(false);
 
   // Password change fields
   const [currentPassword, setCurrentPassword] = useState("");
@@ -96,6 +98,7 @@ export default function MyProfile() {
       return;
     }
     setFullName(user.full_name || "");
+    setEmail(user.email || "");
     setStudienjahr((user.studienjahr || 1).toString());
   }, [user]);
 
@@ -103,12 +106,37 @@ export default function MyProfile() {
     return null;
   }
 
-  const handleSave = async () => {
+  const attemptSave = () => {
     if (!fullName.trim()) {
       setStatus("error");
       setMessage("Name darf nicht leer sein.");
       return;
     }
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setStatus("error");
+      setMessage("E-Mail darf nicht leer sein.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setStatus("error");
+      setMessage("Gültige E-Mail-Adresse eingeben.");
+      return;
+    }
+
+    // Prüfe, ob E-Mail geändert wurde
+    if (trimmedEmail !== user?.email) {
+      setEmailConfirmDialogOpen(true);
+      return;
+    }
+
+    handleSave();
+  };
+
+  const handleSave = async () => {
+    const trimmedEmail = email.trim();
 
     setLoading(true);
     setStatus(null);
@@ -116,6 +144,7 @@ export default function MyProfile() {
     try {
       await peerskillslab.auth.updateMe({
         full_name: fullName,
+        email: trimmedEmail,
         studienjahr: parseInt(studienjahr)
       });
       await checkAppState();
@@ -124,8 +153,13 @@ export default function MyProfile() {
       setTimeout(() => setStatus(null), 3000);
     } catch (error) {
       console.error("Fehler beim Aktualisieren:", error);
+      const errorMsg = error.data?.error || "Fehler beim Speichern der Änderungen.";
+      if (errorMsg === 'email_taken') {
+        setMessage("E-Mail-Adresse ist bereits vergeben.");
+      } else {
+        setMessage(errorMsg);
+      }
       setStatus("error");
-      setMessage("Fehler beim Speichern der Änderungen.");
     } finally {
       setLoading(false);
     }
@@ -143,12 +177,17 @@ export default function MyProfile() {
               <CardTitle className="text-2xl">Mein Profil</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Email (read-only) */}
+              {/* Email (editable) */}
               <div>
-                <Label className="text-muted-foreground">E-Mail</Label>
-                <div className="mt-1.5 p-3 bg-muted rounded-lg text-foreground font-medium">
-                  {user.email}
-                </div>
+                <Label htmlFor="email">E-Mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1.5"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Dies ist deine Login-E-Mail-Adresse.</p>
               </div>
 
               {/* Full Name (editable) */}
@@ -205,7 +244,7 @@ export default function MyProfile() {
 
               {/* Save Button */}
               <Button
-                onClick={handleSave}
+                onClick={attemptSave}
                 disabled={loading}
                 className="w-full"
               >
@@ -343,6 +382,24 @@ export default function MyProfile() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Email Change Confirmation Dialog */}
+        <AlertDialog open={emailConfirmDialogOpen} onOpenChange={setEmailConfirmDialogOpen}>
+          <AlertDialogContent className="max-w-sm mx-4">
+            <AlertDialogHeader>
+              <AlertDialogTitle>E-Mail-Adresse wirklich ändern?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Deine E-Mail-Adresse ist dein Login-Passwort. Nach der Änderung musst du dich mit der neuen E-Mail-Adresse anmelden.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+              <AlertDialogCancel className="mt-0">Abbrechen</AlertDialogCancel>
+              <AlertDialogAction onClick={() => { setEmailConfirmDialogOpen(false); handleSave(); }}>
+                Ja, E-Mail ändern
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

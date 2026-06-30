@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { peerskillslab } from '@/api/peerskillslabClient';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, BookOpen } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -24,6 +23,16 @@ function getCourseStartDate(course) {
   } catch {
     return null;
   }
+}
+
+function CourseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="4" width="14" height="2" rx="1" fill="currentColor" />
+      <rect x="2" y="8" width="10" height="2" rx="1" fill="currentColor" />
+      <rect x="2" y="12" width="7" height="2" rx="1" fill="currentColor" />
+    </svg>
+  );
 }
 
 export default function MyStats() {
@@ -73,20 +82,46 @@ export default function MyStats() {
     return stats;
   }, [attendedCourses, courseMap]);
 
+  const lastCourse = useMemo(() => {
+    if (attendedCourses.length === 0) return null;
+    const sorted = [...attendedCourses].sort((a, b) => {
+      const dateA = getCourseStartDate(courseMap[a.course_id]);
+      const dateB = getCourseStartDate(courseMap[b.course_id]);
+      return (dateB || new Date(0)) - (dateA || new Date(0));
+    });
+    const booking = sorted[0];
+    const course = courseMap[booking.course_id];
+    const courseStart = getCourseStartDate(course);
+    return {
+      title: booking.course_title,
+      category: course?.category || 'Sonstiges',
+      date: courseStart ? format(courseStart, "dd.MM.yyyy '·' HH:mm 'Uhr'", { locale: de }) : '—',
+    };
+  }, [attendedCourses, courseMap]);
+
+  const topCategory = useMemo(() => {
+    const entries = Object.entries(statsByCategory);
+    if (entries.length === 0) return null;
+    return entries.reduce((max, curr) => (curr[1] > max[1] ? curr : max));
+  }, [statsByCategory]);
+
   if (!user) return null;
 
+  const totalCourses = attendedCourses.length;
+
   return (
-    <div className="psl-page">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Meine Statistik</h1>
-        <p className="text-muted-foreground mb-8">Überblick über deine besuchten Kurse</p>
+    <div className="psl-page" style={{ maxWidth: 900 }}>
+      {/* Page Header */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 600, marginBottom: 4 }}>Meine Statistik</h1>
+        <p style={{ fontSize: 14, marginBottom: 36 }}>Überblick über deine besuchten Kurse</p>
       </motion.div>
 
       {isLoading ? (
         <div className="flex justify-center py-20">
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
-      ) : attendedCourses.length === 0 ? (
+      ) : totalCourses === 0 ? (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
           <BookOpen className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-foreground mb-2">Noch keine besuchten Kurse</h3>
@@ -94,65 +129,107 @@ export default function MyStats() {
         </motion.div>
       ) : (
         <div className="space-y-8">
-          {/* Gesamtzahl */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center">
-                  <div className="text-4xl font-bold text-primary mb-2">{attendedCourses.length}</div>
-                  <p className="text-muted-foreground">Besuchte Kurse</p>
+          {/* Stat Hero Row */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.08 }}
+            className="psl-stats-hero-row"
+          >
+            {/* Big Number Card */}
+            <div className="psl-stats-hero-card">
+              <p className="psl-stats-hero-label">Besuchte Kurse</p>
+              <div>
+                <div className="psl-stats-hero-number">{totalCourses}</div>
+                <p className="psl-stats-hero-subtext">insgesamt</p>
+              </div>
+            </div>
+
+            {/* Info Card */}
+            <div className="psl-stats-info-card">
+              <div className="psl-stats-info-row bordered">
+                <div>
+                  <p className="psl-stats-info-label">Letzter Kurs</p>
+                  <p className="psl-stats-info-title">{lastCourse?.title || '—'}</p>
+                  <p className="psl-stats-info-meta">{lastCourse?.date || '—'}</p>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="psl-stats-badge">Besucht</div>
+              </div>
+              <div className="psl-stats-info-row">
+                <div>
+                  <p className="psl-stats-info-label">Aktivste Kategorie</p>
+                  <p className="psl-stats-info-title">{topCategory?.[0] || '—'}</p>
+                </div>
+                <div className="psl-stats-info-number">{topCategory?.[1] || 0}</div>
+              </div>
+            </div>
           </motion.div>
 
           {/* Nach Kategorie */}
           {Object.keys(statsByCategory).length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary" />
-                Nach Kategorie
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(statsByCategory).map(([category, count]) => (
-                  <Card key={category}>
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-foreground">{category}</span>
-                        <span className="text-2xl font-bold text-primary">{count}</span>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.16 }}
+            >
+              <div className="psl-stats-section-header">
+                <div className="psl-stats-dot" />
+                <h2 className="psl-stats-section-title">Nach Kategorie</h2>
+              </div>
+              <div className="psl-stats-card-list">
+                {Object.entries(statsByCategory).map(([category, count], i) => (
+                  <div
+                    key={category}
+                    className="psl-stats-category-row"
+                    style={{ animationDelay: `${i * 0.05}s` }}
+                  >
+                    <div className="psl-stats-bar-section">
+                      <div className="psl-stats-category-header">
+                        <span className="psl-stats-category-name">{category}</span>
+                        <span className="psl-stats-category-count">{count} Kurs{count !== 1 ? 'e' : ''}</span>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <div className="psl-stats-bar-track">
+                        <div
+                          className="psl-stats-bar-fill"
+                          style={{ '--bar-width': `${(count / totalCourses) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </motion.div>
           )}
 
-          {/* Auflistung aller Kurse */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <h2 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary" />
-              Besuchte Kurse
-            </h2>
-            <div className="space-y-3">
+          {/* Besuchte Kurse */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.24 }}
+          >
+            <div className="psl-stats-section-header">
+              <div className="psl-stats-dot" />
+              <h2 className="psl-stats-section-title">Besuchte Kurse</h2>
+            </div>
+            <div className="psl-stats-card-list">
               {attendedCourses.map((booking) => {
                 const course = courseMap[booking.course_id];
                 const courseStart = getCourseStartDate(course);
                 return (
-                  <Card key={booking.id} className="border-border/60 hover:shadow-md transition-shadow">
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-foreground truncate">{booking.course_title}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {course?.category && <span>{course.category} • </span>}
-                          {courseStart && format(courseStart, 'dd.MM.yyyy HH:mm', { locale: de })}
-                        </div>
-                      </div>
-                      <div className="text-xs font-semibold px-2 py-1 rounded bg-primary/10 text-primary border border-primary/20">
-                        Besucht
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <div key={booking.id} className="psl-stats-course-row">
+                    <div className="psl-stats-course-icon">
+                      <CourseIcon />
+                    </div>
+                    <div className="psl-stats-course-content">
+                      <p className="psl-stats-course-title">{booking.course_title}</p>
+                      <p className="psl-stats-course-meta">
+                        {course?.category || 'Sonstiges'}
+                        <span className="psl-stats-course-sep">·</span>
+                        {courseStart ? format(courseStart, 'dd.MM.yyyy · HH:mm', { locale: de }) : '—'}
+                      </p>
+                    </div>
+                    <div className="psl-stats-badge">Besucht</div>
+                  </div>
                 );
               })}
             </div>

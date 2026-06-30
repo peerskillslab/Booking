@@ -81,14 +81,14 @@ export default function TutorDashboard() {
           )}
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {templates.map((template, i) => (
             <motion.div key={template.id} className="h-full" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
               <Card className="h-full flex flex-col border-border/60 hover:border-primary/30 hover:shadow-md transition-all">
                 <CardContent className="p-5 flex flex-col flex-1">
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div>
-                      <h3 className="font-semibold text-foreground leading-tight">{template.title}</h3>
+                  <div className="flex items-start justify-between gap-2 mb-3 min-w-0">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-foreground leading-tight truncate">{template.title}</h3>
                       <Badge variant="secondary" className="text-xs mt-1">{template.category}</Badge>
                     </div>
                   </div>
@@ -103,9 +103,10 @@ export default function TutorDashboard() {
                       <span className="flex items-center gap-1"><Users className="w-3 h-3" />max. {template.max_participants}</span>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <Button className="flex-1" size="sm" onClick={() => openPublish(template)}>
-                      <CalendarPlus className="w-3.5 h-3.5 mr-1" /> Ausschreiben
+                  <div className="flex gap-2 flex-wrap">
+                    <Button className="flex-1 sm:flex-1" size="sm" onClick={() => openPublish(template)} title="Ausschreiben">
+                      <CalendarPlus className="w-3.5 h-3.5 sm:mr-1" />
+                      <span className="hidden sm:inline">Ausschreiben</span>
                     </Button>
                     {user.role === "admin" && (
                       <>

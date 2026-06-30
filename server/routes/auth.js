@@ -74,7 +74,7 @@ router.get('/me', requireAuth, (req, res) => {
 router.patch('/me', requireAuth, async (req, res) => {
   try {
     const pool = getPool();
-    const { full_name, studienjahr, password, current_password } = req.body;
+    const { full_name, studienjahr, password, current_password, email } = req.body;
 
     // If changing password, require and verify current password
     if (password) {
@@ -91,10 +91,27 @@ router.patch('/me', requireAuth, async (req, res) => {
       }
     }
 
+    // If changing email, validate format and uniqueness
+    if (email !== undefined) {
+      const trimmedEmail = email.toLowerCase().trim();
+      if (!trimmedEmail) {
+        return res.status(400).json({ error: 'email is required' });
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+        return res.status(400).json({ error: 'invalid email format' });
+      }
+      // Check uniqueness
+      const existing = await pool.query('SELECT id FROM users WHERE email = $1 AND id != $2', [trimmedEmail, req.user.id]);
+      if (existing.rows.length > 0) {
+        return res.status(400).json({ error: 'email_taken' });
+      }
+    }
+
     const updates = {};
     if (full_name !== undefined) updates.full_name = full_name;
     if (studienjahr !== undefined) updates.studienjahr = studienjahr;
     if (password) updates.password_hash = await bcrypt.hash(password, 10);
+    if (email !== undefined) updates.email = email.toLowerCase().trim();
 
     if (Object.keys(updates).length === 0) return res.json(sanitize(req.user));
 
@@ -105,6 +122,14 @@ router.patch('/me', requireAuth, async (req, res) => {
     const placeholderCount = keys.length;
 
     await pool.query(`UPDATE users SET ${setClause} WHERE id = $${placeholderCount + 1}`, values);
+
+    // If email changed, update denormalized email fields in bookings and course_feedbacks
+    if (email !== undefined) {
+      const newEmail = email.toLowerCase().trim();
+      const oldEmail = req.user.email;
+      await pool.query('UPDATE bookings SET user_email = $1 WHERE user_email = $2', [newEmail, oldEmail]);
+      await pool.query('UPDATE course_feedbacks SET user_email = $1 WHERE user_email = $2', [newEmail, oldEmail]);
+    }
 
     const updatedResult = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
     const updated = updatedResult.rows[0];

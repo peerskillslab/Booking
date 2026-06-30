@@ -48,19 +48,43 @@ function initDb() {
 
       await pool.query('ALTER TABLE courses ADD COLUMN IF NOT EXISTS kurs_nr INTEGER');
       await pool.query('ALTER TABLE bookings ADD COLUMN IF NOT EXISTS attended BOOLEAN DEFAULT FALSE');
+      await pool.query('ALTER TABLE course_templates ADD COLUMN IF NOT EXISTS session_count INTEGER DEFAULT 1');
+      console.log('✓ Migration columns added');
 
-      // Migrate old level values to new study year values
+      // First: migrate old level values to new study year values (including NULL)
       try {
+        await pool.query("UPDATE courses SET level = 'Alle Studienjahre' WHERE level IS NULL OR level NOT IN ('Alle Studienjahre','ab 1. Studienjahr','ab 2. Studienjahr','ab 3. Studienjahr','ab 4. Studienjahr','ab 5. Studienjahr','ab 6. Studienjahr')");
         await pool.query("UPDATE courses SET level = 'Alle Studienjahre' WHERE level = 'Alle Level'");
         await pool.query("UPDATE courses SET level = 'ab 1. Studienjahr' WHERE level = 'Anfänger'");
         await pool.query("UPDATE courses SET level = 'ab 3. Studienjahr' WHERE level = 'Fortgeschritten'");
         await pool.query("UPDATE courses SET level = 'ab 5. Studienjahr' WHERE level = 'Experte'");
+        await pool.query("UPDATE course_templates SET level = 'Alle Studienjahre' WHERE level IS NULL OR level NOT IN ('Alle Studienjahre','ab 1. Studienjahr','ab 2. Studienjahr','ab 3. Studienjahr','ab 4. Studienjahr','ab 5. Studienjahr','ab 6. Studienjahr')");
         await pool.query("UPDATE course_templates SET level = 'Alle Studienjahre' WHERE level = 'Alle Level'");
         await pool.query("UPDATE course_templates SET level = 'ab 1. Studienjahr' WHERE level = 'Anfänger'");
         await pool.query("UPDATE course_templates SET level = 'ab 3. Studienjahr' WHERE level = 'Fortgeschritten'");
         await pool.query("UPDATE course_templates SET level = 'ab 5. Studienjahr' WHERE level = 'Experte'");
+        console.log('✓ Level values fixed');
       } catch (err) {
-        console.log('✓ Level migration already applied or not needed');
+        console.log('⚠ Level migration failed:', err.message);
+      }
+
+      // Second: Now update the CHECK constraints
+      try {
+        await pool.query(`ALTER TABLE courses DROP CONSTRAINT IF EXISTS courses_level_check CASCADE`);
+        await pool.query(`ALTER TABLE courses ADD CONSTRAINT courses_level_check
+          CHECK (level IN ('Alle Studienjahre','ab 1. Studienjahr','ab 2. Studienjahr','ab 3. Studienjahr','ab 4. Studienjahr','ab 5. Studienjahr','ab 6. Studienjahr'))`);
+        console.log('✓ courses CHECK constraint updated');
+      } catch (err) {
+        console.log('⚠ courses CHECK constraint update failed:', err.message);
+      }
+
+      try {
+        await pool.query(`ALTER TABLE course_templates DROP CONSTRAINT IF EXISTS course_templates_level_check CASCADE`);
+        await pool.query(`ALTER TABLE course_templates ADD CONSTRAINT course_templates_level_check
+          CHECK (level IN ('Alle Studienjahre','ab 1. Studienjahr','ab 2. Studienjahr','ab 3. Studienjahr','ab 4. Studienjahr','ab 5. Studienjahr','ab 6. Studienjahr'))`);
+        console.log('✓ course_templates CHECK constraint updated');
+      } catch (err) {
+        console.log('⚠ course_templates CHECK constraint update failed:', err.message);
       }
 
       console.log('✓ Migrations applied');

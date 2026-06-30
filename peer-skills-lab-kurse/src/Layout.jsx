@@ -165,6 +165,7 @@ export default function Layout({ children, currentPageName }) {
     "Home": "Kurse",
     "CourseDetail": "Kursdetails",
     "MyBookings": "Meine Buchungen",
+    "MyStats": "Meine Statistik",
     "AdminCourses": "Kurse verwalten",
     "MeineKurse": "Meine Kurse",
     "TutorDashboard": "Kurs ausschreiben",

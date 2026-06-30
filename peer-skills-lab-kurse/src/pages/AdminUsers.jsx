@@ -143,17 +143,17 @@ export default function AdminUsers() {
                                 <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                   <User className="w-4 h-4 text-primary" />
                                 </div>
-                                <div>
-                                  <div className="font-semibold text-foreground flex items-center gap-2">
-                                    {u.full_name || "—"}
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-semibold text-foreground flex items-center gap-2 flex-wrap">
+                                    <span className="truncate">{u.full_name || "—"}</span>
                                     {u.studienjahr && (
                                       <span className="text-xs font-normal text-muted-foreground">{u.studienjahr}. Jahr</span>
                                     )}
                                   </div>
-                                  <div className="text-sm text-muted-foreground">{u.email}</div>
+                                  <div className="text-sm text-muted-foreground truncate">{u.email}</div>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <Select
                                   value={u.role || "student"}
                                   onValueChange={(newRole) => {
