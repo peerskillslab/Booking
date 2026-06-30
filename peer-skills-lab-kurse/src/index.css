@@ -314,6 +314,10 @@
 }
 .psl-page { padding: 26px 30px 40px; max-width: 980px; margin: 0 auto; }
 
+@media (max-width: 640px) {
+  .psl-page { padding: 16px 12px 32px; }
+}
+
 /* ---------- Components ---------- */
 .psl-card {
   background: var(--psl-card-bg);

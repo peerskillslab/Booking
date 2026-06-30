@@ -248,7 +248,7 @@ export default function MyBookings() {
                       };
 
                       const action = booking.status === "confirmed" ? (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <Button
                             variant="outline"
                             size="sm"

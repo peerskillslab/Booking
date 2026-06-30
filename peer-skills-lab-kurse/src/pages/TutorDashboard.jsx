@@ -52,7 +52,7 @@ export default function TutorDashboard() {
 
   return (
     <div className="psl-page">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-2">
         <p className="text-sm text-muted-foreground">{templates.length} Vorlagen</p>
         {user.role === "admin" && (
           <Button onClick={openCreateTemplate}>

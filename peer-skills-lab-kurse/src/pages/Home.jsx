@@ -76,7 +76,7 @@ export default function Home() {
   return (
     <div className="psl-page">
       {/* Search + view toggle */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <div style={{
           display: "flex", alignItems: "center", gap: 7, height: 30, padding: "0 10px",
           background: "var(--psl-fill)", boxShadow: "inset 0 0 0 0.5px var(--psl-hairline)",

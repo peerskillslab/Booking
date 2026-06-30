@@ -404,14 +404,14 @@ export default function AdminStats() {
                     <p className="text-sm text-muted-foreground py-4 text-center">Keine Daten für diesen Monat</p>
                   ) : (
                     tutorData.map((tutor, i) => (
-                      <div key={tutor.name} className="flex items-center justify-between py-3">
+                      <div key={tutor.name} className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 gap-2 sm:gap-4">
                         <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">
                             {i + 1}
                           </span>
-                          <span className="font-medium text-foreground">{tutor.name}</span>
+                          <span className="font-medium text-foreground truncate">{tutor.name}</span>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 sm:gap-4 text-sm text-muted-foreground flex-wrap">
                           <span className="flex items-center gap-1">
                             <BookOpen className="w-3.5 h-3.5" />
                             {tutor.courses} Kurse
@@ -437,9 +437,9 @@ export default function AdminStats() {
                 <CardContent>
                   <div className="divide-y divide-border/60">
                     {pastTutorData.map((t) => (
-                      <div key={t.name} className="flex items-center justify-between py-3">
-                        <span className="font-medium text-foreground">{t.name}</span>
-                        <div className="flex items-center gap-4 text-sm">
+                      <div key={t.name} className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 gap-2 flex-wrap">
+                        <span className="font-medium text-foreground truncate">{t.name}</span>
+                        <div className="flex items-center gap-4 text-sm flex-wrap">
                           <span className="text-green-700 font-medium">✓ {t.held} durchgeführt</span>
                           <span className="text-amber-700 font-medium">✗ {t.cancelled} nicht stattgef.</span>
                         </div>
@@ -491,7 +491,7 @@ export default function AdminStats() {
                       return (
                         <div key={snap.id} className="flex items-center justify-between py-3 flex-wrap gap-2">
                           <span className="font-medium text-foreground">{snap.month_label}</span>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                             <span>{snap.total_courses} Kurse</span>
                             <span>{snap.total_participants} Teilnehmende</span>
                             <span>{snap.total_bookings} Buchungen</span>

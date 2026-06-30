@@ -141,8 +141,8 @@ export default function MyStats() {
                 return (
                   <Card key={booking.id} className="border-border/60 hover:shadow-md transition-shadow">
                     <CardContent className="p-4 flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="font-semibold text-foreground">{booking.course_title}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-foreground truncate">{booking.course_title}</div>
                         <div className="text-sm text-muted-foreground">
                           {course?.category && <span>{course.category} • </span>}
                           {courseStart && format(courseStart, 'dd.MM.yyyy HH:mm', { locale: de })}

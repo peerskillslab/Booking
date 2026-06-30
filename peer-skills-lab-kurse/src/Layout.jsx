@@ -104,13 +104,6 @@ export default function Layout({ children, currentPageName }) {
     <div className="psl-app">
       {/* ── Sidebar ── */}
       <aside className="psl-sidebar">
-        {/* Traffic lights */}
-        <div className="psl-traffic">
-          <span className="psl-light r" />
-          <span className="psl-light y" />
-          <span className="psl-light g" />
-        </div>
-
         {/* Brand */}
         <div className="psl-brand">
           <Logo size={40} />
@@ -180,6 +173,14 @@ export default function Layout({ children, currentPageName }) {
     "MyProfile": "Profil",
   }[currentPageName] || currentPageName || "Peer Skills Lab"}</span>
           <span className="psl-tb-spacer" />
+          <Link to="/AboutUs" title="Zur Startseite" style={{ display: "flex" }}>
+            <button className="psl-tb-icon-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
+                strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
+                <path d="M3 12L12 3l9 9M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9" />
+              </svg>
+            </button>
+          </Link>
           <div className="psl-tb-divider" />
           <button
             className="psl-tb-icon-btn"

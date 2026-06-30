@@ -46,6 +46,9 @@ export default function AdminCourses() {
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterDate, setFilterDate] = useState("");
+  const [deleteError, setDeleteError] = useState(null);
+  const [notifyDialogOpen, setNotifyDialogOpen] = useState(false);
+  const [notifyData, setNotifyData] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -123,7 +126,24 @@ export default function AdminCourses() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => peerskillslab.entities.Course.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["adminCourses"] }),
+    onSuccess: (result) => {
+      setDeleteError(null);
+      queryClient.invalidateQueries({ queryKey: ["adminCourses"] });
+      toast({ id: "course-delete", title: "Kurs gelöscht", description: result.courseTitle, duration: 3000 });
+      // Wenn es Teilnehmende gibt, Dialog öffnen mit Notifications-Info
+      if (result.emails && result.emails.length > 0) {
+        setNotifyData(result);
+        setNotifyDialogOpen(true);
+      }
+    },
+    onError: (err) => {
+      const errData = err.data || {};
+      if (errData.error === 'course_has_bookings') {
+        setDeleteError('Kurs kann nicht gelöscht werden, solange noch Buchungen vorhanden sind.');
+      } else {
+        setDeleteError(errData.error || 'Fehler beim Löschen des Kurses.');
+      }
+    },
   });
 
   const openCreate = () => {
@@ -217,7 +237,7 @@ export default function AdminCourses() {
             />
           </div>
           <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-48"><SelectValue placeholder="Alle Kategorien" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Alle Kategorien" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle Kategorien</SelectItem>
               {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -227,7 +247,7 @@ export default function AdminCourses() {
             type="date"
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
-            className="w-44"
+            className="w-full sm:w-44"
           />
           {hasFilters && (
             <Button variant="ghost" size="icon" onClick={() => { setSearch(""); setFilterCategory("all"); setFilterDate(""); }}>
@@ -289,7 +309,7 @@ export default function AdminCourses() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Button variant="outline" size="sm" onClick={() => {
                         setSelectedCourse(course);
                         setParticipantsDialogOpen(true);
@@ -310,14 +330,29 @@ export default function AdminCourses() {
                             <AlertDialogTitle>Kurs löschen?</AlertDialogTitle>
                             <AlertDialogDescription>
                               „{course.title}" wird unwiderruflich gelöscht.
+                              {(course.current_participants || 0) > 0 && (
+                                <div className="mt-2 text-sm font-semibold text-destructive">
+                                  Es gibt {course.current_participants} Anmeldung{course.current_participants !== 1 ? 'en' : ''}. Nach dem Löschen wird deine Mail-App mit allen Teilnehmenden geöffnet.
+                                </div>
+                              )}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
+                          {deleteError && (
+                            <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded px-3 py-2">
+                              {deleteError}
+                            </div>
+                          )}
                           <AlertDialogFooter>
                             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => deleteMutation.mutate(course.id)}
+                              onClick={() => {
+                                setDeleteError(null);
+                                deleteMutation.mutate(course.id);
+                              }}
+                              disabled={deleteMutation.isPending}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
+                              {deleteMutation.isPending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : null}
                               Löschen
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -377,7 +412,7 @@ export default function AdminCourses() {
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Button variant="outline" size="sm" onClick={() => {
                               setSelectedCourse(course);
                               setParticipantsDialogOpen(true);
@@ -398,14 +433,29 @@ export default function AdminCourses() {
                                   <AlertDialogTitle>Kurs löschen?</AlertDialogTitle>
                                   <AlertDialogDescription>
                                     „{course.title}" wird unwiderruflich gelöscht.
+                                    {(course.current_participants || 0) > 0 && (
+                                      <div className="mt-2 text-sm font-semibold text-destructive">
+                                        Es gibt {course.current_participants} Anmeldung{course.current_participants !== 1 ? 'en' : ''}. Nach dem Löschen wird deine Mail-App mit allen Teilnehmenden geöffnet.
+                                      </div>
+                                    )}
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
+                                {deleteError && (
+                                  <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded px-3 py-2">
+                                    {deleteError}
+                                  </div>
+                                )}
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Abbrechen</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => deleteMutation.mutate(course.id)}
+                                    onClick={() => {
+                                      setDeleteError(null);
+                                      deleteMutation.mutate(course.id);
+                                    }}
+                                    disabled={deleteMutation.isPending}
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
+                                    {deleteMutation.isPending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : null}
                                     Löschen
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
@@ -440,6 +490,71 @@ export default function AdminCourses() {
               <ParticipantsList course={selectedCourse} />
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Notify Participants Dialog */}
+      <Dialog open={notifyDialogOpen} onOpenChange={setNotifyDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Teilnehmende benachrichtigen</DialogTitle>
+          </DialogHeader>
+          {notifyData && (
+            <div className="space-y-4 py-4">
+              <div>
+                <Label className="text-sm font-semibold">E-Mail-Adressen ({notifyData.emails.length})</Label>
+                <textarea
+                  readOnly
+                  value={notifyData.emails.join('; ')}
+                  className="mt-2 w-full h-20 p-2 border rounded text-xs font-mono bg-muted"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(notifyData.emails.join('; '));
+                    toast({ title: "E-Mails kopiert", duration: 2000 });
+                  }}
+                  className="mt-2"
+                >
+                  E-Mails kopieren
+                </Button>
+              </div>
+
+              <div>
+                <Label className="text-sm font-semibold">Nachrichtentext</Label>
+                <textarea
+                  readOnly
+                  value={`Liebe Teilnehmende\n\nLeider muss der Kurs „${notifyData.courseTitle}" (${notifyData.courseDate}) abgesagt werden.\n\nWir entschuldigen uns für die Unannehmlichkeiten.\n\nFreundliche Grüsse\nPeer Skills Lab`}
+                  className="mt-2 w-full h-32 p-2 border rounded text-sm bg-muted"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const text = `Liebe Teilnehmende\n\nLeider muss der Kurs „${notifyData.courseTitle}" (${notifyData.courseDate}) abgesagt werden.\n\nWir entschuldigen uns für die Unannehmlichkeiten.\n\nFreundliche Grüsse\nPeer Skills Lab`;
+                    navigator.clipboard.writeText(text);
+                    toast({ title: "Text kopiert", duration: 2000 });
+                  }}
+                  className="mt-2"
+                >
+                  Text kopieren
+                </Button>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm">
+                <p className="font-semibold text-blue-900">Wie versenden?</p>
+                <p className="text-blue-800 mt-1">1. E-Mail-Adressen kopieren → In dein E-Mail-Programm einfügen</p>
+                <p className="text-blue-800">2. Text kopieren → In dein E-Mail-Programm einfügen</p>
+                <p className="text-blue-800">3. Nachricht versenden</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNotifyDialogOpen(false)}>
+              Schliessen
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

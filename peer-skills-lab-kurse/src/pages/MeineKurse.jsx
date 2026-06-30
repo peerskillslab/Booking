@@ -22,6 +22,7 @@ export default function MeineKurse() {
   const [bookingsDialogOpen, setBookingsDialogOpen] = useState(false);
   const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -56,7 +57,18 @@ export default function MeineKurse() {
 
   const deleteCourseMutation = useMutation({
     mutationFn: (id) => peerskillslab.entities.Course.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tutorCourses", user?.email] }),
+    onSuccess: () => {
+      setDeleteError(null);
+      queryClient.invalidateQueries({ queryKey: ["tutorCourses", user?.email] });
+    },
+    onError: (err) => {
+      const errData = err.data || {};
+      if (errData.error === 'course_has_bookings') {
+        setDeleteError('Kurs kann nicht gelöscht werden, solange noch Buchungen vorhanden sind.');
+      } else {
+        setDeleteError(errData.error || 'Fehler beim Löschen des Kurses.');
+      }
+    },
   });
 
   const openBookings = (course) => {
@@ -88,7 +100,7 @@ export default function MeineKurse() {
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
               {course.date && <span>{format(new Date(course.date), "dd.MM.yyyy", { locale: de })}</span>}
               {course.time && <span>{course.time}</span>}
               <span className="flex items-center gap-1">
@@ -98,7 +110,7 @@ export default function MeineKurse() {
             </div>
           </div>
           {!isPastCourse && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button variant="outline" size="sm" onClick={() => downloadICalFile(course)} title="Zu Kalender hinzufügen">
                 <Calendar className="w-3.5 h-3.5 mr-1" /> Kalendereintrag
               </Button>
@@ -117,10 +129,17 @@ export default function MeineKurse() {
                       <AlertDialogTitle>Kurs löschen?</AlertDialogTitle>
                       <AlertDialogDescription>„{course.title}" wird unwiderruflich gelöscht.</AlertDialogDescription>
                     </AlertDialogHeader>
+                    {deleteError && (
+                      <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded px-3 py-2">
+                        {deleteError}
+                      </div>
+                    )}
                     <AlertDialogFooter>
                       <AlertDialogCancel>Abbrechen</AlertDialogCancel>
                       <AlertDialogAction onClick={() => deleteCourseMutation.mutate(course.id)}
+                        disabled={deleteCourseMutation.isPending}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        {deleteCourseMutation.isPending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : null}
                         Löschen
                       </AlertDialogAction>
                     </AlertDialogFooter>
