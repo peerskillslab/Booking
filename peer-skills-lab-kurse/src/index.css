@@ -1023,12 +1023,26 @@ p, span, a, button, input, label, li {
 .psl-admin-tile-row {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .psl-admin-tile {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 140px;
   border-radius: 13px;
   padding: 16px 18px;
+}
+
+@media (max-width: 768px) {
+  .psl-admin-tile {
+    flex: 1 1 calc(50% - 6px);
+  }
+}
+
+@media (max-width: 640px) {
+  .psl-admin-tile {
+    flex: 1 1 100%;
+  }
 }
 
 .psl-admin-tile.success {
