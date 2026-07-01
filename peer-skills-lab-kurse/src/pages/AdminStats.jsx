@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, BookOpen, Users, TrendingUp, Award, Download, Archive, Trash2 } from "lucide-react";
+import { Loader2, Download, Archive, Trash2, Users, Calendar } from "lucide-react";
+import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { format, subMonths } from "date-fns";
 import { de } from "date-fns/locale";
@@ -22,6 +22,17 @@ import {
 
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+
+const getInitials = (name) => {
+  if (!name) return "?";
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+};
 
 export default function AdminStats() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -203,23 +214,23 @@ export default function AdminStats() {
   };
 
   return (
-    <div className="psl-page" style={{ maxWidth: 900 }}>
+    <div className="psl-page" style={{ maxWidth: 1100 }}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Statistiken</h1>
-              <p className="text-muted-foreground mt-0.5">Übersicht aller Kurse und Buchungen</p>
-            </div>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="flex items-center justify-between mb-8 flex-wrap gap-4"
+        >
+          <div>
+            <h1 style={{ fontSize: 28, fontWeight: 600, marginBottom: 4 }}>Statistiken</h1>
+            <p style={{ fontSize: 14, marginBottom: 0 }}>Übersicht aller Kurse und Buchungen</p>
           </div>
           <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={isLoading}>
             <Download className="w-4 h-4 mr-1.5" />
             CSV Export
           </Button>
-        </div>
+        </motion.div>
 
         {isLoading ? (
           <div className="flex justify-center py-20">
@@ -227,240 +238,200 @@ export default function AdminStats() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Gesamtstatistik */}
-            <div>
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Gesamtstatistik</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="border-border/60">
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <BookOpen className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Kurse gesamt</p>
-                      <p className="text-3xl font-bold text-foreground">{totalCourses}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border-border/60">
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                      <Users className="w-6 h-6 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Teilnehmende gesamt</p>
-                      <p className="text-3xl font-bold text-foreground">{totalParticipants}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border-border/60">
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
-                      <Award className="w-6 h-6 text-green-700" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Bestätigte Buchungen</p>
-                      <p className="text-3xl font-bold text-foreground">{totalBookings}</p>
-                    </div>
-                  </CardContent>
-                </Card>
+            {/* Row 1: Gesamtstatistik */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.06 }}
+              className="psl-admin-hero-row"
+            >
+              <div className="psl-admin-hero-card dark">
+                <p className="psl-admin-hero-label">Kurse gesamt</p>
+                <span className="psl-admin-hero-number">{totalCourses}</span>
               </div>
-            </div>
+              <div className="psl-admin-hero-card light">
+                <p className="psl-admin-hero-label">Teilnehmende gesamt</p>
+                <span className="psl-admin-hero-number">{totalParticipants}</span>
+              </div>
+              <div className="psl-admin-hero-card light">
+                <p className="psl-admin-hero-label">Bestätigte Buchungen</p>
+                <span className="psl-admin-hero-number">{totalBookings}</span>
+              </div>
+            </motion.div>
 
-            {/* Vergangene Kurse – stattgefunden vs. nicht stattgefunden */}
-            {pastCourses.length > 0 && (
-              <div>
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Vergangene Kurse</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Card className="border-green-200/60">
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
-                        <BookOpen className="w-6 h-6 text-green-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Stattgefunden</p>
-                        <p className="text-3xl font-bold text-green-700">{coursesHeld.length}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-amber-200/60">
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
-                        <BookOpen className="w-6 h-6 text-amber-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Nicht stattgefunden</p>
-                        <p className="text-3xl font-bold text-amber-700">{coursesCancelled.length}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+            {/* Row 2: Vergangene Kurse + YSSA */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.12 }}
+              className="psl-admin-row2"
+            >
+              {pastCourses.length > 0 && (
+                <div className="psl-admin-card">
+                  <p className="psl-admin-card-label">Vergangene Kurse</p>
+                  <div className="psl-admin-tile-row">
+                    <div className="psl-admin-tile success">
+                      <p className="psl-admin-tile-label">Stattgefunden</p>
+                      <span className="psl-admin-tile-num">{coursesHeld.length}</span>
+                    </div>
+                    <div className="psl-admin-tile warning">
+                      <p className="psl-admin-tile-label">Nicht stattgef.</p>
+                      <span className="psl-admin-tile-num">{coursesCancelled.length}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {yssaCourses.length > 0 && (
+                <div className="psl-admin-card">
+                  <p className="psl-admin-card-label">YSSA Kurse</p>
+                  <div className="psl-admin-tile-row">
+                    <div className="psl-admin-tile yssa">
+                      <span className="psl-admin-tile-num">Kurse</span>
+                      <p className="psl-admin-tile-label">{yssaCourses.length}</p>
+                    </div>
+                    <div className="psl-admin-tile yssa">
+                      <span className="psl-admin-tile-num">Teilnehmende</span>
+                      <p className="psl-admin-tile-label">{yssaParticipants}</p>
+                    </div>
+                    <div className="psl-admin-tile yssa">
+                      <span className="psl-admin-tile-num">Buchungen</span>
+                      <p className="psl-admin-tile-label">{yssaBookings}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Row 3: Aktueller Monat */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.18 }}
+              className="psl-admin-card"
+            >
+              <div className="psl-admin-month-header">
+                <p className="psl-admin-card-label">Aktueller Monat</p>
+                <span className="psl-admin-month-badge">{format(now, "MMMM yyyy", { locale: de })}</span>
+              </div>
+              <div className="psl-admin-month-tiles">
+                <div className="psl-admin-month-tile">
+                  <p className="psl-admin-month-tile-label">Kurse</p>
+                  <span className={`psl-admin-month-num${currentMonthCourses.length === 0 ? ' is-zero' : ''}`}>
+                    {currentMonthCourses.length}
+                  </span>
+                </div>
+                <div className="psl-admin-month-tile">
+                  <p className="psl-admin-month-tile-label">Teilnehmende</p>
+                  <span className={`psl-admin-month-num${monthParticipants === 0 ? ' is-zero' : ''}`}>
+                    {monthParticipants}
+                  </span>
+                </div>
+                <div className="psl-admin-month-tile">
+                  <p className="psl-admin-month-tile-label">Buchungen</p>
+                  <span className={`psl-admin-month-num${currentMonthBookings.length === 0 ? ' is-zero' : ''}`}>
+                    {currentMonthBookings.length}
+                  </span>
                 </div>
               </div>
-            )}
+            </motion.div>
 
-            {/* YSSA Kurse */}
-            {yssaCourses.length > 0 && (
-              <div>
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">YSSA Kurse</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <Card className="border-border/60">
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
-                        <BookOpen className="w-6 h-6 text-violet-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Kurse</p>
-                        <p className="text-3xl font-bold text-foreground">{yssaCourses.length}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-border/60">
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
-                        <Users className="w-6 h-6 text-violet-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Teilnehmende</p>
-                        <p className="text-3xl font-bold text-foreground">{yssaParticipants}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-border/60">
-                    <CardContent className="p-6 flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
-                        <Award className="w-6 h-6 text-violet-700" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Buchungen</p>
-                        <p className="text-3xl font-bold text-foreground">{yssaBookings}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            )}
-
-            {/* Aktueller Monat */}
-            <div>
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                Aktueller Monat – {format(now, "MMMM yyyy", { locale: de })}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-muted-foreground">Kurse</p>
-                    <p className="text-3xl font-bold text-primary">{currentMonthCourses.length}</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-muted-foreground">Teilnehmende</p>
-                    <p className="text-3xl font-bold text-primary">{monthParticipants}</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-muted-foreground">Buchungen</p>
-                    <p className="text-3xl font-bold text-primary">{currentMonthBookings.length}</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            {/* Chart */}
+            {/* Chart Row: Kurse pro Tutor:in */}
             {tutorData.length > 0 && (
-              <Card className="border-border/60">
-                <CardHeader>
-                  <CardTitle className="text-lg">Kurse pro Tutor:in (aktueller Monat)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={280}>
-                    <BarChart data={tutorData} margin={{ top: 4, right: 16, left: 0, bottom: 8 }}>
-                      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                      <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                      <Tooltip
-                        formatter={(value, name) => [value, name === "courses" ? "Kurse" : "Teilnehmende"]}
-                        labelStyle={{ fontWeight: 600 }}
-                      />
-                      <Bar dataKey="courses" radius={[6, 6, 0, 0]}>
-                        {tutorData.map((_, i) => (
-                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.24 }}
+                className="psl-admin-chart-card"
+              >
+                <p className="psl-admin-chart-title">Kurse pro Tutor:in (aktueller Monat)</p>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={tutorData} margin={{ top: 4, right: 16, left: 0, bottom: 8 }}>
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                    <Tooltip
+                      formatter={(value, name) => [value, name === "courses" ? "Kurse" : "Teilnehmende"]}
+                      labelStyle={{ fontWeight: 600 }}
+                    />
+                    <Bar dataKey="courses" radius={[6, 6, 0, 0]}>
+                      {tutorData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </motion.div>
             )}
 
-            {/* Tutor Tabelle */}
-            <Card className="border-border/60">
-              <CardHeader>
-                <CardTitle className="text-lg">Tutor:innen im Detail (aktueller Monat)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="divide-y divide-border/60">
-                  {tutorData.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-4 text-center">Keine Daten für diesen Monat</p>
-                  ) : (
-                    tutorData.map((tutor, i) => (
-                      <div key={tutor.name} className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 gap-2 sm:gap-4">
-                        <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">
-                            {i + 1}
-                          </span>
-                          <span className="font-medium text-foreground truncate">{tutor.name}</span>
+            {/* Row 4: Tutor:innen */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.30 }}
+              className="psl-admin-row4"
+            >
+              {pastTutorData.length > 0 && (
+                <div className="psl-admin-card">
+                  <p className="psl-admin-tutor-card-title">Kurse nach Tutor:in</p>
+                  {pastTutorData.map((t) => (
+                    <div key={t.name} className="psl-admin-tutor-row">
+                      <div className="psl-admin-tutor-identity">
+                        <div className="psl-admin-avatar-circle">{getInitials(t.name)}</div>
+                        <span className="psl-admin-tutor-name">{t.name}</span>
+                      </div>
+                      <div className="psl-admin-tutor-stats">
+                        <span className="psl-admin-tutor-held">✓ {t.held} durchgeführt</span>
+                        <span className="psl-admin-tutor-cancelled">✗ {t.cancelled} nicht stattgef.</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="psl-admin-card psl-admin-detail-card">
+                <p className="psl-admin-tutor-card-title">Tutor:innen im Detail</p>
+                <p className="psl-admin-tutor-subtitle">Aktueller Monat · {format(now, "MMMM yyyy", { locale: de })}</p>
+                {tutorData.length === 0 ? (
+                  <div className="psl-admin-empty-state">
+                    <div style={{ textAlign: "center" }}>
+                      <Users className="psl-admin-empty-state-icon" width={32} height={32} />
+                      <p className="psl-admin-empty-state-text">Keine Daten für diesen Monat</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    {tutorData.map((tutor) => (
+                      <div key={tutor.name} className="psl-admin-tutor-row">
+                        <div className="psl-admin-tutor-identity">
+                          <div className="psl-admin-avatar-circle">{getInitials(tutor.name)}</div>
+                          <span className="psl-admin-tutor-name">{tutor.name}</span>
                         </div>
-                        <div className="flex items-center gap-2 sm:gap-4 text-sm text-muted-foreground flex-wrap">
-                          <span className="flex items-center gap-1">
-                            <BookOpen className="w-3.5 h-3.5" />
+                        <div className="psl-admin-tutor-stats">
+                          <span style={{ fontSize: "13px", color: "var(--psl-text-2)" }}>
                             {tutor.courses} Kurse
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3.5 h-3.5" />
+                          <span style={{ fontSize: "13px", color: "var(--psl-text-2)" }}>
                             {tutor.participants} Teilnehmende
                           </span>
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Durchgeführte Kurse nach Tutor:in (alle vergangenen Kurse) */}
-            {pastTutorData.length > 0 && (
-              <Card className="border-border/60">
-                <CardHeader>
-                  <CardTitle className="text-lg">Durchgeführte Kurse nach Tutor:in</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="divide-y divide-border/60">
-                    {pastTutorData.map((t) => (
-                      <div key={t.name} className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 gap-2 flex-wrap">
-                        <span className="font-medium text-foreground truncate">{t.name}</span>
-                        <div className="flex items-center gap-4 text-sm flex-wrap">
-                          <span className="text-green-700 font-medium">✓ {t.held} durchgeführt</span>
-                          <span className="text-amber-700 font-medium">✗ {t.cancelled} nicht stattgef.</span>
-                        </div>
-                      </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                )}
+              </div>
+            </motion.div>
 
-            {/* Archivierte Monats-Snapshots */}
+            {/* Row 5: Archivierte Monate */}
             {snapshots.length > 0 && (
-              <Card className="border-border/60">
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Archive className="w-4 h-4 text-muted-foreground" />
-                    <CardTitle className="text-lg">Archivierte Monate</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="divide-y divide-border/60">
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.36 }}
+                className="psl-admin-card psl-admin-archive-card"
+              >
+                <div className="psl-admin-archive-header">
+                  <Archive className="w-4 h-4" />
+                  <p className="psl-admin-archive-title">Archivierte Monate</p>
+                </div>
+                <div className="psl-admin-archive-list">
                     {snapshots.map((snap) => {
                       const parsedTutors = (() => { try { return JSON.parse(snap.tutor_data || "[]"); } catch { return []; } })();
                       const parsedCourses = (() => { try { return JSON.parse(snap.course_data || "[]"); } catch { return []; } })();
@@ -489,44 +460,58 @@ export default function AdminStats() {
                         queryClient.invalidateQueries({ queryKey: ["statsSnapshots"] });
                       };
                       return (
-                        <div key={snap.id} className="flex items-center justify-between py-3 flex-wrap gap-2">
-                          <span className="font-medium text-foreground">{snap.month_label}</span>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                            <span>{snap.total_courses} Kurse</span>
-                            <span>{snap.total_participants} Teilnehmende</span>
-                            <span>{snap.total_bookings} Buchungen</span>
-                            <Button variant="ghost" size="sm" onClick={handleSnapExport} className="h-7 px-2">
-                              <Download className="w-3.5 h-3.5 mr-1" />
-                              CSV
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-7 px-2 text-destructive hover:bg-destructive/10">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Monats-Snapshot löschen?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Der Eintrag für <strong>{snap.month_label}</strong> wird dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                                  <AlertDialogAction onClick={handleSnapDelete} className="bg-destructive hover:bg-destructive/90">
-                                    Löschen
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                        <div key={snap.id} className="psl-admin-archive-row">
+                          <div className="psl-admin-archive-left">
+                            <div className="psl-admin-archive-icon-box">
+                              <Calendar />
+                            </div>
+                            <span className="psl-admin-archive-month">{snap.month_label}</span>
+                          </div>
+                          <div className="psl-admin-archive-right">
+                            <div className="psl-admin-archive-stats">
+                              <span className="psl-admin-archive-stat">
+                                <strong>{snap.total_courses}</strong> Kurse
+                              </span>
+                              <span className="psl-admin-archive-stat">
+                                <strong>{snap.total_participants}</strong> Teilnehmende
+                              </span>
+                              <span className="psl-admin-archive-stat">
+                                <strong>{snap.total_bookings}</strong> Buchungen
+                              </span>
+                            </div>
+                            <div className="psl-admin-archive-actions">
+                              <button className="psl-btn" onClick={handleSnapExport}>
+                                <Download className="w-3.5 h-3.5" />
+                                CSV
+                              </button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <button className="psl-admin-delete-btn">
+                                    <Trash2 />
+                                  </button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Monats-Snapshot löschen?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Der Eintrag für <strong>{snap.month_label}</strong> wird dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleSnapDelete} className="bg-destructive hover:bg-destructive/90">
+                                      Löschen
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           </div>
                         </div>
                       );
                     })}
                   </div>
-                </CardContent>
-              </Card>
+                </motion.div>
             )}
           </div>
         )}

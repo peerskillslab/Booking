@@ -49,6 +49,24 @@
   --psl-accent-soft: #eef3e6;
 
   --psl-wallpaper: linear-gradient(155deg,#d6d9df 0%,#c3c7d0 48%,#b6bccb 100%);
+
+  /* AdminStats — neue Design-Tokens */
+  --psl-admin-success-bg: #e3f3e1;
+  --psl-admin-success-text: #1f6b2c;
+  --psl-admin-success-text-2: #2c7a3a;
+  --psl-admin-warning-bg: #faf0e1;
+  --psl-admin-warning-text: #95531d;
+  --psl-admin-warning-text-2: #a8632a;
+  --psl-admin-yssa-bg: #f1eef8;
+  --psl-admin-yssa-text: #4a3d85;
+  --psl-admin-yssa-text-2: #615a86;
+  --psl-admin-delete-bg: #fbeeec;
+  --psl-admin-delete-border: #f0d5d0;
+  --psl-admin-delete-icon: #b5432f;
+  --psl-admin-sage-bg: #f5f6f1;
+  --psl-admin-badge-bg: #e9edd9;
+  --psl-admin-avatar-bg: #e9edd9;
+  --psl-admin-avatar-text: #3c5a1e;
 }
 
 /* ---------- PSL Tokens: Dark ---------- */
@@ -80,6 +98,24 @@
   --psl-accent-soft: rgba(143,191,78,0.16);
 
   --psl-wallpaper: linear-gradient(155deg,#2b2d33 0%,#1c1d22 55%,#141418 100%);
+
+  /* AdminStats — Dark Mode */
+  --psl-admin-success-bg: rgba(76,175,80,0.16);
+  --psl-admin-success-text: #7fd88a;
+  --psl-admin-success-text-2: #8fe09a;
+  --psl-admin-warning-bg: rgba(230,159,64,0.16);
+  --psl-admin-warning-text: #e0a768;
+  --psl-admin-warning-text-2: #e6b47c;
+  --psl-admin-yssa-bg: rgba(148,120,220,0.14);
+  --psl-admin-yssa-text: #b8a9ef;
+  --psl-admin-yssa-text-2: #c3bce0;
+  --psl-admin-delete-bg: rgba(224,90,74,0.14);
+  --psl-admin-delete-border: rgba(224,90,74,0.30);
+  --psl-admin-delete-icon: #e08072;
+  --psl-admin-sage-bg: rgba(255,255,255,0.04);
+  --psl-admin-badge-bg: rgba(143,191,78,0.18);
+  --psl-admin-avatar-bg: rgba(143,191,78,0.18);
+  --psl-admin-avatar-text: #c3e08f;
 }
 
 /* ---------- Category colors ---------- */
@@ -872,6 +908,462 @@ p, span, a, button, input, label, li {
 .psl-stats-course-sep {
   color: var(--psl-hairline-strong);
   margin: 0 4px;
+}
+
+/* ========== AdminStats Statistiken — Design Handoff ========== */
+
+.psl-admin-hero-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 640px) {
+  .psl-admin-hero-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.psl-admin-hero-card {
+  border-radius: 18px;
+  padding: 28px 26px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 150px;
+}
+
+.psl-admin-hero-card.dark {
+  background: linear-gradient(165deg, #5c8c1a 0%, #466E0E 72%);
+}
+
+.psl-admin-hero-card.dark::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.psl-admin-hero-card.light {
+  background: var(--psl-card-bg);
+  box-shadow: var(--psl-card-shadow);
+}
+
+.psl-admin-hero-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.psl-admin-hero-card.dark .psl-admin-hero-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.psl-admin-hero-card.light .psl-admin-hero-label {
+  color: var(--psl-text-3);
+}
+
+.psl-admin-hero-number {
+  font-size: 56px;
+  font-weight: 600;
+  line-height: 1;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.psl-admin-hero-card.dark .psl-admin-hero-number {
+  color: #ffffff;
+}
+
+.psl-admin-hero-card.light .psl-admin-hero-number {
+  color: var(--psl-text);
+}
+
+.psl-admin-row2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 640px) {
+  .psl-admin-row2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.psl-admin-card {
+  background: var(--psl-card-bg);
+  border-radius: 18px;
+  padding: 24px 26px;
+  box-shadow: var(--psl-card-shadow);
+}
+
+.psl-admin-card-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--psl-text-3);
+  margin-bottom: 18px;
+}
+
+.psl-admin-tile-row {
+  display: flex;
+  gap: 12px;
+}
+
+.psl-admin-tile {
+  flex: 1;
+  border-radius: 13px;
+  padding: 16px 18px;
+}
+
+.psl-admin-tile.success {
+  background: var(--psl-admin-success-bg);
+}
+
+.psl-admin-tile.warning {
+  background: var(--psl-admin-warning-bg);
+}
+
+.psl-admin-tile.yssa {
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  background: var(--psl-admin-yssa-bg);
+}
+
+.psl-admin-tile-label {
+  font-size: 11px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.psl-admin-tile.success .psl-admin-tile-label {
+  color: var(--psl-admin-success-text-2);
+}
+
+.psl-admin-tile.warning .psl-admin-tile-label {
+  color: var(--psl-admin-warning-text-2);
+}
+
+.psl-admin-tile.yssa .psl-admin-tile-label {
+  color: var(--psl-admin-yssa-text-2);
+}
+
+.psl-admin-tile-num {
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.psl-admin-tile.success .psl-admin-tile-num {
+  color: var(--psl-admin-success-text);
+}
+
+.psl-admin-tile.warning .psl-admin-tile-num {
+  color: var(--psl-admin-warning-text);
+}
+
+.psl-admin-tile.yssa .psl-admin-tile-num {
+  font-size: 32px;
+  color: var(--psl-admin-yssa-text);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.psl-admin-chart-card {
+  background: var(--psl-card-bg);
+  border-radius: 18px;
+  padding: 24px 26px;
+  box-shadow: var(--psl-card-shadow);
+  margin-bottom: 14px;
+}
+
+.psl-admin-chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--psl-text);
+  margin-bottom: 16px;
+}
+
+.psl-admin-month-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--psl-admin-avatar-text);
+  background: var(--psl-admin-badge-bg);
+  padding: 3px 11px;
+  border-radius: 999px;
+}
+
+.psl-admin-month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.psl-admin-month-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .psl-admin-month-tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
+.psl-admin-month-tile {
+  background: var(--psl-admin-sage-bg);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.psl-admin-month-tile-label {
+  font-size: 12px;
+  color: var(--psl-text-2);
+  margin-bottom: 6px;
+}
+
+.psl-admin-month-num {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--psl-text);
+}
+
+.psl-admin-month-num.is-zero {
+  color: var(--psl-text-3);
+}
+
+.psl-admin-row4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 640px) {
+  .psl-admin-row4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.psl-admin-detail-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.psl-admin-tutor-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--psl-text);
+  margin-bottom: 20px;
+}
+
+.psl-admin-tutor-subtitle {
+  font-size: 12px;
+  color: var(--psl-text-2);
+  margin-bottom: 20px;
+}
+
+.psl-admin-tutor-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--psl-hairline);
+}
+
+.psl-admin-tutor-row:last-child {
+  border-bottom: none;
+}
+
+.psl-admin-tutor-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.psl-admin-avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--psl-admin-avatar-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--psl-admin-avatar-text);
+  flex-shrink: 0;
+}
+
+.psl-admin-tutor-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--psl-text);
+}
+
+.psl-admin-tutor-stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.psl-admin-tutor-held {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--psl-admin-success-text-2);
+}
+
+.psl-admin-tutor-cancelled {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--psl-admin-warning-text-2);
+}
+
+.psl-admin-empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--psl-admin-sage-bg);
+  border-radius: 12px;
+  padding: 28px;
+}
+
+.psl-admin-empty-state-icon {
+  opacity: 0.3;
+  margin: 0 auto 10px;
+  display: block;
+}
+
+.psl-admin-empty-state-text {
+  font-size: 13px;
+  color: var(--psl-text-2);
+  text-align: center;
+}
+
+.psl-admin-archive-card {
+  margin-bottom: 0;
+}
+
+.psl-admin-archive-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.psl-admin-archive-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--psl-text);
+}
+
+.psl-admin-archive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.psl-admin-archive-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--psl-admin-sage-bg);
+  border-radius: 12px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.psl-admin-archive-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.psl-admin-archive-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: var(--psl-admin-badge-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.psl-admin-archive-icon-box svg {
+  width: 16px;
+  height: 16px;
+  color: var(--psl-admin-avatar-text);
+}
+
+.psl-admin-archive-month {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--psl-text);
+}
+
+.psl-admin-archive-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.psl-admin-archive-stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.psl-admin-archive-stat {
+  font-size: 13px;
+  color: var(--psl-text-2);
+}
+
+.psl-admin-archive-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.psl-admin-delete-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--psl-admin-delete-bg);
+  border: 1px solid var(--psl-admin-delete-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.psl-admin-delete-btn svg {
+  width: 14px;
+  height: 14px;
+  color: var(--psl-admin-delete-icon);
 }
 
 @layer base {
