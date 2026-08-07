@@ -68,33 +68,6 @@ export default function AdminCourses() {
     enabled: !!user,
   });
 
-  const { data: templates = [] } = useQuery({
-    queryKey: ["adminTemplates"],
-    queryFn: () => peerskillslab.entities.CourseTemplate.list(),
-    enabled: !!user,
-  });
-
-  const missingCategories = CATEGORIES.filter(
-    (cat) => !templates.some((t) => t.category === cat)
-  );
-
-  const [seeding, setSeeding] = useState(false);
-  const seedTemplates = async () => {
-    setSeeding(true);
-    for (const cat of missingCategories) {
-      await peerskillslab.entities.CourseTemplate.create({
-        title: cat,
-        category: cat,
-        level: "Alle Studienjahre",
-        duration_minutes: 60,
-        max_participants: 10,
-      });
-    }
-    queryClient.invalidateQueries({ queryKey: ["adminTemplates"] });
-    queryClient.invalidateQueries({ queryKey: ["tutorTemplates"] });
-    toast({ title: `${missingCategories.length} Vorlagen erstellt`, duration: 3000 });
-    setSeeding(false);
-  };
   const instructorOptions = allUsers
     .filter((u) => (u.role === "tutor" || u.role === "admin") && u.full_name)
     .map((u) => u.full_name)
