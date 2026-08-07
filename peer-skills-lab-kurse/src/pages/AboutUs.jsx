@@ -218,7 +218,7 @@ function TeamSection() {
         </p>
       </div>
       <div className="au-team-mosaic" style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gridAutoRows: "160px", gap: 14 }}>
-        {TEAM.map((m, i) => {
+        {[...TEAM].sort(() => Math.random() - 0.5).map((m, i) => {
           const spans = { c: "span 4", r: "span 2" };
           return (
             <div key={i} className="au-team-cell" style={{ gridColumn: spans.c, gridRow: spans.r, display: "flex", flexDirection: "column", gap: 10 }}>
