@@ -138,10 +138,10 @@ function Pill({ icon: I, label }) {
 
 function HowCards() {
   const steps = [
-    { n: "01", icon: Icon.Users,       title: "Peers lehren Peers",        body: "Studierende lernen besonders effektiv im Austausch mit Peers, die sich in derselben Ausbildungsphase befinden. Lernen auf Augenhöhe ermöglicht offenes Fragenstellen, aktives Ausprobieren und das Korrigieren von Fehlern ohne Hemmschwelle. Dadurch entsteht eine hohe soziale Kongruenz, während die kognitive Kongruenz durch verständliche, nah an der eigenen Denkstruktur liegende Erklärungen unterstützt wird." },
-    { n: "02", icon: Icon.Repeat,      title: "Strategisch wiederholen",   body: "Spaced Repetition Learning ist eine Lernmethode, bei der Inhalte in zeitlich abgestuften Abständen wiederholt werden. Statt einmalig intensiv zu lernen, wird der Stoff mehrfach aktiv abgerufen, wobei die Intervalle zwischen den Wiederholungen zunehmend grösser werden. Dadurch wird die Vergessenskurve gezielt genutzt und Wissen langfristig im Gedächtnis verankert. Die Methode ist besonders effektiv für nachhaltiges Lernen und Prüfungsvorbereitung." },
-    { n: "03", icon: Icon.Stethoscope, title: "OSCE- und Klinik-nah",      body: "Jeder Kurs orientiert sich an den Lernzielen der Universität Bern und ergänzt das bestehende Curriculum somit gezielt." },
-    { n: "04", icon: Icon.Sparkle,     title: "Niedrigschwellig & offen",  body: "Eintragen, hingehen, üben. Wer Lust hat selbst zu unterrichten, schreibt uns einfach!" },
+    { n: "01", icon: Icon.Users,       title: "Peers lehren Peers",        body: "Dadurch entsteht eine hohe soziale und kognitive Kongruenz, weil Inhalte verständlich, praxisnah und ähnlich der eigenen Denkstruktur erklärt werden." },
+    { n: "02", icon: Icon.Repeat,      title: "Strategisch wiederholen",   body: "Mithilfe von Spaced Repetition werden Inhalte in zeitlich abgestuften Abständen wiederholt, damit Wissen langfristig im Gedächtnis verankert wird." },
+    { n: "03", icon: Icon.Stethoscope, title: "OSCE- und Klinik-nah",      body: "Unsere Kurse orientieren sich an den Lernzielen der Universität Bern." },
+    { n: "04", icon: Icon.Sparkle,     title: "Niedrigschwellig & offen",  body: "Eintragen, hingehen, üben – und wer selbst unterrichten möchte, kann sich einfach bei uns melden." },
   ];
   return (
     <section className="au-section">
@@ -173,7 +173,7 @@ function HowCards() {
 function StatsBlock() {
   const stats = [
     { n: "70", label: "Übungseinheiten",        sub: "seit Gründung 2025" },
-    { n: "15",    label: "aktive Peer-Tutor*innen", sub: "ab dem 5. Semester" },
+    { n: "15",    label: "aktive Peer-Tutor*innen", sub: "ab dem 7. Semester" },
     { n: "9",     label: "Skill-Stationen",         sub: "von Anamnese bis ZVK" },
     { n: "94%",    label: "empfehlen weiter",        sub: "aus 60 Feedback-Bögen" },
   ];
@@ -248,8 +248,11 @@ function PartnersBand() {
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22 }} className="au-partners-inner">
         <div className="au-partners-header" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 28 }}>
           <h2 style={{ fontSize: 32, fontWeight: 600, margin: 0 }}>Partner & Unterstützer:innen</h2>
-          <span style={{ fontSize: 13.5, color: "var(--ink-3)", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>6 Institutionen</span>
+          <span style={{ fontSize: 13.5, color: "var(--ink-3)", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>7 Institutionen</span>
         </div>
+        <p style={{ fontSize: 15, lineHeight: 1.55, margin: "0 0 28px", color: "var(--ink-2)" }}>
+          Das Projekt wird von verschiedenen Partner:innen und Unterstützer:innen gefördert, darunter die Medizinische Fakultät der Universität Bern, BiSS Bern, die Fachschaft Medizin, Alumni Med Bern, YSSA Bern, PEC Bern sowie die Direktion Lehre und Forschung der Inselgruppe. Diese Zusammenarbeit hilft uns, unsere Kurse breit zu verankern und praxisnah zu gestalten.
+        </p>
         <div className="au-partners-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
           {PARTNERS.map((p, i) => {
             const card = (
@@ -312,6 +315,9 @@ function CoursesBlock() {
           <h2 style={{ fontSize: 32, fontWeight: 600, margin: 0 }}>Unsere Kurse</h2>
           <span style={{ fontSize: 13.5, color: "var(--ink-3)", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>8 Kurse</span>
         </div>
+        <p style={{ fontSize: 15, lineHeight: 1.55, margin: "0 0 28px", color: "var(--ink-2)" }}>
+          Ziel ist es, die praktischen Fertigkeiten zu festigen und ein fundiertes Verständnis für klinische Untersuchungen zu vermitteln.
+        </p>
         <div className="au-courses-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
           {COURSES.map((c, i) => {
             const I = c.icon;
@@ -448,7 +454,7 @@ export default function AboutUs() {
         </div>
         <div className="au-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 56, alignItems: "start" }}>
           <p style={{ fontSize: 22, lineHeight: 1.45, margin: 0, color: "var(--ink-2)" }}>
-            Wir sind <strong style={{ color: "var(--ink)", fontWeight: 600 }}>Peer Skills Lab</strong> — ein Verein von Medizinstudierenden, der praktische Fertigkeiten mithilfe von Peers strategisch wiederholt. Damit OSCEs entspannter werden und der erste Tag auf Station weniger fremd anfühlt.
+            <strong style={{ color: "var(--ink)", fontWeight: 600 }}>PeerSkills Lab</strong> ist ein studentisch geprägtes Lern- und Vernetzungsprojekt, welches praktische Skills in der Medizin auf verständliche und niederschwellige Weise vermittelt. Uns ist wichtig, dass Wissen auf Augenhöhe vermittelt wird: Studierende lernen besonders effektiv im Austausch mit Peers, die sich in derselben Ausbildungsphase befinden. Offenes Fragenstellen, aktives Ausprobieren und das Korrigieren von Fehlern ohne Hemmschwelle sind dabei zentral.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
             <Pill icon={Icon.Stethoscope} label="OSCE-fokussiert" />
