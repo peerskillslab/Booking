@@ -16,6 +16,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { queryKeys } from "@/lib/queryKeys";
 
 export default function MeineKurse() {
   const [user, setUser] = useState(null);
@@ -59,7 +60,10 @@ export default function MeineKurse() {
     mutationFn: (id) => peerskillslab.entities.Course.delete(id),
     onSuccess: () => {
       setDeleteError(null);
-      queryClient.invalidateQueries({ queryKey: ["tutorCourses", user?.email] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses(user?.email) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminCourses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.statsCourses() });
     },
     onError: (err) => {
       const errData = err.data || {};
@@ -217,7 +221,11 @@ export default function MeineKurse() {
             onOpenChange={(open) => {
               if (!open) {
                 setSelectedCourse(null);
-                queryClient.invalidateQueries({ queryKey: ["tutorCourses", user?.email] });
+                queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses(user?.email) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
+                queryClient.invalidateQueries({ queryKey: queryKeys.courseBookings(selectedCourse?.id) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.courseParticipants(selectedCourse?.id) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
               }
               setBookingsDialogOpen(open);
             }}
@@ -228,7 +236,11 @@ export default function MeineKurse() {
             onOpenChange={(open) => {
               if (!open) {
                 setSelectedCourse(null);
-                queryClient.invalidateQueries({ queryKey: ["tutorCourses", user?.email] });
+                queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses(user?.email) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
+                queryClient.invalidateQueries({ queryKey: queryKeys.courseBookings(selectedCourse?.id) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.courseParticipants(selectedCourse?.id) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
               }
               setAttendanceDialogOpen(open);
             }}

@@ -7,6 +7,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
+import { queryKeys } from '@/lib/queryKeys';
 
 export default function AttendanceDialog({ open, onOpenChange, course }) {
   const [bookings, setBookings] = useState([]);
@@ -46,8 +47,11 @@ export default function AttendanceDialog({ open, onOpenChange, course }) {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tutorCourses'] });
-      queryClient.invalidateQueries({ queryKey: ['myStats'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.myStats() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.courseBookings(course?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.courseParticipants(course?.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
       onOpenChange(false);
     },
   });

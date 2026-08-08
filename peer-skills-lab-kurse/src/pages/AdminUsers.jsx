@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Loader2, Users, User, Search, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { queryKeys } from "@/lib/queryKeys";
 
 const ROLES = [
   { value: "student", label: "Student:in" },
@@ -51,7 +52,8 @@ export default function AdminUsers() {
   const updateRoleMutation = useMutation({
     mutationFn: ({ id, role }) => peerskillslab.entities.User.update(id, { role }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminUsers() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usersForInstructor() });
       setPendingRoleChange(null);
     },
   });
@@ -59,7 +61,8 @@ export default function AdminUsers() {
   const deleteUserMutation = useMutation({
     mutationFn: (id) => peerskillslab.entities.User.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminUsers() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usersForInstructor() });
       setPendingDelete(null);
     },
   });
