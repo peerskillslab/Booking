@@ -25,6 +25,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { getCourseStartDate, isCancellationWindowOpen, isCoursePast } from "@/lib/courseUtils";
+import { queryKeys } from "@/lib/queryKeys";
 
 const MIN_PARTICIPANTS_THRESHOLD = 3;
 
@@ -33,25 +35,6 @@ const STATUS_LABELS = {
   cancelled: { label: "Storniert", className: "bg-destructive/10 text-destructive border-destructive/20" },
   pending: { label: "Ausstehend", className: "bg-accent/10 text-accent border-accent/20" },
 };
-
-function getCourseStartDate(course) {
-  if (!course?.date) return null;
-  try {
-    let dateStr = course.date;
-    if (typeof dateStr !== "string") {
-      if (dateStr instanceof Date) {
-        dateStr = dateStr.toISOString().split("T")[0];
-      } else {
-        return null;
-      }
-    }
-    const timeStr = course.time && course.time.length >= 5 ? course.time.substring(0, 5) : "00:00";
-    const date = new Date(`${dateStr}T${timeStr}:00`);
-    return isNaN(date.getTime()) ? null : date;
-  } catch {
-    return null;
-  }
-}
 
 function BookingRow({ booking, course, status, action, lowParticipantsMessage }) {
   return (
@@ -137,10 +120,16 @@ export default function MyBookings() {
       await peerskillslab.entities.Booking.update(booking.id, { status: "cancelled" });
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["myBookings"] });
-      await queryClient.invalidateQueries({ queryKey: ["myBookingsCourses"] });
-      await queryClient.invalidateQueries({ queryKey: ["courses"] });
-      await queryClient.invalidateQueries({ queryKey: ["adminCourses"] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings(user?.email) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookingsCourses(user?.email) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.adminCourses() });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses() });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.statsCourses() });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courseBookings() });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.courseParticipants() });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.myStats(user?.email) });
     },
     onError: (err) => {
       if (err?.message === "cancellation_deadline_passed") {

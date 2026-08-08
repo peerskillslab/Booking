@@ -3,18 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-
-const CAT_COLORS = {
-  "CST Abdomen":           "#C0563B",
-  "CST HKL":               "#C0394B",
-  "CST Gynäkologie":       "#B5519E",
-  "CST Lunge":             "#3E86C7",
-  "CST Neurologie":        "#7A5CC4",
-  "CST Bewegungsapparat":  "#2F9E6E",
-  "POCUS":                 "#C9962B",
-  "Venenpunktion":         "#2D8C9E",
-  "YSSA":                  "#8A8D2F",
-};
+import { CATEGORY_COLORS } from "@/lib/categoryStyles";
 
 const LEVEL_LABELS = {
   "Alle Studienjahre":   "ALLE STUDIENJAHRE",
@@ -38,7 +27,7 @@ export default function CourseCard({ course }) {
   const max = course.max_participants || 0;
   const isFull = max > 0 && current >= max;
   const pct = max > 0 ? Math.min(100, (current / max) * 100) : 0;
-  const catColor = CAT_COLORS[course.category] || "#466E0E";
+  const catColor = CATEGORY_COLORS[course.category] || "#466E0E";
 
   let dayAbbr = null, dayNum = null, monthAbbr = null;
   if (course.date) {

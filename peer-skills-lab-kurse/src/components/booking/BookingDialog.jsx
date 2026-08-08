@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 export default function BookingDialog({ open, onOpenChange, course, user, onBooked }) {
   const queryClient = useQueryClient();
@@ -48,9 +49,9 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
 
     // Optimistic update: bump participant count immediately
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["courses"] });
-      const previous = queryClient.getQueryData(["courses"]);
-      queryClient.setQueryData(["courses"], (old) =>
+      await queryClient.cancelQueries({ queryKey: queryKeys.courses() });
+      const previous = queryClient.getQueryData(queryKeys.courses());
+      queryClient.setQueryData(queryKeys.courses(), (old) =>
         old?.map((c) =>
           c.id === course.id
             ? { ...c, current_participants: (c.current_participants || 0) + 1 }
@@ -62,7 +63,7 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
 
     onError: (err, _vars, ctx) => {
       // Roll back optimistic update
-      if (ctx?.previous) queryClient.setQueryData(["courses"], ctx.previous);
+      if (ctx?.previous) queryClient.setQueryData(queryKeys.courses(), ctx.previous);
       if (err.message === "DUPLICATE") {
         alert("Du hast diesen Kurs bereits gebucht!");
       } else if (err.message === "course_full") {
@@ -74,10 +75,18 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
 
     onSuccess: () => {
       setStep("success");
-      queryClient.invalidateQueries({ queryKey: ["courses"] });
-      queryClient.invalidateQueries({ queryKey: ["course"] });
-      queryClient.invalidateQueries({ queryKey: ["myBookings"] });
-      queryClient.invalidateQueries({ queryKey: ["adminCourses"] });
+      // Invalidate all related caches
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.course(course.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminCourses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses(user?.email) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.statsCourses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.myBookings(user?.email) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.myBookingsCourses(user?.email) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.courseBookings(course.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.courseParticipants(course.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.myStats(user?.email) });
       if (onBooked) onBooked();
     },
   });

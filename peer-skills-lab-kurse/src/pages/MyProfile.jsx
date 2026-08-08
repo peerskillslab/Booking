@@ -75,7 +75,7 @@ export default function MyProfile() {
       setTimeout(() => setPasswordStatus(null), 3000);
     } catch (error) {
       console.error("Fehler beim Passwort ändern:", error);
-      const errorMsg = error.response?.data?.error || "Fehler beim Ändern des Passworts.";
+      const errorMsg = error.data?.error || "Fehler beim Ändern des Passworts.";
       setPasswordStatus("error");
       setPasswordMessage(errorMsg);
     } finally {

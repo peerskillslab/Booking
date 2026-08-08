@@ -17,32 +17,23 @@ import { ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { CATEGORY_COLORS, getCategoryColorVariant } from "@/lib/categoryStyles";
 
-const categoryColors = {
-  "CST Abdomen":        { bg: "bg-blue-100",   text: "text-blue-700",   border: "border-blue-200"   },
-  "CST HKL":            { bg: "bg-red-100",    text: "text-red-700",    border: "border-red-200"    },
-  "CST Gynäkologie":    { bg: "bg-pink-100",   text: "text-pink-700",   border: "border-pink-200"   },
-  "CST Lunge":          { bg: "bg-sky-100",    text: "text-sky-700",    border: "border-sky-200"    },
-  "CST Neurologie":     { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" },
-  "CST Bewegungsapparat":{ bg: "bg-amber-100", text: "text-amber-700",  border: "border-amber-200"  },
-  "POCUS":              { bg: "bg-teal-100",   text: "text-teal-700",   border: "border-teal-200"   },
-  "Venenpunktion":      { bg: "bg-green-100",  text: "text-green-700",  border: "border-green-200"  },
-  "YSSA":               { bg: "bg-violet-100", text: "text-violet-700", border: "border-violet-200" },
-};
-
-const fallbackColor = { bg: "bg-primary/10", text: "text-primary", border: "border-primary/20" };
+const fallbackColor = { bg: "#f0f0f0", text: "#666", border: "#ccc" };
 
 function CourseChip({ course }) {
-  const color = categoryColors[course.category] || fallbackColor;
+  const hexColor = CATEGORY_COLORS[course.category];
+  const color = hexColor ? getCategoryColorVariant(hexColor) : fallbackColor;
   return (
     <Link
       to={createPageUrl("CourseDetail") + `?id=${course.id}`}
       onClick={(e) => e.stopPropagation()}
-      className={cn(
-        "block w-full text-left rounded-md px-1.5 py-1 border text-xs leading-tight",
-        "hover:brightness-95 transition-all truncate",
-        color.bg, color.text, color.border
-      )}
+      className="block w-full text-left rounded-md px-1.5 py-1 text-xs leading-tight border hover:brightness-95 transition-all truncate"
+      style={{
+        backgroundColor: color.bg,
+        color: color.text,
+        borderColor: color.border,
+      }}
     >
       <div className="font-semibold truncate">{course.title}</div>
       {course.time && (

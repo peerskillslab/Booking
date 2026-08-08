@@ -12,6 +12,7 @@ import { de } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import PullToRefreshIndicator from "@/components/ui/PullToRefreshIndicator";
+import { CATEGORY_COLORS } from "@/lib/categoryStyles";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,12 +66,6 @@ export default function Home() {
     return unsubscribe;
   }, [refetch]);
 
-  const CAT_COLORS = {
-    "CST Abdomen": "#C0563B", "CST HKL": "#C0394B", "CST Gynäkologie": "#B5519E",
-    "CST Lunge": "#3E86C7", "CST Neurologie": "#7A5CC4", "CST Bewegungsapparat": "#2F9E6E",
-    "POCUS": "#C9962B", "Venenpunktion": "#2D8C9E", "YSSA": "#8A8D2F",
-  };
-
   const categories = [...new Set(courses.map(c => c.category).filter(Boolean))];
 
   return (
@@ -121,7 +116,7 @@ export default function Home() {
         {categories.map(cat => (
           <button key={cat} className={`psl-pill${selectedCategory === cat ? " on" : ""}`}
             onClick={() => setSelectedCategory(cat)}>
-            <span className="psl-cat-dot" style={{ background: CAT_COLORS[cat] || "#888" }} />
+            <span className="psl-cat-dot" style={{ background: CATEGORY_COLORS[cat] || "#888" }} />
             {cat}
           </button>
         ))}

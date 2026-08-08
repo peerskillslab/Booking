@@ -5,25 +5,7 @@ import { Loader2, BookOpen } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { motion } from 'framer-motion';
-
-function getCourseStartDate(course) {
-  if (!course?.date) return null;
-  try {
-    let dateStr = course.date;
-    if (typeof dateStr !== 'string') {
-      if (dateStr instanceof Date) {
-        dateStr = dateStr.toISOString().split('T')[0];
-      } else {
-        return null;
-      }
-    }
-    const timeStr = course.time && course.time.length >= 5 ? course.time.substring(0, 5) : '00:00';
-    const date = new Date(`${dateStr}T${timeStr}:00`);
-    return isNaN(date.getTime()) ? null : date;
-  } catch {
-    return null;
-  }
-}
+import { getCourseStartDate, isCoursePast } from '@/lib/courseUtils';
 
 function CourseIcon() {
   return (

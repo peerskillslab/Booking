@@ -24,6 +24,7 @@ import { de } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import ParticipantsList from "../components/admin/ParticipantsList";
+import { queryKeys } from "@/lib/queryKeys";
 
 const CATEGORIES = ["CST Abdomen", "CST HKL", "CST Gynäkologie", "CST Lunge", "CST Neurologie", "CST Bewegungsapparat", "POCUS", "Venenpunktion", "YSSA"];
 const LEVELS = ["Alle Studienjahre", "ab 1. Studienjahr", "ab 2. Studienjahr", "ab 3. Studienjahr", "ab 4. Studienjahr", "ab 5. Studienjahr", "ab 6. Studienjahr"];
@@ -89,9 +90,11 @@ export default function AdminCourses() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["adminCourses"] });
-      queryClient.invalidateQueries({ queryKey: ["tutorCourses"] });
-      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminCourses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.statsCourses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
       toast({ id: "course-save", title: editingCourse ? "Kurs gespeichert" : "Kurs erstellt", description: form.title, duration: 3000 });
       closeDialog();
     },
@@ -101,7 +104,11 @@ export default function AdminCourses() {
     mutationFn: (id) => peerskillslab.entities.Course.delete(id),
     onSuccess: (result) => {
       setDeleteError(null);
-      queryClient.invalidateQueries({ queryKey: ["adminCourses"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminCourses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.statsCourses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
       toast({ id: "course-delete", title: "Kurs gelöscht", description: result.courseTitle, duration: 3000 });
       // Wenn es Teilnehmende gibt, Dialog öffnen mit Notifications-Info
       if (result.emails && result.emails.length > 0) {
