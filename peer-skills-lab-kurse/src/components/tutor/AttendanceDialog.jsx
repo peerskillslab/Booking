@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
 import { queryKeys } from '@/lib/queryKeys';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function AttendanceDialog({ open, onOpenChange, course }) {
+  const { toast } = useToast();
   const [bookings, setBookings] = useState([]);
   const [attendance, setAttendance] = useState({});
   const [loading, setLoading] = useState(true);
@@ -52,7 +54,19 @@ export default function AttendanceDialog({ open, onOpenChange, course }) {
       queryClient.invalidateQueries({ queryKey: queryKeys.courseBookings(course?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.courseParticipants(course?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
+      toast({
+        title: "Anwesenheit gespeichert",
+        duration: 2000
+      });
       onOpenChange(false);
+    },
+    onError: (err) => {
+      toast({
+        title: "Fehler beim Speichern",
+        description: err.data?.error || "Bitte versuche es später erneut.",
+        variant: "destructive",
+        duration: 3000
+      });
     },
   });
 

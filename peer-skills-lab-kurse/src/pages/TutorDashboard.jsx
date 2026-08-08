@@ -14,6 +14,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { queryKeys } from "@/lib/queryKeys";
 
 const CATEGORY_DEFAULTS = {
   "CST Abdomen": {
@@ -90,7 +91,18 @@ export default function TutorDashboard() {
 
   const deleteTemplateMutation = useMutation({
     mutationFn: (id) => peerskillslab.entities.CourseTemplate.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["courseTemplates"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.courseTemplates() });
+      toast({ title: "Vorlage gelöscht", duration: 2000 });
+    },
+    onError: (err) => {
+      toast({
+        title: "Fehler beim Löschen",
+        description: err.data?.error || "Bitte versuche es später erneut.",
+        variant: "destructive",
+        duration: 3000
+      });
+    },
   });
 
   const missingCategories = Object.keys(CATEGORY_DEFAULTS).filter(
@@ -111,8 +123,16 @@ export default function TutorDashboard() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["courseTemplates"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.courseTemplates() });
       toast({ title: `${missingCategories.length} Vorlagen erstellt`, duration: 3000 });
+    },
+    onError: (err) => {
+      toast({
+        title: "Fehler beim Erstellen",
+        description: err.data?.error || "Bitte versuche es später erneut.",
+        variant: "destructive",
+        duration: 3000
+      });
     },
   });
 

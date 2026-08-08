@@ -1,11 +1,9 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { saveToken } from '@/api/peerskillslabClient';
+import { peerskillslab, saveToken } from '@/api/peerskillslabClient';
 import { useAuth } from '@/lib/AuthContext';
 import Logo from '@/components/Logo';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 function useThemeInit() {
   useEffect(() => {
@@ -33,18 +31,9 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const endpoint = mode === 'login' ? '/auth/login' : '/auth/register';
-      const body = mode === 'login'
-        ? { email, password }
-        : { email, password, full_name: fullName, studienjahr: parseInt(studienjahr) };
-
-      const res = await fetch(`${API_BASE}${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Fehler');
+      const data = mode === 'login'
+        ? await peerskillslab.auth.login(email, password)
+        : await peerskillslab.auth.register(email, password, fullName, parseInt(studienjahr));
 
       saveToken(data.token);
       loginSuccess(data.user);

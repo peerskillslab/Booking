@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+import { peerskillslab } from '@/api/peerskillslabClient';
 
 export default function ResetPassword() {
   const [params] = useSearchParams();
@@ -34,13 +33,7 @@ export default function ResetPassword() {
     if (password !== confirm) { setError('Die Passwörter stimmen nicht überein.'); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Fehler');
+      await peerskillslab.auth.resetPassword(token, password);
       setDone(true);
     } catch (err) {
       setError(err.message);

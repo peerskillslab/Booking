@@ -59,6 +59,11 @@ app.use('/api/entities/coursetemplates',  apiCors, require('./routes/courseTempl
 app.use('/api/entities/monthlystatshots', apiCors, require('./routes/monthlyStats'));
 app.use('/api/functions',                 apiCors, require('./routes/functions'));
 
+// --- JSON 404 for unknown /api/* routes ---
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'not_found', message: 'API endpoint not found' });
+});
+
 // --- Statische Frontend-Dateien (kein CORS nötig) ---
 const DIST = path.join(__dirname, 'public');
 console.log(`Frontend path: ${DIST}`);

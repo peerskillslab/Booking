@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const CATEGORIES = ["CST Abdomen", "CST HKL", "CST Gynäkologie", "CST Lunge", "CST Neurologie", "CST Bewegungsapparat", "POCUS", "Venenpunktion", "YSSA"];
 const LEVELS = ["Alle Studienjahre", "ab 1. Studienjahr", "ab 2. Studienjahr", "ab 3. Studienjahr", "ab 4. Studienjahr", "ab 5. Studienjahr", "ab 6. Studienjahr"];
@@ -19,6 +20,7 @@ const empty = {
 };
 
 export default function TemplateDialog({ open, onOpenChange, editingTemplate, onSaved }) {
+  const { toast } = useToast();
   const [form, setForm] = useState(empty);
 
   useEffect(() => {
@@ -49,8 +51,20 @@ export default function TemplateDialog({ open, onOpenChange, editingTemplate, on
       }
     },
     onSuccess: () => {
+      toast({
+        title: editingTemplate ? "Vorlage aktualisiert" : "Vorlage erstellt",
+        duration: 2000
+      });
       onSaved();
       onOpenChange(false);
+    },
+    onError: (err) => {
+      toast({
+        title: "Fehler beim Speichern",
+        description: err.data?.error || "Bitte versuche es später erneut.",
+        variant: "destructive",
+        duration: 3000
+      });
     },
   });
 

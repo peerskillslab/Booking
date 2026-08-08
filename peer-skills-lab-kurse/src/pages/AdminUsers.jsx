@@ -13,6 +13,7 @@ import {
 import { Loader2, Users, User, Search, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { queryKeys } from "@/lib/queryKeys";
+import { useToast } from "@/components/ui/use-toast";
 
 const ROLES = [
   { value: "student", label: "Student:in" },
@@ -27,6 +28,7 @@ const roleBadgeClass = {
 };
 
 export default function AdminUsers() {
+  const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState(null);
   const [search, setSearch] = useState("");
   const [pendingRoleChange, setPendingRoleChange] = useState(null);
@@ -54,7 +56,16 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminUsers() });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersForInstructor() });
+      toast({ title: "Rolle aktualisiert", duration: 2000 });
       setPendingRoleChange(null);
+    },
+    onError: (err) => {
+      toast({
+        title: "Fehler beim Aktualisieren",
+        description: err.data?.error || "Bitte versuche es später erneut.",
+        variant: "destructive",
+        duration: 3000
+      });
     },
   });
 
@@ -63,7 +74,16 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminUsers() });
       queryClient.invalidateQueries({ queryKey: queryKeys.usersForInstructor() });
+      toast({ title: "Nutzer:in gelöscht", duration: 2000 });
       setPendingDelete(null);
+    },
+    onError: (err) => {
+      toast({
+        title: "Fehler beim Löschen",
+        description: err.data?.error || "Bitte versuche es später erneut.",
+        variant: "destructive",
+        duration: 3000
+      });
     },
   });
 

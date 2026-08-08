@@ -1,12 +1,22 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 const { getPool } = require('../db/database');
 const { authenticate, requireAuth, JWT_SECRET } = require('../middleware/authenticate');
 const { newId } = require('../utils');
 const { sendResetEmail } = require('../emailService');
 
 const router = express.Router();
+
+// Rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 requests per windowMs
+  message: 'Too many attempts, please try again later',
+  standardHeaders: false,
+  legacyHeaders: false,
+});
 
 // Parse JWT on all auth routes so req.user is populated for /me
 router.use(authenticate);
@@ -19,10 +29,11 @@ function makeToken(user) {
 }
 
 // POST /api/auth/register
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const { email, password, full_name, studienjahr } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'email und password erforderlich' });
+    if (password.length < 8) return res.status(400).json({ error: 'password must be at least 8 characters' });
 
     const pool = getPool();
     const existingResult = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
@@ -45,7 +56,7 @@ router.post('/register', async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'email und password erforderlich' });
@@ -144,7 +155,7 @@ router.patch('/me', requireAuth, async (req, res) => {
 router.post('/logout', (req, res) => res.json({ ok: true }));
 
 // POST /api/auth/forgot-password
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'email erforderlich' });
@@ -190,6 +201,7 @@ router.post('/reset-password', async (req, res) => {
   try {
     const { token, password } = req.body;
     if (!token || !password) return res.status(400).json({ error: 'token und password erforderlich' });
+    if (password.length < 8) return res.status(400).json({ error: 'password must be at least 8 characters' });
 
     const pool = getPool();
     const tokenResult = await pool.query(

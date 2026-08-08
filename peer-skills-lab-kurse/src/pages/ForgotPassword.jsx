@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+import { peerskillslab } from '@/api/peerskillslabClient';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -14,12 +13,7 @@ export default function ForgotPassword() {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      if (!res.ok) throw new Error();
+      await peerskillslab.auth.forgotPassword(email);
       setSent(true);
     } catch {
       setError('Anfrage fehlgeschlagen. Bitte versuche es später erneut.');

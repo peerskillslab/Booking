@@ -112,6 +112,34 @@ function makeEntityClient(entityName) {
 
 export const localClient = {
   auth: {
+    login(email, password) {
+      return apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+    },
+
+    register(email, password, fullName, studienjahr) {
+      return apiFetch('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ email, password, full_name: fullName, studienjahr }),
+      });
+    },
+
+    forgotPassword(email) {
+      return apiFetch('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+    },
+
+    resetPassword(token, password) {
+      return apiFetch('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token, password }),
+      });
+    },
+
     me() {
       return apiFetch('/auth/me');
     },
