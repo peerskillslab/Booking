@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
+import { invalidateOnCoursePublish } from "@/lib/invalidationStrategy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,11 +65,8 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
     onSuccess: (course) => {
       setCreatedCourse(course);
       setDone(true);
-      queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses(user?.email) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.adminCourses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.statsCourses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
+      // Use granular invalidation instead of carpet-bombing
+      invalidateOnCoursePublish(queryClient);
       onPublished();
       setError(null);
     },

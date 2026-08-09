@@ -26,6 +26,11 @@ import { useToast } from "@/components/ui/use-toast";
 import ParticipantsList from "../components/admin/ParticipantsList";
 import { queryKeys } from "@/lib/queryKeys";
 import { CATEGORIES, LEVELS } from "@/lib/courseConstants";
+import {
+  invalidateOnCourseCreate,
+  invalidateOnCourseUpdate,
+  invalidateOnCourseDelete,
+} from "@/lib/invalidationStrategy";
 
 const emptyCourse = {
   title: "", description: "", short_description: "", category: "CST Abdomen",
@@ -87,12 +92,15 @@ export default function AdminCourses() {
         await peerskillslab.entities.Course.create(data);
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.adminCourses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.statsCourses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
+    onSuccess: (result, variables) => {
+      if (editingCourse) {
+        // Only invalidate affected queries on update
+        const statusChanged = variables.status !== editingCourse.status;
+        invalidateOnCourseUpdate(queryClient, editingCourse.id, statusChanged);
+      } else {
+        // On create, invalidate course lists
+        invalidateOnCourseCreate(queryClient, variables.status || 'active');
+      }
       toast({ id: "course-save", title: editingCourse ? "Kurs gespeichert" : "Kurs erstellt", description: form.title, duration: 3000 });
       closeDialog();
     },
@@ -100,13 +108,9 @@ export default function AdminCourses() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => peerskillslab.entities.Course.delete(id),
-    onSuccess: (result) => {
+    onSuccess: (result, courseId) => {
       setDeleteError(null);
-      queryClient.invalidateQueries({ queryKey: queryKeys.adminCourses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.statsCourses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
+      invalidateOnCourseDelete(queryClient, courseId);
       toast({ id: "course-delete", title: "Kurs gelöscht", description: result.courseTitle, duration: 3000 });
       // Wenn es Teilnehmende gibt, Dialog öffnen mit Notifications-Info
       if (result.emails && result.emails.length > 0) {

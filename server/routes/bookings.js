@@ -123,20 +123,17 @@ router.post('/', requireAuth, async (req, res) => {
 router.patch('/:id', requireAuth, async (req, res) => {
   try {
     const pool = getPool();
-    const resultSelect = await pool.query('SELECT * FROM bookings WHERE id = $1', [req.params.id]);
+    const resultSelect = await pool.query('SELECT b.*, c.date, c.time FROM bookings b JOIN courses c ON b.course_id = c.id WHERE b.id = $1', [req.params.id]);
     const booking = resultSelect.rows[0];
     if (!booking) return res.status(404).json({ error: 'not_found' });
     if (!canWriteBooking(req.user, booking)) return res.status(403).json({ error: 'forbidden' });
 
+    // Check cancellation deadline (user non-admin only)
     if (req.body.status === 'cancelled' && req.user.role !== 'admin') {
-      const courseRes = await pool.query('SELECT date, time FROM courses WHERE id = $1', [booking.course_id]);
-      const course = courseRes.rows[0];
-      if (course) {
-        const courseStart = new Date(`${course.date}T${course.time || '00:00'}`);
-        const cutoff = new Date(courseStart.getTime() - 72 * 60 * 60 * 1000);
-        if (new Date() > cutoff) {
-          return res.status(403).json({ error: 'cancellation_deadline_passed' });
-        }
+      const courseStart = new Date(`${booking.date}T${booking.time || '00:00'}`);
+      const cutoff = new Date(courseStart.getTime() - 72 * 60 * 60 * 1000);
+      if (new Date() > cutoff) {
+        return res.status(403).json({ error: 'cancellation_deadline_passed' });
       }
     }
 
@@ -161,7 +158,13 @@ router.patch('/:id', requireAuth, async (req, res) => {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      await client.query(`UPDATE bookings SET ${setClause} WHERE id = $${placeholderCount + 1}`, values);
+
+      // Update and return in one query
+      const updateRes = await client.query(
+        `UPDATE bookings SET ${setClause} WHERE id = $${placeholderCount + 1} RETURNING *`,
+        values
+      );
+      const updatedBooking = updateRes.rows[0];
 
       // Keep current_participants in sync when status changes
       if (updates.status && updates.status !== booking.status) {
@@ -179,15 +182,13 @@ router.patch('/:id', requireAuth, async (req, res) => {
       }
 
       await client.query('COMMIT');
+      res.json(updatedBooking);
     } catch (err) {
       try { await client.query('ROLLBACK'); } catch {}
       throw err;
     } finally {
       client.release();
     }
-
-    const resultFinal = await pool.query('SELECT * FROM bookings WHERE id = $1', [req.params.id]);
-    res.json(resultFinal.rows[0]);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -203,16 +204,29 @@ router.delete('/:id', requireAuth, async (req, res) => {
     if (!booking) return res.status(404).json({ error: 'not_found' });
     if (!canWriteBooking(req.user, booking)) return res.status(403).json({ error: 'forbidden' });
 
-    await pool.query('DELETE FROM bookings WHERE id = $1', [req.params.id]);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    if (booking.status === 'confirmed') {
-      await pool.query(
-        'UPDATE courses SET current_participants = GREATEST(0, current_participants - 1) WHERE id = $1',
-        [booking.course_id]
-      );
+      // Delete booking
+      await client.query('DELETE FROM bookings WHERE id = $1', [req.params.id]);
+
+      // Update course participants if booking was confirmed
+      if (booking.status === 'confirmed') {
+        await client.query(
+          'UPDATE courses SET current_participants = GREATEST(0, current_participants - 1) WHERE id = $1',
+          [booking.course_id]
+        );
+      }
+
+      await client.query('COMMIT');
+      res.json({ ok: true });
+    } catch (err) {
+      try { await client.query('ROLLBACK'); } catch {}
+      throw err;
+    } finally {
+      client.release();
     }
-
-    res.json({ ok: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

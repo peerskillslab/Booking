@@ -18,6 +18,7 @@ import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
+import { invalidateOnBookingCreate } from "@/lib/invalidationStrategy";
 
 export default function BookingDialog({ open, onOpenChange, course, user, onBooked }) {
   const queryClient = useQueryClient();
@@ -75,18 +76,8 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
 
     onSuccess: () => {
       setStep("success");
-      // Invalidate all related caches
-      queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.course(course.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.adminCourses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses(user?.email) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.statsCourses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.myBookings(user?.email) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.myBookingsCourses(user?.email) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.courseBookings(course.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.courseParticipants(course.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.myStats(user?.email) });
+      // Only invalidate queries affected by booking creation
+      invalidateOnBookingCreate(queryClient, course.id, user?.email);
       if (onBooked) onBooked();
     },
   });

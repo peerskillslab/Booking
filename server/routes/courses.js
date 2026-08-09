@@ -113,9 +113,11 @@ router.patch('/:id', requireAuth, async (req, res) => {
     values.push(req.params.id);
     const placeholderCount = keys.length;
 
-    await pool.query(`UPDATE courses SET ${setClause} WHERE id = $${placeholderCount + 1}`, values);
-
-    const resultFinal = await pool.query('SELECT * FROM courses WHERE id = $1', [req.params.id]);
+    // Use RETURNING to avoid second SELECT
+    const resultFinal = await pool.query(
+      `UPDATE courses SET ${setClause} WHERE id = $${placeholderCount + 1} RETURNING *`,
+      values
+    );
     res.json(resultFinal.rows[0]);
   } catch (err) {
     console.error(err);
@@ -132,32 +134,37 @@ router.delete('/:id', requireAuth, async (req, res) => {
     if (!course) return res.status(404).json({ error: 'not_found' });
     if (!canDeleteCourse(req.user, course)) return res.status(403).json({ error: 'forbidden' });
 
-    // Admin darf mit Buchungen löschen, Tutor nicht
-    if (req.user.role === 'admin') {
-      try {
-        // Alle (nicht stornierten) Buchungen laden
-        const bookingsResult = await pool.query(
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Admin: Get emails and delete cascading
+      if (req.user.role === 'admin') {
+        // Get active participants (1 query instead of 2 separate)
+        const emailsResult = await client.query(
           `SELECT DISTINCT user_email FROM bookings WHERE course_id = $1 AND status != 'cancelled'`,
           [req.params.id]
         );
-        const emails = bookingsResult.rows.map(r => r.user_email).filter(e => e);
+        const emails = emailsResult.rows.map(r => r.user_email).filter(e => e);
 
-        // Bookings und Feedbacks löschen
-        await pool.query('DELETE FROM bookings WHERE course_id = $1', [req.params.id]);
-        await pool.query('DELETE FROM course_feedbacks WHERE course_id = $1', [req.params.id]);
+        // Delete in transaction
+        await client.query('DELETE FROM bookings WHERE course_id = $1', [req.params.id]);
+        await client.query('DELETE FROM course_feedbacks WHERE course_id = $1', [req.params.id]);
+        await client.query('DELETE FROM courses WHERE id = $1', [req.params.id]);
 
-        // Kurs löschen
-        await pool.query('DELETE FROM courses WHERE id = $1', [req.params.id]);
-
+        await client.query('COMMIT');
         res.json({ ok: true, emails, courseTitle: course.title, courseDate: course.date });
-      } catch (err) {
-        console.error('Admin delete error:', err);
-        res.status(500).json({ error: 'Internal server error' });
+      } else {
+        // Tutor: Delete fails if bookings exist (foreign key constraint)
+        await client.query('DELETE FROM courses WHERE id = $1', [req.params.id]);
+        await client.query('COMMIT');
+        res.json({ ok: true });
       }
-    } else {
-      // Tutor: Delete scheitert wenn Buchungen existieren
-      await pool.query('DELETE FROM courses WHERE id = $1', [req.params.id]);
-      res.json({ ok: true });
+    } catch (err) {
+      try { await client.query('ROLLBACK'); } catch {}
+      throw err;
+    } finally {
+      client.release();
     }
   } catch (err) {
     if (err.code === '23503' && err.constraint === 'bookings_course_id_fkey') {

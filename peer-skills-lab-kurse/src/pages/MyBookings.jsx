@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getCourseStartDate, isCancellationWindowOpen, isCoursePast } from "@/lib/courseUtils";
 import { queryKeys } from "@/lib/queryKeys";
+import { invalidateOnBookingCancel } from "@/lib/invalidationStrategy";
 
 const MIN_PARTICIPANTS_THRESHOLD = 3;
 
@@ -119,17 +120,9 @@ export default function MyBookings() {
     mutationFn: async (booking) => {
       await peerskillslab.entities.Booking.update(booking.id, { status: "cancelled" });
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookings(user?.email) });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myBookingsCourses(user?.email) });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.adminCourses() });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses() });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.statsCourses() });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.courseBookings() });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.courseParticipants() });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.myStats(user?.email) });
+    onSuccess: async (result, booking) => {
+      // Only invalidate affected queries: course participants + user bookings
+      invalidateOnBookingCancel(queryClient, booking.course_id, user?.email);
     },
     onError: (err) => {
       if (err?.message === "cancellation_deadline_passed") {

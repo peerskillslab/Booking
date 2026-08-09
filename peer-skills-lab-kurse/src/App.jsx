@@ -4,15 +4,21 @@ import { queryClientInstance } from '@/lib/query-client'
 import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import { lazy, Suspense } from 'react';
 import PageNotFound from './lib/PageNotFound';
-import TutorDashboard from './pages/TutorDashboard';
-import AdminUsers from './pages/AdminUsers';
-import AdminStats from './pages/AdminStats';
+
+// Lazy-load heavy components for code splitting
+const TutorDashboard = lazy(() => import('./pages/TutorDashboard'));
+const AdminUsers = lazy(() => import('./pages/AdminUsers'));
+const AdminStats = lazy(() => import('./pages/AdminStats'));
+const AdminCourses = lazy(() => import('./pages/AdminCourses'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+
+// Regular imports for frequently used pages
 import MyProfile from './pages/MyProfile';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-import AboutUs from './pages/AboutUs';
 import Datenschutz from './pages/Datenschutz';
 import Impressum from './pages/Impressum';
 import FAQ from './pages/FAQ';
@@ -22,6 +28,13 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { useInactivityLogout } from '@/lib/useInactivityLogout';
 import PublicLayout from './PublicLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
+
+// Page loader component
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  </div>
+);
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -82,9 +95,11 @@ const AuthenticatedApp = () => {
             }
           />
         ))}
-        <Route path="/TutorDashboard" element={<LayoutWrapper currentPageName="TutorDashboard"><PageTransitionWrapper><TutorDashboard /></PageTransitionWrapper></LayoutWrapper>} />
-        <Route path="/AdminUsers" element={<LayoutWrapper currentPageName="AdminUsers"><PageTransitionWrapper><AdminUsers /></PageTransitionWrapper></LayoutWrapper>} />
-        <Route path="/AdminStats" element={<LayoutWrapper currentPageName="AdminStats"><PageTransitionWrapper><AdminStats /></PageTransitionWrapper></LayoutWrapper>} />
+        <Route path="/TutorDashboard" element={<LayoutWrapper currentPageName="TutorDashboard"><Suspense fallback={<PageLoader />}><PageTransitionWrapper><TutorDashboard /></PageTransitionWrapper></Suspense></LayoutWrapper>} />
+        <Route path="/AdminUsers" element={<LayoutWrapper currentPageName="AdminUsers"><Suspense fallback={<PageLoader />}><PageTransitionWrapper><AdminUsers /></PageTransitionWrapper></Suspense></LayoutWrapper>} />
+        <Route path="/AdminStats" element={<LayoutWrapper currentPageName="AdminStats"><Suspense fallback={<PageLoader />}><PageTransitionWrapper><AdminStats /></PageTransitionWrapper></Suspense></LayoutWrapper>} />
+        <Route path="/AdminCourses" element={<LayoutWrapper currentPageName="AdminCourses"><Suspense fallback={<PageLoader />}><PageTransitionWrapper><AdminCourses /></PageTransitionWrapper></Suspense></LayoutWrapper>} />
+        <Route path="/admin/courses" element={<LayoutWrapper currentPageName="AdminCourses"><Suspense fallback={<PageLoader />}><PageTransitionWrapper><AdminCourses /></PageTransitionWrapper></Suspense></LayoutWrapper>} />
         <Route path="/MyProfile" element={<LayoutWrapper currentPageName="MyProfile"><PageTransitionWrapper><MyProfile /></PageTransitionWrapper></LayoutWrapper>} />
         <Route path="/MyStats" element={<LayoutWrapper currentPageName="MyStats"><PageTransitionWrapper><MyStats /></PageTransitionWrapper></LayoutWrapper>} />
         <Route path="*" element={<PageNotFound />} />
@@ -104,7 +119,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/AboutUs" element={<PublicLayout><PageTransitionWrapper><AboutUs /></PageTransitionWrapper></PublicLayout>} />
+            <Route path="/AboutUs" element={<PublicLayout><Suspense fallback={<PageLoader />}><PageTransitionWrapper><AboutUs /></PageTransitionWrapper></Suspense></PublicLayout>} />
             <Route path="/Datenschutz" element={<PublicLayout><PageTransitionWrapper><Datenschutz /></PageTransitionWrapper></PublicLayout>} />
             <Route path="/Impressum" element={<PublicLayout><PageTransitionWrapper><Impressum /></PageTransitionWrapper></PublicLayout>} />
             <Route path="/FAQ" element={<PublicLayout><PageTransitionWrapper><FAQ /></PageTransitionWrapper></PublicLayout>} />
