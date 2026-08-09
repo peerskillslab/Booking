@@ -155,8 +155,7 @@ export default function MyBookings() {
       if (booking.status === "cancelled") {
         if (!confirmedCourseIds.has(booking.course_id)) {
           const course = courseMap[booking.course_id];
-          const courseStart = getCourseStartDate(course);
-          if (!courseStart || !isBefore(courseStart, now)) {
+          if (!isCoursePast(course)) {
             if (!cancelledByCourse[booking.course_id]) {
               cancelledByCourse[booking.course_id] = booking;
             }
@@ -175,8 +174,7 @@ export default function MyBookings() {
         upcoming.push(booking);
         return;
       }
-      const courseStart = getCourseStartDate(course);
-      if (courseStart && isBefore(courseStart, now)) {
+      if (isCoursePast(course)) {
         past.push(booking);
       } else {
         upcoming.push(booking);
@@ -224,8 +222,7 @@ export default function MyBookings() {
                   <AnimatePresence>
                     {upcomingBookings.map((booking, i) => {
                       const course = courseMap[booking.course_id];
-                      const courseStart = getCourseStartDate(course);
-                      const canCancel = courseStart === null || isBefore(new Date(), subHours(courseStart, 72));
+                      const canCancel = isCancellationWindowOpen(course);
                       const handleContactTutor = () => {
                         const tutorEmail = course?.created_by;
                         const tutorName = course?.instructor || 'Tutor:in';

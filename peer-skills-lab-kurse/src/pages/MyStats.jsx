@@ -49,8 +49,7 @@ export default function MyStats() {
       if (!b.attended || b.status !== 'confirmed') return false;
       const course = courseMap[b.course_id];
       if (!course) return false;
-      const courseStart = getCourseStartDate(course);
-      return courseStart && courseStart < now;
+      return isCoursePast(course);
     });
   }, [bookings, courseMap]);
 
@@ -67,8 +66,8 @@ export default function MyStats() {
   const lastCourse = useMemo(() => {
     if (attendedCourses.length === 0) return null;
     const sorted = [...attendedCourses].sort((a, b) => {
-      const dateA = getCourseStartDate(courseMap[a.course_id]);
-      const dateB = getCourseStartDate(courseMap[b.course_id]);
+      const dateA = getCourseStartDate(courseMap[a.course_id])?.date;
+      const dateB = getCourseStartDate(courseMap[b.course_id])?.date;
       return (dateB || new Date(0)) - (dateA || new Date(0));
     });
     const booking = sorted[0];
@@ -77,7 +76,7 @@ export default function MyStats() {
     return {
       title: booking.course_title,
       category: course?.category || 'Sonstiges',
-      date: courseStart ? format(courseStart, "dd.MM.yyyy '·' HH:mm 'Uhr'", { locale: de }) : '—',
+      date: courseStart?.date ? format(courseStart.date, "dd.MM.yyyy '·' HH:mm 'Uhr'", { locale: de }) : '—',
     };
   }, [attendedCourses, courseMap]);
 
@@ -207,7 +206,7 @@ export default function MyStats() {
                       <p className="psl-stats-course-meta">
                         {course?.category || 'Sonstiges'}
                         <span className="psl-stats-course-sep">·</span>
-                        {courseStart ? format(courseStart, 'dd.MM.yyyy · HH:mm', { locale: de }) : '—'}
+                        {courseStart?.date ? format(courseStart.date, 'dd.MM.yyyy · HH:mm', { locale: de }) : '—'}
                       </p>
                     </div>
                     <div className="psl-stats-badge">Besucht</div>

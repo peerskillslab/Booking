@@ -176,14 +176,17 @@ export default function CourseCalendar({ courses, selectedDate, onSelectDate }) 
 
       {/* Legend */}
       <div className="px-5 py-3 border-t border-border/60 flex flex-wrap gap-x-4 gap-y-1">
-        {Object.entries(categoryColors)
+        {Object.entries(CATEGORY_COLORS)
           .filter(([cat]) => courses.some((c) => c.category === cat))
-          .map(([cat, color]) => (
-            <span key={cat} className="flex items-center gap-1 text-xs text-muted-foreground">
-              <span className={cn("w-2 h-2 rounded-sm", color.bg, "border", color.border)} />
-              {cat}
-            </span>
-          ))}
+          .map(([cat, hexColor]) => {
+            const color = getCategoryColorVariant(hexColor);
+            return (
+              <span key={cat} className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span className="w-2 h-2 rounded-sm border" style={{ backgroundColor: color.bg, borderColor: color.border }} />
+                {cat}
+              </span>
+            );
+          })}
       </div>
     </div>
   );
