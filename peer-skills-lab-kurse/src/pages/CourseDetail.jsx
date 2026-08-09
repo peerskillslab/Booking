@@ -15,6 +15,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import BookingDialog from "@/components/booking/BookingDialog";
+import { getCategoryOklch } from "@/lib/categoryStyles";
 
 export default function CourseDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -76,10 +77,10 @@ export default function CourseDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-4 md:px-6 pt-6 pb-20">
+      <div className="max-w-[900px] mx-auto px-4 md:px-6 pt-6 pb-20">
         <div className="mb-5">
           <Link to={createPageUrl("Home")}>
-            <Button variant="secondary" size="sm">
+            <Button variant="outline" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" /> Zurück
             </Button>
           </Link>
@@ -88,19 +89,27 @@ export default function CourseDetail() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="grid md:grid-cols-3 gap-8"
+          className="grid md:grid-cols-[1.6fr_1fr] gap-8"
         >
           {/* Main content */}
           <div className="md:col-span-2 space-y-6">
             <div>
-              <div className="flex flex-wrap gap-2 mb-3">
-                <Badge className="bg-primary/10 text-primary border-primary/20 border">
-                  {course.category}
-                </Badge>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {(() => {
+                  const colors = getCategoryOklch(course.category);
+                  return (
+                    <Badge style={{ background: colors.bg, color: colors.text, borderColor: colors.border }} className="border">
+                      {course.category}
+                    </Badge>
+                  );
+                })()}
                 {course.level && (
                   <Badge variant="secondary">{course.level}</Badge>
                 )}
               </div>
+              <h1 className="text-3xl font-bold font-heading mb-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800 }}>
+                {course.title}
+              </h1>
               {course.instructor && (
                 <p className="text-muted-foreground flex items-center gap-2">
                   <User className="w-4 h-4" /> mit {course.instructor}
@@ -120,7 +129,7 @@ export default function CourseDetail() {
 
           {/* Sidebar */}
           <div>
-            <Card className="border-border/60 shadow-lg shadow-primary/5 sticky top-6">
+            <Card className="border-border/60 sticky top-6">
               <CardContent className="p-6 space-y-5">
                 <div className="space-y-3">
                   {(() => {
@@ -202,9 +211,9 @@ export default function CourseDetail() {
                 </div>
 
                 {/* Progress bar */}
-                <div className="w-full bg-secondary rounded-full h-2">
+                <div className="w-full bg-secondary rounded-full h-1.5">
                   <div
-                    className="bg-primary h-2 rounded-full transition-all"
+                    className="bg-primary h-1.5 rounded-full transition-all"
                     style={{
                       width: `${Math.min(100, ((course.current_participants || 0) / (course.max_participants || 1)) * 100)}%`,
                     }}
@@ -226,7 +235,8 @@ export default function CourseDetail() {
                    </div>
                  ) : (
                    <Button
-                     className="w-full h-12 text-base rounded-xl"
+                     className="w-full text-base"
+                     style={{ height: 46, borderRadius: 12 }}
                      disabled={isFull}
                      onClick={() => {
                        if (!user) {

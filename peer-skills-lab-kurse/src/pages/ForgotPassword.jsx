@@ -23,28 +23,44 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-md p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Passwort vergessen</h1>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'var(--psl-wallpaper, linear-gradient(155deg,#d6d9df 0%,#c3c7d0 48%,#b6bccb 100%))',
+      fontFamily: 'var(--psl-font)',
+      padding: 24,
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: 380,
+        background: 'var(--psl-content-bg, #fff)',
+        borderRadius: 18,
+        border: '1px solid var(--psl-hairline, rgba(0,0,0,.09))',
+        padding: 36,
+        textAlign: 'center',
+      }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Plus Jakarta Sans', sans-serif", color: 'var(--psl-text, #1d1d1f)', margin: '0 0 6px' }}>Passwort vergessen</h1>
 
         {sent ? (
-          <div className="mt-4 space-y-4">
-            <p className="text-sm text-gray-600">
+          <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <p style={{ fontSize: 13.5, color: 'var(--psl-text-2, #5f5f63)', margin: 0 }}>
               Falls diese E-Mail-Adresse registriert ist, erhältst du in Kürze einen Link zum Zurücksetzen deines Passworts.
             </p>
-            <p className="text-center text-sm">
-              <Link to="/login" className="text-slate-800 font-medium hover:underline">
+            <p style={{ textAlign: 'center', margin: 0 }}>
+              <Link to="/login" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--psl-accent, #466E0E)', textDecoration: 'none' }}>
                 Zurück zur Anmeldung
               </Link>
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <p className="text-sm text-gray-500">
+          <form onSubmit={handleSubmit} style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 11, textAlign: 'left' }}>
+            <p style={{ fontSize: 13, color: 'var(--psl-text-2, #5f5f63)', margin: '0 0 4px' }}>
               Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link zum Zurücksetzen.
             </p>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--psl-text-2, #5f5f63)' }}>E-Mail</label>
               <input
                 type="email"
                 required
@@ -52,21 +68,29 @@ export default function ForgotPassword() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="name@beispiel.ch"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"
+                style={{...inputStyle}}
               />
             </div>
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+              <p style={{ fontSize: 12.5, color: '#d1413a', background: 'rgba(209,65,58,.08)', borderRadius: 7, padding: '8px 11px', margin: 0 }}>{error}</p>
             )}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-800 text-white rounded-lg py-2 text-sm font-medium hover:bg-slate-700 disabled:opacity-50 transition-colors"
+              style={{
+                height: 44, borderRadius: 11, border: 'none', cursor: loading ? 'default' : 'pointer',
+                background: 'var(--psl-accent, #466E0E)',
+                color: 'var(--psl-accent-text, #fff)',
+                fontSize: 14, fontWeight: 600,
+                opacity: loading ? 0.65 : 1,
+                marginTop: 4,
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+              }}
             >
               {loading ? 'Senden…' : 'Link senden'}
             </button>
-            <p className="text-center text-sm text-gray-500">
-              <Link to="/login" className="text-slate-800 font-medium hover:underline">
+            <p style={{ textAlign: 'center', fontSize: 13.5, color: 'var(--psl-text-3, #8a8a8e)', margin: 0 }}>
+              <Link to="/login" style={{ fontWeight: 600, color: 'var(--psl-accent, #466E0E)', textDecoration: 'none' }}>
                 Zurück zur Anmeldung
               </Link>
             </p>
@@ -76,3 +100,14 @@ export default function ForgotPassword() {
     </div>
   );
 }
+
+const inputStyle = {
+  width: '100%', height: 40, padding: '0 12px',
+  borderRadius: 9, fontSize: 13.5,
+  color: 'var(--psl-text, #1d1d1f)',
+  background: 'var(--psl-card-bg, #fff)',
+  border: '1px solid var(--psl-hairline, rgba(0,0,0,.09))',
+  outline: 'none',
+  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
+  boxSizing: 'border-box',
+};

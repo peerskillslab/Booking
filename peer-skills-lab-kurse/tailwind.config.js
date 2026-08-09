@@ -6,7 +6,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["'Eina01'", "'Nunito'", "sans-serif"],
+        sans: ["Inter", "sans-serif"],
+        heading: ["'Plus Jakarta Sans'", "sans-serif"],
       },
       letterSpacing: {},
       lineHeight: {

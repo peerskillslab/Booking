@@ -167,7 +167,7 @@ export default function MyProfile() {
 
   return (
     <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-[560px] mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -335,7 +335,7 @@ export default function MyProfile() {
           </Card>
 
           {/* Delete Account */}
-          <Card className="mt-6 border-destructive/30">
+          <Card className="mt-6" style={{ borderColor: "color-mix(in srgb, var(--psl-danger) 30%, transparent)", backgroundColor: "oklch(90% 0.05 25)" }}>
             <CardHeader>
               <CardTitle className="text-base text-destructive flex items-center gap-2">
                 <Trash2 className="w-4 h-4" />

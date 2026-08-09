@@ -3,13 +3,12 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
-import PullToRefreshIndicator from "@/components/ui/PullToRefreshIndicator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Loader2, BookOpen, XCircle, ExternalLink, AlertTriangle, Download, RotateCcw, Mail } from "lucide-react";
 import { downloadICalFile } from "@/lib/icalGenerator";
-import { format, isBefore, subHours } from "date-fns";
+import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -25,21 +24,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { getCourseStartDate, isCancellationWindowOpen, isCoursePast } from "@/lib/courseUtils";
-import { queryKeys } from "@/lib/queryKeys";
+import { isCancellationWindowOpen, isCoursePast } from "@/lib/courseUtils";
 import { invalidateOnBookingCancel } from "@/lib/invalidationStrategy";
 
 const MIN_PARTICIPANTS_THRESHOLD = 3;
 
 const STATUS_LABELS = {
-  confirmed: { label: "Bestätigt", className: "bg-primary/10 text-primary border-primary/20" },
-  cancelled: { label: "Storniert", className: "bg-destructive/10 text-destructive border-destructive/20" },
-  pending: { label: "Ausstehend", className: "bg-accent/10 text-accent border-accent/20" },
+  confirmed: { label: "Bestätigt", className: "border text-xs", style: { background: "oklch(94% 0.03 135)", color: "oklch(41% 0.10 135)", borderColor: "oklch(88% 0.03 135)" } },
+  cancelled: { label: "Storniert", className: "border text-xs", style: { background: "color-mix(in srgb, var(--psl-danger) 12%, transparent)", color: "var(--psl-danger)", borderColor: "color-mix(in srgb, var(--psl-danger) 20%, transparent)" } },
+  pending: { label: "Ausstehend", className: "border text-xs", style: { background: "oklch(94% 0.03 195)", color: "oklch(41% 0.10 195)", borderColor: "oklch(88% 0.03 195)" } },
 };
 
 function BookingRow({ booking, course, status, action, lowParticipantsMessage }) {
   return (
-    <Card className={`hover:shadow-md transition-shadow ${lowParticipantsMessage ? "border-amber-300" : "border-border/60"}`}>
+    <Card className={lowParticipantsMessage ? "border-amber-300" : "border-border/60"}>
       {lowParticipantsMessage && (
         <div className="flex items-center gap-2 px-5 pt-3 pb-0 text-amber-700 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -58,7 +56,7 @@ function BookingRow({ booking, course, status, action, lowParticipantsMessage })
             >
               {booking.course_title}
             </Link>
-            <Badge className={`${status.className} border text-xs`}>
+            <Badge className={status.className} style={status.style}>
               {status.label}
             </Badge>
           </div>
@@ -230,9 +228,9 @@ export default function MyBookings() {
                         <div className="flex gap-2 flex-wrap">
                           <Button
                             variant="outline"
-                            size="sm"
                             onClick={() => downloadICalFile(course)}
                             title="Zu Kalender hinzufügen"
+                            style={{ height: 34, borderRadius: 9 }}
                           >
                             <Download className="w-4 h-4 mr-1.5" />
                             Kalendereintrag hinzufügen
@@ -240,9 +238,9 @@ export default function MyBookings() {
                           {course?.created_by && (
                             <Button
                               variant="outline"
-                              size="sm"
                               onClick={handleContactTutor}
                               title="Tutor kontaktieren"
+                              style={{ height: 34, borderRadius: 9 }}
                             >
                               <Mail className="w-4 h-4 mr-1.5" />
                               Tutor kontaktieren
@@ -252,10 +250,10 @@ export default function MyBookings() {
                             <AlertDialogTrigger asChild>
                               <Button
                                 variant="ghost"
-                                size="sm"
                                 disabled={!canCancel}
                                 className={canCancel ? "text-destructive hover:text-destructive hover:bg-destructive/10" : "text-muted-foreground opacity-50 cursor-not-allowed"}
                                 title={!canCancel ? "Stornierung nur bis 72h vor Kursbeginn möglich" : ""}
+                                style={{ height: 34, borderRadius: 9 }}
                               >
                                 <XCircle className="w-4 h-4 mr-1.5" />
                                 Stornieren
@@ -325,8 +323,8 @@ export default function MyBookings() {
                         <Link to={createPageUrl("CourseDetail") + `?id=${booking.course_id}`}>
                           <Button
                             variant="outline"
-                            size="sm"
                             className="text-primary border-primary/30 hover:bg-primary/10"
+                            style={{ height: 34, borderRadius: 9 }}
                           >
                             <RotateCcw className="w-4 h-4 mr-1.5" />
                             Wieder anmelden
@@ -367,9 +365,9 @@ export default function MyBookings() {
                       const action = booking.status === "confirmed" ? (
                         <Button
                           variant="ghost"
-                          size="sm"
                           onClick={() => window.open("https://forms.cloud.microsoft/e/sZ3XW4XpMy", "_blank")}
                           className="text-primary hover:text-primary hover:bg-primary/10"
+                          style={{ height: 34, borderRadius: 9 }}
                         >
                           <ExternalLink className="w-4 h-4 mr-1.5" />
                           Rückmeldung

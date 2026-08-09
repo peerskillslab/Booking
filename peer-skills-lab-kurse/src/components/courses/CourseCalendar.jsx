@@ -10,20 +10,18 @@ import {
   subMonths,
   isSameMonth,
   isToday,
-  parseISO,
 } from "date-fns";
 import { de } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Clock, MapPin } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { CATEGORY_COLORS, getCategoryColorVariant } from "@/lib/categoryStyles";
+import { getCategoryOklch } from "@/lib/categoryStyles";
 
-const fallbackColor = { bg: "#f0f0f0", text: "#666", border: "#ccc" };
+const fallbackColor = { bg: "oklch(94% 0.03 130)", text: "oklch(41% 0.10 130)", border: "oklch(88% 0.03 130)" };
 
 function CourseChip({ course }) {
-  const hexColor = CATEGORY_COLORS[course.category];
-  const color = hexColor ? getCategoryColorVariant(hexColor) : fallbackColor;
+  const color = getCategoryOklch(course.category) || fallbackColor;
   return (
     <Link
       to={createPageUrl("CourseDetail") + `?id=${course.id}`}
@@ -176,10 +174,9 @@ export default function CourseCalendar({ courses, selectedDate, onSelectDate }) 
 
       {/* Legend */}
       <div className="px-5 py-3 border-t border-border/60 flex flex-wrap gap-x-4 gap-y-1">
-        {Object.entries(CATEGORY_COLORS)
-          .filter(([cat]) => courses.some((c) => c.category === cat))
-          .map(([cat, hexColor]) => {
-            const color = getCategoryColorVariant(hexColor);
+        {Array.from(new Set(courses.map(c => c.category).filter(Boolean)))
+          .map((cat) => {
+            const color = getCategoryOklch(cat);
             return (
               <span key={cat} className="flex items-center gap-1 text-xs text-muted-foreground">
                 <span className="w-2 h-2 rounded-sm border" style={{ backgroundColor: color.bg, borderColor: color.border }} />

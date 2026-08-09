@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
 import { invalidateOnCoursePublish } from "@/lib/invalidationStrategy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

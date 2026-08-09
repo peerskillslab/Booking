@@ -33,8 +33,8 @@ export default function PublicLayout({ children }) {
       {/* Top bar */}
       <header style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        height: 52, padding: "0 20px",
-        background: "var(--psl-sidebar-bg)",
+        height: 56, padding: "0 20px",
+        background: "#ffffff",
         borderBottom: "0.5px solid var(--psl-hairline)",
         position: "sticky", top: 0, zIndex: 100,
       }}>
@@ -74,12 +74,11 @@ export default function PublicLayout({ children }) {
           <Link
             to="/login"
             style={{
-              height: 28, padding: "0 14px", borderRadius: 7, border: "none",
+              height: 38, padding: "0 16px", borderRadius: 10, border: "none",
               background: "var(--psl-brand)", color: "#fff",
-              fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+              fontSize: 13.5, fontWeight: 600, cursor: "pointer",
               display: "flex", alignItems: "center", gap: 6,
               textDecoration: "none", letterSpacing: "0.01em",
-              boxShadow: "0 1px 4px rgba(0,0,0,.18)",
             }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ width: 13, height: 13 }}>

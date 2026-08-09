@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useAuth } from "@/lib/AuthContext";
 import Logo from "@/components/Logo";
@@ -106,7 +105,7 @@ export default function Layout({ children, currentPageName }) {
       <aside className="psl-sidebar">
         {/* Brand */}
         <div className="psl-brand">
-          <Logo size={40} />
+          <Logo size={34} />
           <div>
             <div className="psl-brand-name">Peer Skills Lab</div>
             <div className="psl-brand-sub">Clinical Skills Training</div>

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 // --- Custom SVG icons from design ---
@@ -68,12 +68,22 @@ const Icon = {
   ),
 };
 
-const CSS = {
-  "--bg": "#FAFAF8", "--ink": "#1F2C0A", "--ink-2": "#4A5A30", "--ink-3": "#7A8A60",
-  "--surface": "#F5F2E8", "--line": "#E8E2D0", "--line-soft": "#EEEAD8",
-  "--sage": "#E3EAD0", "--accent": "#466E0E",
+const CSS_LIGHT = {
+  "--bg": "oklch(98% 0.004 130)", "--ink": "oklch(20% 0.01 130)",
+  "--ink-2": "oklch(50% 0.01 130)", "--ink-3": "oklch(58% 0.01 130)",
+  "--surface": "#ffffff", "--line": "oklch(92% 0.006 130)", "--line-soft": "oklch(94% 0.006 130)",
+  "--sage": "#eef3e6", "--accent": "#466E0E",
 };
-const A = { main: "#466E0E", soft: "#E3EAD0", ink: "#1F2C0A", deep: "#2F4A09" };
+
+const CSS_DARK = {
+  "--bg": "oklch(18% 0.006 130)", "--ink": "oklch(96% 0.004 130)",
+  "--ink-2": "oklch(74% 0.006 130)", "--ink-3": "oklch(62% 0.006 130)",
+  "--surface": "oklch(23% 0.006 130)", "--line": "oklch(30% 0.008 130)", "--line-soft": "oklch(36% 0.008 130)",
+  "--sage": "#3a4a38", "--accent": "#8FBF4E",
+};
+
+const A_LIGHT = { main: "#466E0E", soft: "#E3EAD0", ink: "#1F2C0A", deep: "#2F4A09" };
+const A_DARK = { main: "#8FBF4E", soft: "#3a4a38", ink: "#f0f0f0", deep: "#d0d0d0" };
 
 const TEAM = [
   { name: "Elin",     role: "Co-Founder", tone: 0, img: "/team/elin.jpg" },
@@ -128,15 +138,15 @@ function PhotoSquare({ tone = 0, style: sx }) {
   return <div style={{ width: "100%", height: "100%", borderRadius: 16, background: `repeating-linear-gradient(135deg, ${a} 0 12px, ${b} 12px 24px)`, border: "1px solid var(--line)", ...sx }} />;
 }
 
-function Pill({ icon: I, label }) {
+function Pill({ icon: I, label, A }) {
   return (
-    <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--line)", fontSize: 14.5, fontWeight: 500, color: "var(--ink)" }}>
+    <div style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--line)", fontSize: 14.5, fontWeight: 500, color: A.main }}>
       <I width="18" height="18" stroke="currentColor" /><span>{label}</span>
     </div>
   );
 }
 
-function HowCards() {
+function HowCards({ A }) {
   const steps = [
     { n: "01", icon: Icon.Users,       title: "Peers lehren Peers",        body: "Dadurch entsteht eine hohe soziale und kognitive Kongruenz, weil Inhalte verständlich, praxisnah und ähnlich der eigenen Denkstruktur erklärt werden." },
     { n: "02", icon: Icon.Repeat,      title: "Strategisch wiederholen",   body: "Mithilfe von Spaced Repetition werden Inhalte in zeitlich abgestuften Abständen wiederholt, damit Wissen langfristig im Gedächtnis verankert wird." },
@@ -156,10 +166,7 @@ function HowCards() {
           const I = s.icon;
           return (
             <div key={s.n} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 16, padding: "28px 26px", display: "flex", flexDirection: "column", gap: 18, minHeight: 280 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: A.soft, color: A.deep, display: "flex", alignItems: "center", justifyContent: "center" }}><I width="22" height="22" /></div>
-                <span style={{ fontSize: 14, color: "var(--ink-3)", fontWeight: 500 }}>{s.n}</span>
-              </div>
+              <span style={{ fontSize: 14, color: "var(--ink-3)", fontWeight: 500 }}>{s.n}</span>
               <h3 style={{ fontSize: 21, fontWeight: 600, margin: 0, lineHeight: 1.2 }}>{s.title}</h3>
               <p style={{ fontSize: 14.5, lineHeight: 1.55, margin: 0, color: "var(--ink-2)" }}>{s.body}</p>
             </div>
@@ -170,42 +177,59 @@ function HowCards() {
   );
 }
 
-function StatsBlock() {
+function StatsBlock({ A }) {
   const stats = [
     { n: "70", label: "Übungseinheiten",        sub: "seit Gründung 2025" },
-    { n: "15",    label: "aktive Peer-Tutor*innen", sub: "ab dem 7. Semester" },
-    { n: "9",     label: "Skill-Stationen",         sub: "von Anamnese bis ZVK" },
-    { n: "94%",    label: "empfehlen weiter",        sub: "aus 60 Feedback-Bögen" },
+    { n: "15", label: "aktive Peer-Tutor*innen", sub: "ab dem 7. Semester" },
+    { n: "9",  label: "Skill-Stationen",        sub: "von Anamnese bis ZVK" },
+    { n: "94%", label: "empfehlen weiter",      sub: "aus 60 Feedback-Bögen" },
   ];
   return (
     <section className="au-section">
-      <div style={{ background: A.ink, color: "#F5F2E8", borderRadius: 22, position: "relative", overflow: "hidden" }} className="au-stats-inner">
-        <div style={{ position: "absolute", top: -100, right: -100, width: 360, height: 360, borderRadius: "50%", background: A.main, opacity: 0.25 }} />
-        <div style={{ position: "absolute", bottom: -120, left: -40, width: 220, height: 220, borderRadius: "50%", background: A.main, opacity: 0.15 }} />
-        <div className="au-stats-header" style={{ position: "relative", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "end" }}>
-          <div>
-            <div style={{ fontSize: 13.5, textTransform: "uppercase", opacity: 0.65, fontWeight: 500, marginBottom: 14 }}>Stand heute</div>
-            <h2 className="au-h2" style={{ fontWeight: 600, lineHeight: 1.05, margin: 0, maxWidth: 540 }}>In Zahlen,</h2>
-          </div>
-          <p style={{ fontSize: 16, lineHeight: 1.55, margin: 0, opacity: 0.85 }}>
-            Wir fragen nur, was uns hilft zu sehen, ob die Kurse wirklich gebucht werden und ob die Teilnehmenden danach das Gefühl haben, etwas mitgenommen zu haben.
-          </p>
-        </div>
-        <div className="au-stats-numbers" style={{ position: "relative", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 32, marginTop: 56, paddingTop: 40, borderTop: "1px solid rgba(245,242,232,0.18)" }}>
-          {stats.map((s, i) => (
-            <div key={i}>
-              <div className="au-stat-n" style={{ fontWeight: 600, lineHeight: 0.92 }}>{s.n}</div>
-              <div style={{ fontSize: 16, fontWeight: 500, marginTop: 14 }}>{s.label}</div>
-              <div style={{ fontSize: 13.5, opacity: 0.65, marginTop: 4 }}>{s.sub}</div>
-            </div>
-          ))}
+      <div className="au-stats-inner">
+        <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 32 }}>Stand heute</div>
+        <h2 className="au-h2" style={{ fontWeight: 600, lineHeight: 1.05, margin: "0 0 56px", maxWidth: 540 }}>In Zahlen.</h2>
+        <div className="au-stats-numbers" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
+          {stats.map((s, i) => {
+            const isGreen = i % 2 === 0;
+            return (
+              <div key={i} style={{
+                background: isGreen ? "#eef3e6" : "#e8f2f2",
+                borderRadius: 16,
+                padding: "24px 22px",
+                display: "flex",
+                flexDirection: "column",
+              }}>
+                <div className="au-stat-n" style={{
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontSize: 40,
+                  fontWeight: 800,
+                  color: isGreen ? "#466e0e" : "#4e9597",
+                  lineHeight: 0.92,
+                  margin: 0,
+                }}>{s.n}</div>
+                <div style={{ fontSize: 15, fontWeight: 600, marginTop: 10, color: "var(--ink)" }}>{s.label}</div>
+                <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 2, opacity: 0.7 }}>{s.sub}</div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
   );
 }
 
-function TeamSection() {
+function TeamSection({ A }) {
+  // Fisher-Yates shuffle for stable randomization
+  const shuffledTeam = useMemo(() => {
+    const arr = [...TEAM];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, []);
+
   return (
     <section className="au-section">
       <div className="au-team-header" style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 32 }}>
@@ -218,8 +242,8 @@ function TeamSection() {
         </p>
       </div>
       <div className="au-team-mosaic" style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gridAutoRows: "160px", gap: 14 }}>
-        {[...TEAM].sort(() => Math.random() - 0.5).map((m, i) => {
-          const spans = { c: "span 4", r: "span 2" };
+        {shuffledTeam.map((m, i) => {
+          const spans = { c: "span 2", r: "span 2" };
           return (
             <div key={i} className="au-team-cell" style={{ gridColumn: spans.c, gridRow: spans.r, display: "flex", flexDirection: "column", gap: 10 }}>
               <div style={{ flex: 1, position: "relative", overflow: "hidden", borderRadius: 16, border: "1px solid var(--line)", minHeight: 0 }}>
@@ -242,7 +266,7 @@ function TeamSection() {
   );
 }
 
-function PartnersBand() {
+function PartnersBand({ A }) {
   return (
     <section className="au-section">
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22 }} className="au-partners-inner">
@@ -284,15 +308,12 @@ function PartnersBand() {
   );
 }
 
-function ContactRow({ label, value, icon: I, href }) {
+function ContactRow({ label, value, href }) {
   const inner = (
-    <>
-      <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--sage)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink)", flexShrink: 0 }}><I width="18" height="18" /></div>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 12, color: "var(--ink-3)", textTransform: "uppercase" }}>{label}</div>
-        <div style={{ fontSize: 14.5, fontWeight: 500 }}>{value}</div>
-      </div>
-    </>
+    <div style={{ flex: 1 }}>
+      <div style={{ fontSize: 12, color: "var(--ink-3)", textTransform: "uppercase", fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>{value}</div>
+    </div>
   );
   const shared = { display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", background: "var(--bg)", borderRadius: 12 };
   if (href) {
@@ -307,7 +328,7 @@ function ContactRow({ label, value, icon: I, href }) {
   return <div style={shared}>{inner}</div>;
 }
 
-function CoursesBlock() {
+function CoursesBlock({ A }) {
   return (
     <section className="au-section">
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22 }} className="au-courses-inner">
@@ -319,35 +340,29 @@ function CoursesBlock() {
           Ziel ist es, die praktischen Fertigkeiten zu festigen und ein fundiertes Verständnis für klinische Untersuchungen zu vermitteln.
         </p>
         <div className="au-courses-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
-          {COURSES.map((c, i) => {
-            const I = c.icon;
-            return (
-              <div key={i} style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 16, padding: "28px 26px", display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ width: 48, height: 48, borderRadius: 12, background: A.soft, color: A.deep, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <I width="22" height="22" />
-                </div>
-                <div>
-                  <div style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.2, marginBottom: 10 }}>{c.name}</div>
-                  <p style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink-2)", margin: 0 }}>{c.body}</p>
-                </div>
+          {COURSES.map((c, i) => (
+            <div key={i} style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 16, padding: "28px 26px", display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.2, marginBottom: 10 }}>{c.name}</div>
+                <p style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink-2)", margin: 0 }}>{c.body}</p>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-function JoinBlock() {
+function JoinBlock({ A }) {
   return (
     <section className="au-section au-section-join">
       <div className="au-join-right" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22, display: "flex", flexDirection: "column", gap: 18 }}>
         <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500 }}>Direkt erreichen</div>
         <div className="au-contact-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-          <ContactRow label="Allgemein"  value="info@peerskillslab.ch" icon={Icon.Mail}      href="mailto:info@peerskillslab.ch" />
-          <ContactRow label="Instagram"  value="@peerskillslab"         icon={Icon.Instagram} href="https://www.instagram.com/peerskillslab_bern" />
-          <ContactRow label="LinkedIn"   value="PeerSkills Lab"         icon={Icon.LinkedIn}  href="https://www.linkedin.com/company/112596144" />
+          <ContactRow label="Allgemein"  value="info@peerskillslab.ch" href="mailto:info@peerskillslab.ch" />
+          <ContactRow label="Instagram"  value="@peerskillslab"        href="https://www.instagram.com/peerskillslab_bern" />
+          <ContactRow label="LinkedIn"   value="PeerSkills Lab"        href="https://www.linkedin.com/company/112596144" />
         </div>
         <div style={{ paddingTop: 16, borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10, color: "var(--ink-2)", fontSize: 13.5 }}>
           <Icon.Calendar width="16" height="16" />
@@ -360,6 +375,23 @@ function JoinBlock() {
 
 // --- Main page ---
 export default function AboutUs() {
+  const [isDark, setIsDark] = useState(() => {
+    const theme = document.documentElement.dataset.theme;
+    return theme === "dark" || (theme === undefined && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  });
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const theme = document.documentElement.dataset.theme;
+      setIsDark(theme === "dark" || (theme === undefined && window.matchMedia("(prefers-color-scheme: dark)").matches));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+
+  const CSS = isDark ? CSS_DARK : CSS_LIGHT;
+  const A = isDark ? A_DARK : A_LIGHT;
+
   return (
     <div style={{ width: "100%", background: "var(--bg)", color: "var(--ink)", ...CSS }}>
       <style>{`
@@ -440,7 +472,7 @@ export default function AboutUs() {
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 64 }}>
           <Link to="/FAQ" style={{ textDecoration: "none" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 28px", borderRadius: 16, background: A.soft, border: `1px solid ${A.main}30`, fontSize: 16, fontWeight: 600, color: A.main, transition: "background 0.15s" }}
-              onMouseEnter={e => e.currentTarget.style.background = "#D4DFB8"}
+              onMouseEnter={e => e.currentTarget.style.background = isDark ? "#4a5544" : "#D4DFB8"}
               onMouseLeave={e => e.currentTarget.style.background = A.soft}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
@@ -457,10 +489,10 @@ export default function AboutUs() {
             <strong style={{ color: "var(--ink)", fontWeight: 600 }}>PeerSkills Lab</strong> ist ein studentisch geprägtes Lern- und Vernetzungsprojekt, welches praktische Skills in der Medizin auf verständliche und niederschwellige Weise vermittelt. Uns ist wichtig, dass Wissen auf Augenhöhe vermittelt wird: Studierende lernen besonders effektiv im Austausch mit Peers, die sich in derselben Ausbildungsphase befinden. Offenes Fragenstellen, aktives Ausprobieren und das Korrigieren von Fehlern ohne Hemmschwelle sind dabei zentral.
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
-            <Pill icon={Icon.Stethoscope} label="OSCE-fokussiert" />
-            <Pill icon={Icon.Repeat}      label="Spaced repetition" />
-            <Pill icon={Icon.Users}       label="Peer-zu-Peer" />
-            <Pill icon={Icon.Heart}       label="Non-profit, Verein" />
+            <Pill icon={Icon.Stethoscope} label="OSCE-fokussiert" A={A} />
+            <Pill icon={Icon.Repeat}      label="Spaced repetition" A={A} />
+            <Pill icon={Icon.Users}       label="Peer-zu-Peer" A={A} />
+            <Pill icon={Icon.Heart}       label="Non-profit, Verein" A={A} />
           </div>
         </div>
       </section>
@@ -491,12 +523,12 @@ export default function AboutUs() {
         </div>
       </section>
 
-      <HowCards />
-      <StatsBlock />
-      <CoursesBlock />
-      <TeamSection />
-      <PartnersBand />
-      <JoinBlock />
+      <HowCards A={A} />
+      <StatsBlock A={A} />
+      <CoursesBlock A={A} />
+      <TeamSection A={A} />
+      <PartnersBand A={A} />
+      <JoinBlock A={A} />
     </div>
   );
 }

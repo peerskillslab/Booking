@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-import { CATEGORY_COLORS } from "@/lib/categoryStyles";
+import { getCategoryOklch } from "@/lib/categoryStyles";
 
 const LEVEL_LABELS = {
   "Alle Studienjahre":   "ALLE STUDIENJAHRE",
@@ -27,7 +27,7 @@ export default function CourseCard({ course }) {
   const max = course.max_participants || 0;
   const isFull = max > 0 && current >= max;
   const pct = max > 0 ? Math.min(100, (current / max) * 100) : 0;
-  const catColor = CATEGORY_COLORS[course.category] || "#466E0E";
+  const colors = getCategoryOklch(course.category);
 
   let dayAbbr = null, dayNum = null, monthAbbr = null;
   if (course.date) {
@@ -43,7 +43,7 @@ export default function CourseCard({ course }) {
 
   return (
     <Link to={createPageUrl("CourseDetail") + `?id=${course.id}`} style={{ textDecoration: "none" }}>
-      <div className="psl-course-card" style={{ "--cat-color": catColor }}>
+      <div className="psl-course-card">
 
         {/* Header: date box + badges */}
         <div className="psl-cc-header">
@@ -55,8 +55,8 @@ export default function CourseCard({ course }) {
             </div>
           )}
           <div className="psl-cc-badges">
-            <span className="psl-cc-cat-badge" style={{ color: catColor, background: `color-mix(in srgb, ${catColor} 14%, transparent)` }}>
-              <span className="psl-cc-cat-dot" style={{ background: catColor }} />
+            <span className="psl-cc-cat-badge" style={{ color: colors.text, background: colors.bg }}>
+              <span className="psl-cc-cat-dot" style={{ background: colors.solid }} />
               {course.category}
             </span>
             {levelLabel && (
@@ -95,7 +95,7 @@ export default function CourseCard({ course }) {
         {/* Footer: instructor + seats */}
         <div className="psl-cc-foot">
           <div className="psl-cc-instructor">
-            <div className="psl-cc-avatar" style={{ background: catColor }}>
+            <div className="psl-cc-avatar" style={{ background: colors.solid }}>
               {initials(course.instructor)}
             </div>
             <div className="psl-cc-instructor-info">
@@ -104,7 +104,7 @@ export default function CourseCard({ course }) {
             </div>
           </div>
           <div className="psl-cc-seats-wrap">
-            <div className="psl-cc-seats-count" style={{ color: isFull ? "#ef4444" : "var(--psl-text-2)" }}>
+            <div className="psl-cc-seats-count" style={{ color: isFull ? "var(--psl-danger)" : "var(--psl-text-2)" }}>
               {current}/{max}
               {isFull && <span className="psl-cc-full-badge">voll</span>}
             </div>
@@ -112,7 +112,7 @@ export default function CourseCard({ course }) {
               <div className="psl-cc-progress-bar"
                 style={{
                   width: `${pct}%`,
-                  background: isFull ? "#ef4444" : catColor,
+                  background: isFull ? "var(--psl-danger)" : colors.solid,
                 }} />
             </div>
           </div>

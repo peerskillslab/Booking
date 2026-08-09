@@ -18,19 +18,19 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Loader2, Users, Eye, Search, X } from "lucide-react";
+import { Pencil, Trash2, Loader2, Users, Eye, Search, X } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import ParticipantsList from "../components/admin/ParticipantsList";
-import { queryKeys } from "@/lib/queryKeys";
 import { CATEGORIES, LEVELS } from "@/lib/courseConstants";
 import {
   invalidateOnCourseCreate,
   invalidateOnCourseUpdate,
   invalidateOnCourseDelete,
 } from "@/lib/invalidationStrategy";
+import { getCategoryOklch } from "@/lib/categoryStyles";
 
 const emptyCourse = {
   title: "", description: "", short_description: "", category: "CST Abdomen",
@@ -216,10 +216,11 @@ export default function AdminCourses() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
+              style={{ height: 40, borderRadius: 11 }}
             />
           </div>
           <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Alle Kategorien" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-48" style={{ height: 40, borderRadius: 11 }}><SelectValue placeholder="Alle Kategorien" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle Kategorien</SelectItem>
               {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -230,6 +231,7 @@ export default function AdminCourses() {
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
             className="w-full sm:w-44"
+            style={{ height: 40, borderRadius: 11 }}
           />
           {hasFilters && (
             <Button variant="ghost" size="icon" onClick={() => { setSearch(""); setFilterCategory("all"); setFilterDate(""); }}>
@@ -265,7 +267,10 @@ export default function AdminCourses() {
                           <span className="text-xs font-mono font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
                         )}
                         <span className="font-semibold truncate">{course.title}</span>
-                        <Badge variant="secondary" className="text-xs">{course.category}</Badge>
+                        {(() => {
+                          const colors = getCategoryOklch(course.category);
+                          return <Badge className="text-xs border" style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}>{course.category}</Badge>;
+                        })()}
                         <Badge
                           className={`text-xs border ${
                             course.status === "active"
@@ -292,18 +297,18 @@ export default function AdminCourses() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Button variant="outline" size="sm" onClick={() => {
+                      <Button variant="outline" onClick={() => {
                         setSelectedCourse(course);
                         setParticipantsDialogOpen(true);
-                      }}>
+                      }} style={{ height: 32, borderRadius: 9 }}>
                         <Eye className="w-3.5 h-3.5 mr-1" /> Teilnehmende
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => openEdit(course)}>
+                      <Button variant="outline" onClick={() => openEdit(course)} style={{ height: 32, borderRadius: 9 }}>
                         <Pencil className="w-3.5 h-3.5 mr-1" /> Bearbeiten
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                          <Button variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" style={{ height: 32, borderRadius: 9 }}>
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </AlertDialogTrigger>
@@ -368,7 +373,10 @@ export default function AdminCourses() {
                           <span className="text-xs font-mono font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
                         )}
                         <span className="font-semibold truncate">{course.title}</span>
-                              <Badge variant="secondary" className="text-xs">{course.category}</Badge>
+                              {(() => {
+                                const colors = getCategoryOklch(course.category);
+                                return <Badge className="text-xs border" style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}>{course.category}</Badge>;
+                              })()}
                               <Badge
                                 className={`text-xs border ${
                                   course.status === "active"
@@ -395,18 +403,18 @@ export default function AdminCourses() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <Button variant="outline" size="sm" onClick={() => {
+                            <Button variant="outline" onClick={() => {
                               setSelectedCourse(course);
                               setParticipantsDialogOpen(true);
-                            }}>
+                            }} style={{ height: 32, borderRadius: 9 }}>
                               <Eye className="w-3.5 h-3.5 mr-1" /> Teilnehmende
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => openEdit(course)}>
+                            <Button variant="outline" onClick={() => openEdit(course)} style={{ height: 32, borderRadius: 9 }}>
                               <Pencil className="w-3.5 h-3.5 mr-1" /> Bearbeiten
                             </Button>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                                <Button variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" style={{ height: 32, borderRadius: 9 }}>
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </Button>
                               </AlertDialogTrigger>

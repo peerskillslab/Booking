@@ -64,20 +64,20 @@ export default function Login() {
     }}>
       <div style={{
         width: '100%',
-        maxWidth: 360,
+        maxWidth: 380,
         background: 'var(--psl-content-bg, #fff)',
-        borderRadius: 16,
-        boxShadow: '0 28px 70px rgba(0,0,0,.28), 0 8px 22px rgba(0,0,0,.18), 0 0 0 0.5px rgba(0,0,0,.12)',
+        borderRadius: 18,
+        border: '1px solid var(--psl-hairline, rgba(0,0,0,.09))',
         padding: 36,
         textAlign: 'center',
       }}>
 
         {/* Brand mark */}
         <div style={{ margin: '0 auto 18px' }}>
-          <Logo size={56} />
+          <Logo size={48} />
         </div>
 
-        <h1 style={{ fontSize: 21, fontWeight: 700, letterSpacing: '-.4px', color: 'var(--psl-text, #1d1d1f)', margin: 0 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Plus Jakarta Sans', sans-serif", letterSpacing: '-.4px', color: 'var(--psl-text, #1d1d1f)', margin: 0 }}>
           Peer Skills Lab
         </h1>
         <p style={{ fontSize: 13, color: 'var(--psl-text-2, #5f5f63)', margin: '5px 0 24px' }}>
@@ -161,13 +161,13 @@ export default function Login() {
             type="submit"
             disabled={loading}
             style={{
-              height: 38, borderRadius: 7, border: 'none', cursor: loading ? 'default' : 'pointer',
+              height: 44, borderRadius: 11, border: 'none', cursor: loading ? 'default' : 'pointer',
               background: 'var(--psl-accent, #466E0E)',
               color: 'var(--psl-accent-text, #fff)',
-              fontSize: 14, fontWeight: 550,
+              fontSize: 14, fontWeight: 600,
               opacity: loading ? 0.65 : 1,
               marginTop: 4,
-              fontFamily: 'inherit',
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
             }}
           >
             {loading ? 'Bitte warten…' : mode === 'login' ? 'Anmelden' : 'Registrieren'}
@@ -191,13 +191,13 @@ export default function Login() {
 }
 
 const inputStyle = {
-  width: '100%', height: 32, padding: '0 11px',
-  borderRadius: 7, fontSize: 13,
+  width: '100%', height: 40, padding: '0 12px',
+  borderRadius: 9, fontSize: 13.5,
   color: 'var(--psl-text, #1d1d1f)',
-  background: 'var(--psl-content-bg, #fff)',
-  boxShadow: 'inset 0 0 0 0.5px var(--psl-hairline-strong, rgba(0,0,0,.14))',
-  border: 'none', outline: 'none',
-  fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif',
+  background: 'var(--psl-card-bg, #fff)',
+  border: '1px solid var(--psl-hairline, rgba(0,0,0,.09))',
+  outline: 'none',
+  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
   boxSizing: 'border-box',
 };
 

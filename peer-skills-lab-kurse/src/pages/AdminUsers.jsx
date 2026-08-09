@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -120,13 +119,14 @@ export default function AdminUsers() {
         </div>
 
         {/* Search */}
-        <div className="relative mb-8">
+        <div className="relative mb-8" style={{ maxWidth: 320 }}>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Nach Name oder E-Mail suchen…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
+            style={{ height: 40, borderRadius: 11 }}
           />
         </div>
 
@@ -163,8 +163,8 @@ export default function AdminUsers() {
                           <Card className="border-border/60">
                             <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                               <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                  <User className="w-4 h-4 text-primary" />
+                                <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "oklch(94% 0.03 195)", color: "oklch(41% 0.10 195)" }}>
+                                  <User className="w-4 h-4" />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <div className="font-semibold text-foreground flex items-center gap-2 flex-wrap">
@@ -185,7 +185,7 @@ export default function AdminUsers() {
                                   }}
                                   disabled={u.id === currentUser.id}
                                 >
-                                  <SelectTrigger className="w-36 h-8 text-xs">
+                                  <SelectTrigger className="w-36 text-xs" style={{ height: 32, borderRadius: 8 }}>
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>

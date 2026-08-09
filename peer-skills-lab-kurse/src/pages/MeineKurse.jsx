@@ -17,6 +17,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { queryKeys } from "@/lib/queryKeys";
+import { getCategoryOklch } from "@/lib/categoryStyles";
 
 export default function MeineKurse() {
   const [user, setUser] = useState(null);
@@ -92,7 +93,10 @@ export default function MeineKurse() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className={`font-semibold truncate ${isPastCourse ? "text-muted-foreground" : ""}`}>{course.title}</span>
-              <Badge variant="secondary" className="text-xs">{course.category}</Badge>
+              {(() => {
+                const colors = getCategoryOklch(course.category);
+                return <Badge className="text-xs border" style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}>{course.category}</Badge>;
+              })()}
               {isPastCourse ? (
                 <Badge className="text-xs border bg-muted text-muted-foreground border-border">Abgeschlossen</Badge>
               ) : (
@@ -115,16 +119,16 @@ export default function MeineKurse() {
           </div>
           {!isPastCourse && (
             <div className="flex gap-2 flex-wrap">
-              <Button variant="outline" size="sm" onClick={() => downloadICalFile(course)} title="Zu Kalender hinzufügen">
+              <Button variant="outline" onClick={() => downloadICalFile(course)} title="Zu Kalender hinzufügen" style={{ height: 34, borderRadius: 9 }}>
                 <Calendar className="w-3.5 h-3.5 mr-1" /> Kalendereintrag
               </Button>
-              <Button variant="outline" size="sm" onClick={() => openBookings(course)}>
+              <Button variant="outline" onClick={() => openBookings(course)} style={{ height: 34, borderRadius: 9 }}>
                 <Mail className="w-3.5 h-3.5 mr-1" /> Buchungen
               </Button>
               {(course.current_participants || 0) === 0 && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10">
+                    <Button variant="ghost" className="text-destructive hover:bg-destructive/10" style={{ height: 34, borderRadius: 9 }}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </AlertDialogTrigger>

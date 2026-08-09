@@ -1,12 +1,19 @@
 // @ts-nocheck
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const CSS = {
-  "--bg": "#FAFAF8", "--ink": "#1F2C0A", "--ink-2": "#4A5A30", "--ink-3": "#7A8A60",
-  "--surface": "#F5F2E8", "--line": "#E8E2D0", "--line-soft": "#EEEAD8",
-  "--sage": "#E3EAD0", "--accent": "#466E0E",
+const CSS_LIGHT = {
+  "--bg": "oklch(98% 0.004 130)", "--ink": "oklch(20% 0.01 130)", "--ink-2": "oklch(50% 0.01 130)", "--ink-3": "oklch(58% 0.01 130)",
+  "--surface": "#ffffff", "--line": "oklch(92% 0.006 130)", "--line-soft": "oklch(94% 0.006 130)",
+  "--sage": "#eef3e6", "--accent": "#466E0E",
 };
-const A = { main: "#466E0E", soft: "#E3EAD0", ink: "#1F2C0A", deep: "#2F4A09" };
+
+const CSS_DARK = {
+  "--bg": "oklch(18% 0.006 130)", "--ink": "oklch(96% 0.004 130)", "--ink-2": "oklch(74% 0.006 130)", "--ink-3": "oklch(62% 0.006 130)",
+  "--surface": "oklch(23% 0.006 130)", "--line": "oklch(30% 0.008 130)", "--line-soft": "oklch(36% 0.008 130)",
+  "--sage": "#3a4a38", "--accent": "#8FBF4E",
+};
+
+const A = { main: "#466E0E" };
 
 const FAQS = [
   {
@@ -70,8 +77,10 @@ const FAQS = [
   },
 ];
 
-function AccordionItem({ q, a }) {
+function AccordionItem({ q, a, isDark }) {
   const [open, setOpen] = useState(false);
+  const accentColor = isDark ? "#8FBF4E" : "#466E0E";
+
   return (
     <div
       style={{
@@ -98,8 +107,8 @@ function AccordionItem({ q, a }) {
             width: 22,
             height: 22,
             borderRadius: "50%",
-            background: open ? A.main : "var(--surface)",
-            border: `1px solid ${open ? A.main : "var(--line)"}`,
+            background: open ? accentColor : "var(--surface)",
+            border: `1px solid ${open ? accentColor : "var(--line)"}`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -109,7 +118,7 @@ function AccordionItem({ q, a }) {
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path
               d={open ? "M2 5h6" : "M5 2v6M2 5h6"}
-              stroke={open ? "#fff" : A.main}
+              stroke={open ? "#fff" : accentColor}
               strokeWidth="1.6"
               strokeLinecap="round"
             />
@@ -126,6 +135,22 @@ function AccordionItem({ q, a }) {
 }
 
 export default function FAQ() {
+  const [isDark, setIsDark] = useState(() => {
+    const theme = document.documentElement.dataset.theme;
+    return theme === "dark" || (theme === undefined && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  });
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const theme = document.documentElement.dataset.theme;
+      setIsDark(theme === "dark" || (theme === undefined && window.matchMedia("(prefers-color-scheme: dark)").matches));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+
+  const CSS = isDark ? CSS_DARK : CSS_LIGHT;
+
   return (
     <div style={CSS}>
       <style>{`
@@ -143,7 +168,7 @@ export default function FAQ() {
 
         <h1 style={{ fontWeight: 600, fontSize: "clamp(32px, 7vw, 72px)", lineHeight: 0.95, margin: "0 0 16px", wordBreak: "break-word" }}>
           Häufige<br />
-          <span style={{ color: A.main }}>Fragen.</span>
+          <span style={{ color: isDark ? "#8FBF4E" : "#466E0E" }}>Fragen.</span>
         </h1>
 
         <p style={{ fontSize: 17, color: "var(--ink-2)", lineHeight: 1.5, margin: "0 0 56px", maxWidth: 520 }}>
@@ -158,7 +183,7 @@ export default function FAQ() {
               </div>
               <div>
                 {section.items.map((item) => (
-                  <AccordionItem key={item.q} q={item.q} a={item.a} />
+                  <AccordionItem key={item.q} q={item.q} a={item.a} isDark={isDark} />
                 ))}
               </div>
             </div>
@@ -174,7 +199,7 @@ export default function FAQ() {
             href="mailto:info@peerskillslab.ch"
             style={{
               display: "inline-flex", alignItems: "center", gap: 8,
-              fontSize: 14, fontWeight: 600, color: A.main,
+              fontSize: 14, fontWeight: 600, color: isDark ? "#8FBF4E" : "#466E0E",
               textDecoration: "none",
             }}
           >

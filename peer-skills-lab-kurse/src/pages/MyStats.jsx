@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { getCourseStartDate, isCoursePast } from '@/lib/courseUtils';
+import { getCategoryOklch } from '@/lib/categoryStyles';
 
 function CourseIcon() {
   return (
@@ -196,9 +197,10 @@ export default function MyStats() {
               {attendedCourses.map((booking) => {
                 const course = courseMap[booking.course_id];
                 const courseStart = getCourseStartDate(course);
+                const colors = getCategoryOklch(course?.category);
                 return (
                   <div key={booking.id} className="psl-stats-course-row">
-                    <div className="psl-stats-course-icon">
+                    <div className="psl-stats-course-icon" style={{ background: colors.bg, color: colors.text }}>
                       <CourseIcon />
                     </div>
                     <div className="psl-stats-course-content">
