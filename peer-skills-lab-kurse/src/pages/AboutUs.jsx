@@ -32,38 +32,10 @@ const Icon = {
       <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" />
     </svg>
   ),
-  ArrowRight: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="M5 12h14M13 6l6 6-6 6" />
-    </svg>
-  ),
-  Mail: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3.5 6.5l8.5 7 8.5-7" />
-    </svg>
-  ),
-  Book: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="M4 4.5h6a2 2 0 0 1 2 2V20" /><path d="M20 4.5h-6a2 2 0 0 0-2 2V20" />
-      <path d="M4 4.5V20h6" /><path d="M20 4.5V20h-6" />
-    </svg>
-  ),
   Calendar: (p) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}>
       <rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 9.5h17" />
       <path d="M8 3.5v3M16 3.5v3" /><path d="M8 13.5l1.6 1.6L13 11.7" />
-    </svg>
-  ),
-  Instagram: (p) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <rect x="2.5" y="2.5" width="19" height="19" rx="5" />
-      <circle cx="12" cy="12" r="4.5" />
-      <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none" />
-    </svg>
-  ),
-  LinkedIn: (p) => (
-    <svg viewBox="0 0 24 24" fill="currentColor" {...p}>
-      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14zm-1.5 15.5v-5.3c0-2.1-1.1-3-2.7-3-1.2 0-1.8.7-2.1 1.1V10.5H10v8h2.7v-4.4c0-.3.1-.8.7-1.1.5-.2 1.3-.1 1.3 1.1v4.4h2.8zM7.5 9a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm1.35 9.5v-8h-2.7v8h2.7z"/>
     </svg>
   ),
 };
