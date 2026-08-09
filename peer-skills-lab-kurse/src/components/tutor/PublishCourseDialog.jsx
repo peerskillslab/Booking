@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,7 @@ import TimeInput from "@/components/ui/TimeInput";
 import RoomReservationDialog from "./RoomReservationDialog";
 
 export default function PublishCourseDialog({ open, onOpenChange, template, user, onPublished }) {
+  const queryClient = useQueryClient();
   const sessionCount = template?.session_count || 1;
   const isMultiSession = sessionCount > 1;
 
@@ -62,6 +64,11 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
     onSuccess: (course) => {
       setCreatedCourse(course);
       setDone(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses(user?.email) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.courses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminCourses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.statsCourses() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
       onPublished();
       setError(null);
     },

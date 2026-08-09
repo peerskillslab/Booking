@@ -123,10 +123,13 @@ export default function CourseDetail() {
             <Card className="border-border/60 shadow-lg shadow-primary/5 sticky top-6">
               <CardContent className="p-6 space-y-5">
                 <div className="space-y-3">
-                  {course.extra_dates && JSON.parse(course.extra_dates).length > 0 ? (
-                    <div className="space-y-2">
-                      <div className="text-xs font-semibold text-muted-foreground uppercase">Alle Termine:</div>
-                      {[{ date: course.date, time: course.time }, ...JSON.parse(course.extra_dates)].map((session, i) => (
+                  {(() => {
+                    try {
+                      const extraDates = course.extra_dates ? JSON.parse(course.extra_dates) : [];
+                      return extraDates.length > 0 ? (
+                        <div className="space-y-2">
+                          <div className="text-xs font-semibold text-muted-foreground uppercase">Alle Termine:</div>
+                          {[{ date: course.date, time: course.time }, ...extraDates].map((session, i) => (
                         <div key={i} className="space-y-1 pb-2 border-b border-border/40 last:border-0 last:pb-0">
                           {session.date && (
                             <div className="flex items-center gap-3 text-sm">
@@ -144,21 +147,40 @@ export default function CourseDetail() {
                       ))}
                     </div>
                   ) : (
-                    <>
-                      {course.date && (
-                        <div className="flex items-center gap-3 text-sm">
-                          <Calendar className="w-4 h-4 text-primary" />
-                          <span>{format(new Date(course.date), "EEEE, dd. MMMM yyyy", { locale: de })}</span>
-                        </div>
-                      )}
-                      {course.time && (
-                        <div className="flex items-center gap-3 text-sm">
-                          <Clock className="w-4 h-4 text-primary" />
-                          <span>{course.time}</span>
-                        </div>
-                      )}
-                    </>
-                  )}
+                        <>
+                          {course.date && (
+                            <div className="flex items-center gap-3 text-sm">
+                              <Calendar className="w-4 h-4 text-primary" />
+                              <span>{format(new Date(course.date), "EEEE, dd. MMMM yyyy", { locale: de })}</span>
+                            </div>
+                          )}
+                          {course.time && (
+                            <div className="flex items-center gap-3 text-sm">
+                              <Clock className="w-4 h-4 text-primary" />
+                              <span>{course.time}</span>
+                            </div>
+                          )}
+                        </>
+                      );
+                    } catch {
+                      return (
+                        <>
+                          {course.date && (
+                            <div className="flex items-center gap-3 text-sm">
+                              <Calendar className="w-4 h-4 text-primary" />
+                              <span>{format(new Date(course.date), "EEEE, dd. MMMM yyyy", { locale: de })}</span>
+                            </div>
+                          )}
+                          {course.time && (
+                            <div className="flex items-center gap-3 text-sm">
+                              <Clock className="w-4 h-4 text-primary" />
+                              <span>{course.time}</span>
+                            </div>
+                          )}
+                        </>
+                      );
+                    }
+                  })()}
                   {course.duration_minutes && (
                     <div className="flex items-center gap-3 text-sm">
                       <BarChart3 className="w-4 h-4 text-primary" />

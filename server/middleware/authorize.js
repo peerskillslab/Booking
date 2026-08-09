@@ -60,5 +60,4 @@ module.exports = {
   canReadBooking, canWriteBooking,
   canReadTemplate, canWriteTemplate,
   canReadFeedback, canWriteFeedback,
-  isAdmin,
 };

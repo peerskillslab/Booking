@@ -16,7 +16,7 @@ function getPool() {
 }
 
 function initDb() {
-  if (initialized) return pool;
+  if (initialized) return Promise.resolve(pool);
   initialized = true;
 
   pool = new Pool({
@@ -28,8 +28,8 @@ function initDb() {
 
   console.log('Database pool initialized');
 
-  // Initialize schema and test connection in background (non-blocking)
-  (async () => {
+  // Initialize schema and test connection — return promise that resolves when complete
+  return (async () => {
     try {
       const client = await pool.connect();
       console.log('✓ Database connected');
@@ -45,11 +45,6 @@ function initDb() {
         await pool.query(statement);
       }
       console.log('✓ Database schema initialized');
-
-      await pool.query('ALTER TABLE courses ADD COLUMN IF NOT EXISTS kurs_nr INTEGER');
-      await pool.query('ALTER TABLE bookings ADD COLUMN IF NOT EXISTS attended BOOLEAN DEFAULT FALSE');
-      await pool.query('ALTER TABLE course_templates ADD COLUMN IF NOT EXISTS session_count INTEGER DEFAULT 1');
-      console.log('✓ Migration columns added');
 
       // First: migrate old level values to new study year values (including NULL)
       try {
@@ -92,8 +87,6 @@ function initDb() {
       console.error('⚠ Database error:', err.message);
     }
   })();
-
-  return pool;
 }
 
 module.exports = { getPool, initDb };

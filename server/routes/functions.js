@@ -1,6 +1,6 @@
 const express = require('express');
 const { getPool } = require('../db/database');
-const { authenticate, requireAuth } = require('../middleware/authenticate');
+const { authenticate, requireAuth, requireRole } = require('../middleware/authenticate');
 
 const router = express.Router();
 router.use(authenticate);
@@ -54,8 +54,7 @@ router.post('/updateCourseParticipants', async (req, res) => {
 
 // POST /api/functions/resetAllData
 // Deletes all courses, bookings, feedbacks and stat snapshots (admin only).
-router.post('/resetAllData', async (req, res) => {
-  if (req.user?.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
+router.post('/resetAllData', requireRole('admin'), async (req, res) => {
   const pool = getPool();
   const client = await pool.connect();
   try {

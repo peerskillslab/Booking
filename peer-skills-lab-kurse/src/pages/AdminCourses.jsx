@@ -25,9 +25,7 @@ import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import ParticipantsList from "../components/admin/ParticipantsList";
 import { queryKeys } from "@/lib/queryKeys";
-
-const CATEGORIES = ["CST Abdomen", "CST HKL", "CST Gynäkologie", "CST Lunge", "CST Neurologie", "CST Bewegungsapparat", "POCUS", "Venenpunktion", "YSSA"];
-const LEVELS = ["Alle Studienjahre", "ab 1. Studienjahr", "ab 2. Studienjahr", "ab 3. Studienjahr", "ab 4. Studienjahr", "ab 5. Studienjahr", "ab 6. Studienjahr"];
+import { CATEGORIES, LEVELS } from "@/lib/courseConstants";
 
 const emptyCourse = {
   title: "", description: "", short_description: "", category: "CST Abdomen",
@@ -323,7 +321,7 @@ export default function AdminCourses() {
                             </div>
                           )}
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                            <AlertDialogCancel onClick={() => setDeleteError(null)}>Abbrechen</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => {
                                 setDeleteError(null);
@@ -457,9 +455,11 @@ export default function AdminCourses() {
         )}
 
       {/* Participants Dialog */}
-      <Dialog open={participantsDialogOpen} onOpenChange={() => {
-        setParticipantsDialogOpen(false);
-        setSelectedCourse(null);
+      <Dialog open={participantsDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setParticipantsDialogOpen(false);
+          setSelectedCourse(null);
+        }
       }}>
         <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>

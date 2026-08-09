@@ -1,13 +1,6 @@
 export function generateICalFile(course) {
   const eventId = `${course.id}@peerskillslab.ch`;
 
-  console.log('Generating iCal for course:', {
-    id: course.id,
-    date: course.date,
-    time: course.time,
-    title: course.title
-  });
-
   // Parse date safely — handle dd.MM.yyyy and yyyy-MM-dd formats
   let startDateTime = new Date();
   if (course.date) {
@@ -24,19 +17,14 @@ export function generateICalFile(course) {
       const pad = (n) => String(n).padStart(2, '0');
       const isoDate = `${year}-${pad(month)}-${pad(day)}`;
       const dateTimeStr = `${isoDate}T${time}`;
-      console.log('Parsing date string:', dateTimeStr);
       startDateTime = new Date(dateTimeStr);
-      console.log('Parsed date:', startDateTime.toISOString());
     } else if (dateStr.includes('-')) {
       // Format: yyyy-MM-dd
-      console.log('Parsing date string:', `${dateStr}T${time}`);
       startDateTime = new Date(`${dateStr}T${time}`);
-      console.log('Parsed date:', startDateTime.toISOString());
     }
   }
 
   if (isNaN(startDateTime.getTime())) {
-    console.warn('Invalid date for course:', course, 'using current date');
     startDateTime = new Date();
   }
 
