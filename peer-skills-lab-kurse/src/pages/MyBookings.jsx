@@ -249,7 +249,9 @@ export default function MyBookings() {
                                 variant="ghost"
                                 disabled={!canCancel}
                                 className={canCancel ? "text-destructive hover:text-destructive hover:bg-destructive/10" : "text-muted-foreground opacity-50 cursor-not-allowed"}
-                                title={!canCancel ? `Stornierung nur bis ${CANCELLATION_WINDOW_HOURS}h vor Kursbeginn möglich` : ""}
+                                title={!canCancel
+                                  ? `Selbst stornieren ist nur bis ${CANCELLATION_WINDOW_HOURS}h vor Kursbeginn möglich. Kurzfristige Absagen bitte per E-Mail an info@peerskillslab.ch.`
+                                  : ""}
                                 style={{ height: 34, borderRadius: 9 }}
                               >
                                 <XCircle className="w-4 h-4 mr-1.5" />

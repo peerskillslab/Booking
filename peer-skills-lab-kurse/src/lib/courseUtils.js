@@ -44,15 +44,33 @@ export function getCourseStartDate(course) {
 }
 
 /**
- * Check if a course is in the cancellation window (72 hours before start)
+ * Exact start of a course, date and time combined. The server derives the
+ * cancellation deadline the same way, so both sides agree on the cutoff.
+ */
+export function getCourseStartDateTime(course) {
+  const d = parseCourseDate(course?.date);
+  if (!d) return null;
+
+  const timeStr = course.time ? course.time.split(" - ")[0]?.trim() : null;
+  const [h, m] = (timeStr || "00:00").split(":").map(Number);
+  if (Number.isInteger(h) && Number.isInteger(m)) d.setHours(h, m, 0, 0);
+  return d;
+}
+
+/**
+ * May the booking still be cancelled by the student?
+ *
+ * Allowed up to CANCELLATION_WINDOW_HOURS *before* the course starts — mirrors
+ * the server check in routes/bookings.js. (This used to be inverted: it only
+ * returned true inside the final 72 hours, so the cancel button was disabled
+ * exactly when cancelling was permitted.)
  */
 export function isCancellationWindowOpen(course) {
-  const start = getCourseStartDate(course);
-  if (!start?.date) return false;
+  const start = getCourseStartDateTime(course);
+  if (!start) return false;
 
-  const now = new Date();
-  const hoursDiff = (start.date - now) / (1000 * 60 * 60);
-  return hoursDiff <= CANCELLATION_WINDOW_HOURS && hoursDiff > 0;
+  const hoursUntilStart = (start - new Date()) / (1000 * 60 * 60);
+  return hoursUntilStart >= CANCELLATION_WINDOW_HOURS;
 }
 
 /**
