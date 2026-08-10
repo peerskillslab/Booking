@@ -82,6 +82,9 @@ export default function BookingsDialog({ open, onOpenChange, course }) {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">{booking.user_email}</p>
+                      {booking.notes && (
+                        <p className="text-xs text-foreground/80 mt-1 italic">„{booking.notes}"</p>
+                      )}
                     </div>
                   </div>
                 ))}
