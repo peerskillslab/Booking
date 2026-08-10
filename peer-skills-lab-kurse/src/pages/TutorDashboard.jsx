@@ -4,7 +4,6 @@ import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Plus, BookOpen, CalendarPlus, Pencil, Trash2, Loader2, Users, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import TemplateDialog from "@/components/tutor/TemplateDialog";
@@ -13,80 +12,33 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
+import { useToast } from "@/components/ui/use-toast";
 import { queryKeys } from "@/lib/queryKeys";
-import { getCategoryOklch } from "@/lib/categoryStyles";
+import { CategoryBadge } from "@/components/courses/CategoryBadge";
+import { useAuth } from "@/lib/AuthContext";
+import { CATEGORY_DEFAULTS } from "@/lib/courseConstants";
 
-const CATEGORY_DEFAULTS = {
-  "CST Abdomen": {
-    short_description: "Repetition der Abdomenuntersuchung",
-    description: "Im Repetitionskurs 'CST-Abdomen' wird die Untersuchung des Abdomens wiederholt. Neben den Grundlagen der Inspektion, Auskultation, Perkussion und Palpation werden auch spezielle Untersuchungen (z. B. bei Peritonitis oder Appendizitis) thematisiert. Ziel des Kurses ist es, eure praktischen Fertigkeiten zu festigen und euch ein fundiertes Verständnis für die differenzierte Abdomenuntersuchung zu vermitteln.",
-    level: "Alle Studienjahre",
-  },
-  "CST HKL": {
-    short_description: "Herzkreislauf-Untersuchung verstehen und üben",
-    description: "Im Repetitionskurs 'CST-Herzkreislauf' werden die wesentlichen Untersuchungsmethoden des Herzens und des Kreislaufsystems wiederholt und vertieft. Dabei gehen Sie alle Schritte von der Inspektion über die Perkussion bis hin zur Auskultation und Palpation durch. Das Ziel besteht darin, eure praktischen Fertigkeiten in der Untersuchung des kardiovaskulären Systems zu festigen.",
-    level: "Alle Studienjahre",
-  },
-  "CST Gynäkologie": {
-    short_description: "Gynäkologische Untersuchungen sicher durchführen",
-    description: "Im Repetitionskurs CST-Gynäkologie werden gynäkologische Untersuchungen wiederholt. Dazu gehören die Brustuntersuchung sowie die Spekulumuntersuchung. Dabei gehen Sie alle Schritte strukturiert durch. Das Ziel besteht darin, die praktischen Fertigkeiten in der Gynäkologie zu festigen.",
-    level: "Alle Studienjahre",
-  },
-  "CST Lunge": {
-    short_description: "Lungenauskultation und Atemwegsuntersuchung",
-    description: "Im Repetitionskurs 'CST-Lunge' wiederholen Sie die Untersuchung der Lunge und der Atemwege. Dabei gehen Sie alle Schritte von der Inspektion über die Perkussion bis hin zur Auskultation und Palpation durch. Das Ziel besteht darin, die praktischen Fertigkeiten in der Untersuchung des respiratorischen Systems zu festigen.",
-    level: "Alle Studienjahre",
-  },
-  "CST Neurologie": {
-    short_description: "Neurologische Grunduntersuchung systematisch üben",
-    description: "Neurologische Grunduntersuchung: Reflexe, Sensibilität, Koordination und Hirnnerven strukturiert üben.",
-    level: "Alle Studienjahre",
-  },
-  "CST Bewegungsapparat": {
-    short_description: "Gelenk- und Muskeluntersuchungen trainieren",
-    description: "Untersuchung von Gelenken und Muskeln – orientiert an häufigen OSCE-Stationen und klinischen Tests.",
-    level: "Alle Studienjahre",
-  },
-  "POCUS": {
-    short_description: "Notfallsonografie und Ultraschallfertigkeiten",
-    description: "E-FAST ist eine schnelle Ultraschalluntersuchung bei Traumapatienten, mit der sich freie Flüssigkeit im Abdomen, im Perikard und im Thorax sowie ein Pneumothorax nachweisen lassen. Sie ist lebensrettend in der Notfallversorgung. Bei POCUS Abdomen stehen die Gallenblase, die Nieren und die Harnblase im Mittelpunkt. Mithilfe standardisierter Untersuchungsschritte werden typische Krankheitsbilder erkannt. Aufbauend auf die Kurse 'E-FAST' und 'POCUS Abdomen' vermitteln wir theoretische und praktische Ultraschallfertigkeiten anhand der Untersuchung der Aorta, der Vena cava inferior sowie der tiefen Beinvenen. Durchführung einer sonografisch gesteuerten Punktion in 'in-plane'- und 'out-of-plane'-Technik werden geübt.",
-    level: "Alle Studienjahre",
-  },
-  "Venenpunktion": {
-    short_description: "Blutentnahme und periphere Venenkatheter anlegen",
-    description: "In unserem Repetitionskurs zur Venenpunktion wiederholen wir die wichtigsten Grundlagen der Blutentnahme und der Anlage eines peripheren Venenkatheters. Dazu gehören auch das vorbereitende Gespräch, die Hygiene und die Technik. Ihr habt die Gelegenheit, an einem Modell zu üben. Der Kurs wird von erfahrenen Tutor:innen geleitet, die seit mehreren Jahren auch die Erstjahreskurse betreuen.",
-    level: "Alle Studienjahre",
-  },
-  "YSSA": {
-    short_description: "",
-    description: "",
-    level: "ab 4. Studienjahr",
-  },
-};
 
 export default function TutorDashboard() {
-  const [user, setUser] = useState(null);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { user, isLoadingAuth } = useAuth();
 
   useEffect(() => {
-    peerskillslab.auth.me().then((u) => {
-      if (u.role !== "admin" && u.role !== "tutor") {
-        window.location.href = "/";
-        return;
-      }
-      setUser(u);
-    }).catch(() => {
+    if (isLoadingAuth) return;
+    if (!user) {
       peerskillslab.auth.redirectToLogin(window.location.href);
-    });
-  }, []);
+    } else if (user.role !== "admin" && user.role !== "tutor") {
+      window.location.href = "/";
+    }
+  }, [user, isLoadingAuth]);
 
   const { data: templates = [], isLoading: templatesLoading } = useQuery({
-    queryKey: ["courseTemplates"],
+    queryKey: queryKeys.courseTemplates(),
     queryFn: () => peerskillslab.entities.CourseTemplate.list("-created_date"),
   });
 
@@ -195,10 +147,7 @@ export default function TutorDashboard() {
                   <div className="flex items-start justify-between gap-2 mb-3 min-w-0">
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-foreground leading-tight truncate">{template.title}</h3>
-                      {(() => {
-                        const colors = getCategoryOklch(template.category);
-                        return <Badge className="text-xs mt-1 border" style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}>{template.category}</Badge>;
-                      })()}
+                      <CategoryBadge category={template.category} className="text-xs mt-1 border" />
                     </div>
                   </div>
                   {template.short_description && (
@@ -257,7 +206,7 @@ export default function TutorDashboard() {
         open={templateDialogOpen}
         onOpenChange={setTemplateDialogOpen}
         editingTemplate={editingTemplate}
-        onSaved={() => queryClient.invalidateQueries({ queryKey: ["courseTemplates"] })}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: queryKeys.courseTemplates() })}
       />
 
       {selectedTemplate && (
@@ -266,7 +215,7 @@ export default function TutorDashboard() {
           onOpenChange={setPublishDialogOpen}
           template={selectedTemplate}
           user={user}
-          onPublished={() => queryClient.invalidateQueries({ queryKey: ["tutorCourses", user?.email] })}
+          onPublished={() => queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses(user?.email) })}
         />
       )}
     </div>

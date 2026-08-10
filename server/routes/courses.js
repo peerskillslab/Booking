@@ -1,8 +1,8 @@
 const express = require('express');
 const { getPool } = require('../db/database');
-const { authenticate, requireAuth } = require('../middleware/authenticate');
+const { authenticate, requireAuth, requireRole } = require('../middleware/authenticate');
 const { canReadCourse, canWriteCourse, canDeleteCourse } = require('../middleware/authorize');
-const { newId, parseSort, buildWhere } = require('../utils');
+const { newId, parseSort, buildWhere, buildUpdate } = require('../utils');
 
 const router = express.Router();
 router.use(authenticate);
@@ -53,12 +53,16 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/entities/courses
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireRole('tutor', 'admin'), async (req, res) => {
   try {
     const pool = getPool();
     const { title, category, date, max_participants, ...rest } = req.body;
     if (!title || !category || !date || !max_participants) {
       return res.status(400).json({ error: 'title, category, date, max_participants sind erforderlich' });
+    }
+    const maxParticipants = Number(max_participants);
+    if (!Number.isInteger(maxParticipants) || maxParticipants < 1 || maxParticipants > 500) {
+      return res.status(400).json({ error: 'max_participants muss zwischen 1 und 500 liegen' });
     }
 
     const id = newId();
@@ -75,7 +79,7 @@ router.post('/', requireAuth, async (req, res) => {
     `, [
       id, title, rest.description || null, rest.short_description || null, category,
       rest.instructor || null, date, rest.time || null, rest.duration_minutes || null,
-      max_participants, rest.current_participants ?? 0, rest.location || null,
+      maxParticipants, 0, rest.location || null,
       rest.image_url || null, rest.level || 'Alle Studienjahre', rest.status || 'active',
       rest.extra_dates || null, kurs_nr, req.user.email, now
     ]);
@@ -96,26 +100,20 @@ router.patch('/:id', requireAuth, async (req, res) => {
     if (!course) return res.status(404).json({ error: 'not_found' });
     if (!canWriteCourse(req.user, course)) return res.status(403).json({ error: 'forbidden' });
 
+    // current_participants ist bewusst nicht editierbar — der Zähler wird
+    // ausschliesslich von den Buchungsrouten innerhalb einer Transaktion geführt.
     const editable = [
       'title','description','short_description','category','instructor','date','time',
-      'duration_minutes','max_participants','current_participants','location',
+      'duration_minutes','max_participants','location',
       'image_url','level','status','extra_dates',
     ];
-    const updates = {};
-    for (const key of editable) {
-      if (req.body[key] !== undefined) updates[key] = req.body[key];
-    }
-    if (Object.keys(updates).length === 0) return res.json(course);
-
-    const keys = Object.keys(updates);
-    const values = Object.values(updates);
-    const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+    const { setClause, values, nextParam } = buildUpdate(req.body, editable);
+    if (!setClause) return res.json(course);
     values.push(req.params.id);
-    const placeholderCount = keys.length;
 
     // Use RETURNING to avoid second SELECT
     const resultFinal = await pool.query(
-      `UPDATE courses SET ${setClause} WHERE id = $${placeholderCount + 1} RETURNING *`,
+      `UPDATE courses SET ${setClause} WHERE id = $${nextParam} RETURNING *`,
       values
     );
     res.json(resultFinal.rows[0]);

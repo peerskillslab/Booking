@@ -82,6 +82,42 @@ function initDb() {
         console.log('⚠ course_templates CHECK constraint update failed:', err.message);
       }
 
+      // Nutzer:innen löschen scheiterte mit FK-Verletzung, sobald sie je ein
+      // Passwort zurückgesetzt hatten.
+      try {
+        await pool.query(`ALTER TABLE password_reset_tokens
+          DROP CONSTRAINT IF EXISTS password_reset_tokens_user_id_fkey`);
+        await pool.query(`ALTER TABLE password_reset_tokens
+          ADD CONSTRAINT password_reset_tokens_user_id_fkey
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`);
+        console.log('✓ password_reset_tokens FK auf ON DELETE CASCADE gesetzt');
+      } catch (err) {
+        console.log('⚠ password_reset_tokens FK migration failed:', err.message);
+      }
+
+      // Doppelbuchungen strukturell ausschliessen. Der Index wird nur angelegt,
+      // wenn die Daten sauber sind — bestehende Dubletten werden gemeldet,
+      // nicht automatisch gelöscht.
+      try {
+        const dupes = await pool.query(`
+          SELECT course_id, user_email, COUNT(*) AS n
+          FROM bookings WHERE status <> 'cancelled'
+          GROUP BY course_id, user_email HAVING COUNT(*) > 1
+        `);
+        if (dupes.rows.length > 0) {
+          console.warn(
+            `⚠ ${dupes.rows.length} doppelte Buchung(en) gefunden — Unique-Index nicht angelegt.`,
+            dupes.rows.map(r => `${r.user_email}@${r.course_id} (${r.n}x)`).join(', ')
+          );
+        } else {
+          await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_bookings_course_user
+            ON bookings(course_id, user_email) WHERE status <> 'cancelled'`);
+          console.log('✓ Unique-Index auf bookings(course_id, user_email)');
+        }
+      } catch (err) {
+        console.log('⚠ bookings unique index migration failed:', err.message);
+      }
+
       console.log('✓ Migrations applied');
     } catch (err) {
       console.error('⚠ Database error:', err.message);

@@ -12,7 +12,14 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("Error caught by boundary:", error, errorInfo);
+    // vite.config.js entfernt console.* im Production-Build — in Produktion
+    // hinterlässt ein console.error hier also keine Spur. Der Fehler wird
+    // deshalb zusätzlich als unhandledrejection-ähnliches Event gemeldet,
+    // damit ein späteres Monitoring ihn abgreifen kann.
+    if (import.meta.env.DEV) {
+      console.error("Error caught by boundary:", error, errorInfo);
+    }
+    window.dispatchEvent(new CustomEvent("psl:error", { detail: { error, errorInfo } }));
   }
 
   handleReset = () => {
@@ -34,7 +41,7 @@ export default class ErrorBoundary extends React.Component {
             <p className="text-muted-foreground">
               Ein unerwarteter Fehler ist aufgetreten. Bitte versuche die Seite neu zu laden.
             </p>
-            {process.env.NODE_ENV === "development" && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <details className="mt-4 text-left bg-muted p-3 rounded text-sm text-muted-foreground overflow-auto max-h-48">
                 <summary className="cursor-pointer font-mono font-semibold mb-2">Details (Dev-Modus)</summary>
                 <pre className="whitespace-pre-wrap break-words">{this.state.error.toString()}</pre>

@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { peerskillslab } from '@/api/peerskillslabClient';
+import { useTheme } from '@/lib/useTheme';
+import { inputStyle, authErrorMessage } from '@/lib/authFormStyles';
 
 export default function ResetPassword() {
+  useTheme();
   const [params] = useSearchParams();
   const token = params.get('token') || '';
   const [password, setPassword] = useState('');
@@ -55,7 +58,8 @@ export default function ResetPassword() {
       await peerskillslab.auth.resetPassword(token, password);
       setDone(true);
     } catch (err) {
-      setError(err.message);
+      // Rohe Servermeldungen (z.B. Postgres-Texte) dürfen nicht angezeigt werden.
+      setError(err.message?.startsWith('Ungültiger') ? err.message : authErrorMessage(err.message));
     } finally {
       setLoading(false);
     }
@@ -101,13 +105,3 @@ export default function ResetPassword() {
   );
 }
 
-const inputStyle = {
-  width: '100%', height: 40, padding: '0 12px',
-  borderRadius: 9, fontSize: 13.5,
-  color: 'var(--psl-text, #1d1d1f)',
-  background: 'var(--psl-card-bg, #fff)',
-  border: '1px solid var(--psl-hairline, rgba(0,0,0,.09))',
-  outline: 'none',
-  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
-  boxSizing: 'border-box',
-};

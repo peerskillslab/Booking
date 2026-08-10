@@ -63,47 +63,49 @@ export function getCategoryOklch(category, opts = {}) {
 }
 
 /**
- * Legacy function for backward compatibility.
- * Generates hex-based color variants from a hex color.
- * Kept for gradual migration; prefer getCategoryOklch() for new code.
+ * Status palette for courses and bookings. Same OKLCH recipe as the category
+ * colours, so status pills sit visually next to category pills.
+ * Previously this ternary was copy-pasted across four screens.
  */
-export function getCategoryColorVariant(hexColor) {
-  // Convert hex to RGB
-  const r = parseInt(hexColor.slice(1, 3), 16);
-  const g = parseInt(hexColor.slice(3, 5), 16);
-  const b = parseInt(hexColor.slice(5, 7), 16);
+const STATUS_HUES = { positive: 135, danger: 25, neutral: 130 };
 
-  // Generate a light pastel background (85% lighter than hex)
-  const bgR = Math.min(255, Math.round(r + (255 - r) * 0.85));
-  const bgG = Math.min(255, Math.round(g + (255 - g) * 0.85));
-  const bgB = Math.min(255, Math.round(b + (255 - b) * 0.85));
-  const bgHex = `#${bgR.toString(16).padStart(2, "0")}${bgG.toString(16).padStart(2, "0")}${bgB.toString(16).padStart(2, "0")}`;
+const STATUS_TONE = {
+  // Kurse
+  active: "positive",
+  completed: "neutral",
+  cancelled: "danger",
+  draft: "neutral",
+  // Buchungen
+  confirmed: "positive",
+  pending: "neutral",
+  past: "neutral",
+};
 
-  // Generate a light border (50% lighter)
-  const borderR = Math.min(255, Math.round(r + (255 - r) * 0.5));
-  const borderG = Math.min(255, Math.round(g + (255 - g) * 0.5));
-  const borderB = Math.min(255, Math.round(b + (255 - b) * 0.5));
-  const borderHex = `#${borderR.toString(16).padStart(2, "0")}${borderG.toString(16).padStart(2, "0")}${borderB.toString(16).padStart(2, "0")}`;
+export const STATUS_LABELS = {
+  active: "Aktiv",
+  completed: "Abgeschlossen",
+  cancelled: "Storniert",
+  draft: "Entwurf",
+  confirmed: "Bestätigt",
+  pending: "Ausstehend",
+  past: "Vergangen",
+};
 
+export function getStatusStyle(status, opts = {}) {
+  const hue = STATUS_HUES[STATUS_TONE[status] ?? "neutral"];
+  const chroma = STATUS_TONE[status] === "neutral" ? 0.01 : 0.10;
+  const bgChroma = STATUS_TONE[status] === "neutral" ? 0.006 : 0.03;
+
+  if (opts.dark) {
+    return {
+      bg: `oklch(28% ${bgChroma} ${hue})`,
+      text: `oklch(72% ${chroma} ${hue})`,
+      border: `oklch(38% ${bgChroma * 2} ${hue})`,
+    };
+  }
   return {
-    bg: bgHex,
-    text: hexColor,
-    border: borderHex,
+    bg: `oklch(94% ${bgChroma} ${hue})`,
+    text: `oklch(41% ${chroma} ${hue})`,
+    border: `oklch(88% ${bgChroma} ${hue})`,
   };
 }
-
-/**
- * Legacy CATEGORY_COLORS for backward compatibility.
- * Kept during migration; will be removed once all call-sites use CATEGORY_HUES + getCategoryOklch().
- */
-export const CATEGORY_COLORS = {
-  "CST Abdomen": "#C0563B",
-  "CST HKL": "#D9714D",
-  "CST Gynäkologie": "#C8963B",
-  "CST Lunge": "#B8743B",
-  "CST Neurologie": "#A0873B",
-  "CST Bewegungsapparat": "#8A8D2F",
-  "POCUS": "#C9962B",
-  "Venenpunktion": "#2D8C9E",
-  "YSSA": "#8A8D2F",
-};

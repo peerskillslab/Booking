@@ -1,6 +1,11 @@
 const jwt = require('jsonwebtoken');
 const { getPool } = require('../db/database');
 
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET ist in Produktion nicht gesetzt. Server startet nicht.');
+  process.exit(1);
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || 'peerskills-dev-secret-change-in-production';
 
 function authenticate(req, res, next) {

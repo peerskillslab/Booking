@@ -1,17 +1,12 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useAuth } from "@/lib/AuthContext";
 import Logo from "@/components/Logo";
+import { useTheme } from "@/lib/useTheme";
+import { getInitials } from "@/lib/utils";
 
 // ── Icons ────────────────────────────────────────────────────────────────────
-const Ico = ({ d, ...p }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
-    strokeLinecap="round" strokeLinejoin="round" {...p}>
-    <path d={d} />
-  </svg>
-);
-
 const icons = {
   book:     "M4 5.5A1.5 1.5 0 0 1 5.5 4H13a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5.5A1.5 1.5 0 0 0 4 20.5z M4 17.5A1.5 1.5 0 0 1 5.5 16H14",
   bookmark: "M6 4.5h12v16l-6-4-6 4z",
@@ -35,29 +30,6 @@ function NavIcon({ name }) {
   );
 }
 
-
-// ── Theme logic ───────────────────────────────────────────────────────────────
-function applyTheme(t) {
-  document.documentElement.setAttribute("data-theme", t);
-  document.documentElement.classList.toggle("dark", t === "dark");
-}
-
-function useTheme() {
-  const stored = typeof localStorage !== "undefined" ? localStorage.getItem("psl-theme") : null;
-  const [theme, setThemeState] = useState(stored || "light");
-
-  useEffect(() => { applyTheme(theme); }, [theme]);
-
-  const toggle = useCallback(() => {
-    setThemeState(prev => {
-      const next = prev === "dark" ? "light" : "dark";
-      localStorage.setItem("psl-theme", next);
-      return next;
-    });
-  }, []);
-
-  return [theme, toggle];
-}
 
 // ── Nav model ─────────────────────────────────────────────────────────────────
 function navGroups(user) {
@@ -85,16 +57,28 @@ function navGroups(user) {
   ];
 }
 
+const PAGE_TITLES = {
+  Home: "Kurse",
+  CourseDetail: "Kursdetails",
+  MyBookings: "Meine Buchungen",
+  MyStats: "Meine Statistik",
+  AdminCourses: "Kurse verwalten",
+  MeineKurse: "Meine Kurse",
+  TutorDashboard: "Kurs ausschreiben",
+  AdminUsers: "Nutzer:innen",
+  AdminStats: "Statistiken",
+  MyProfile: "Profil",
+};
+
 // ── Layout ────────────────────────────────────────────────────────────────────
 export default function Layout({ children, currentPageName }) {
   const { user } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const [theme, toggleTheme] = useTheme();
 
   const groups = navGroups(user);
   const initials = user?.full_name
-    ? user.full_name.split(" ").map(s => s[0]).join("").slice(0, 2).toUpperCase()
+    ? getInitials(user.full_name)
     : user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
   const isDark = theme === "dark";
@@ -147,7 +131,7 @@ export default function Layout({ children, currentPageName }) {
               </div>
             </div>
           </Link>
-          <button className="psl-foot-btn" onClick={() => peerskillslab.auth.logout()} title="Abmelden">
+          <button className="psl-foot-btn" onClick={() => peerskillslab.auth.logout()} title="Abmelden" aria-label="Abmelden">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
               strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M9 16l4-4-4-4M13 12H3" />
@@ -160,21 +144,12 @@ export default function Layout({ children, currentPageName }) {
       <div className="psl-content">
         {/* Toolbar */}
         <div className="psl-toolbar">
-          <span className="psl-tb-title">{{
-    "Home": "Kurse",
-    "CourseDetail": "Kursdetails",
-    "MyBookings": "Meine Buchungen",
-    "MyStats": "Meine Statistik",
-    "AdminCourses": "Kurse verwalten",
-    "MeineKurse": "Meine Kurse",
-    "TutorDashboard": "Kurs ausschreiben",
-    "AdminUsers": "Nutzer:innen",
-    "AdminStats": "Statistiken",
-    "MyProfile": "Profil",
-  }[currentPageName] || currentPageName || "Peer Skills Lab"}</span>
+          <span className="psl-tb-title">
+            {PAGE_TITLES[currentPageName] || currentPageName || "Peer Skills Lab"}
+          </span>
           <span className="psl-tb-spacer" />
           <Link to="/AboutUs" title="Zur Startseite" style={{ display: "flex" }}>
-            <button className="psl-tb-icon-btn">
+            <button className="psl-tb-icon-btn" aria-label="Zur Startseite">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
                 strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
                 <path d="M3 12L12 3l9 9M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9" />
@@ -186,6 +161,7 @@ export default function Layout({ children, currentPageName }) {
             className="psl-tb-icon-btn"
             onClick={toggleTheme}
             title={isDark ? "Hell darstellen" : "Dunkel darstellen"}
+            aria-label={isDark ? "Hell darstellen" : "Dunkel darstellen"}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
               strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>

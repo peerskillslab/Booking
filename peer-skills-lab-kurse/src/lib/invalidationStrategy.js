@@ -91,31 +91,12 @@ export function invalidateOnCoursePublish(queryClient) {
 }
 
 /**
- * Optimistic update helper for fast feedback
- * Usage:
- *   queryClient.setQueryData(queryKeys.myBookings(email), prev =>
- *     prev.filter(b => b.id !== bookingId)
- *   );
+ * When booking a course, the "have I already booked this?" query on the
+ * course detail page has to refresh too — otherwise the booking button stays
+ * enabled after a successful booking.
  */
-export function optimisticallyUpdateBookingList(queryClient, email, bookingId, status) {
-  queryClient.setQueryData(queryKeys.myBookings(email), (prev) => {
-    if (!prev) return prev;
-    return prev.map(b =>
-      b.id === bookingId ? { ...b, status } : b
-    );
-  });
-}
-
-/**
- * Optimistic update for course participants
- */
-export function optimisticallyUpdateParticipants(queryClient, courseId, delta) {
-  queryClient.setQueryData(queryKeys.courseParticipants(courseId), (prev) => {
-    if (!prev || !prev[0]) return prev;
-    return prev.map(p =>
-      p.id === courseId
-        ? { ...p, current_participants: Math.max(0, (p.current_participants || 0) + delta) }
-        : p
-    );
-  });
+export function invalidateOnBookingChange(queryClient, courseId, userEmail) {
+  invalidateOnBookingCreate(queryClient, courseId, userEmail);
+  queryClient.invalidateQueries({ queryKey: queryKeys.userBookings(courseId, userEmail) });
+  queryClient.invalidateQueries({ queryKey: queryKeys.course(courseId) });
 }

@@ -1,7 +1,7 @@
 const express = require('express');
 const { getPool } = require('../db/database');
 const { authenticate, requireAuth, requireRole } = require('../middleware/authenticate');
-const { parseSort } = require('../utils');
+const { parseSort, buildUpdate } = require('../utils');
 
 const router = express.Router();
 router.use(authenticate);
@@ -54,22 +54,24 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
     const user = resultSelect.rows[0];
     if (!user) return res.status(404).json({ error: 'not_found' });
 
-    const allowed = ['role', 'full_name', 'studienjahr'];
-    const updates = {};
-    for (const key of allowed) {
-      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    if (req.body.role !== undefined && !['admin', 'tutor', 'student'].includes(req.body.role)) {
+      return res.status(400).json({ error: 'ungültige Rolle' });
     }
-    if (Object.keys(updates).length === 0) return res.json(sanitize(user));
+    if (req.body.studienjahr !== undefined) {
+      const year = Number(req.body.studienjahr);
+      if (!Number.isInteger(year) || year < 1 || year > 6) {
+        return res.status(400).json({ error: 'studienjahr muss zwischen 1 und 6 liegen' });
+      }
+    }
 
-    const keys = Object.keys(updates);
-    const values = Object.values(updates);
-    const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+    const { setClause, values, nextParam } = buildUpdate(req.body, ['role', 'full_name', 'studienjahr']);
+    if (!setClause) return res.json(sanitize(user));
     values.push(req.params.id);
-    const placeholderCount = keys.length;
 
-    await pool.query(`UPDATE users SET ${setClause} WHERE id = $${placeholderCount + 1}`, values);
-
-    const resultFinal = await pool.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+    const resultFinal = await pool.query(
+      `UPDATE users SET ${setClause} WHERE id = $${nextParam} RETURNING *`,
+      values
+    );
     res.json(sanitize(resultFinal.rows[0]));
   } catch (err) {
     console.error(err);
@@ -79,13 +81,48 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
 
 // DELETE /api/entities/users/:id  — own account or admin
 router.delete('/:id', requireAuth, async (req, res) => {
+  const pool = getPool();
   try {
-    const pool = getPool();
     if (req.params.id !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'forbidden' });
     }
-    await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
-    res.json({ ok: true });
+
+    const target = await pool.query('SELECT email, role FROM users WHERE id = $1', [req.params.id]);
+    if (!target.rows[0]) return res.status(404).json({ error: 'not_found' });
+
+    // Ohne verbleibenden Admin gäbe es keinen Weg zurück in die Verwaltung.
+    if (target.rows[0].role === 'admin') {
+      const admins = await pool.query(`SELECT COUNT(*)::int AS n FROM users WHERE role = 'admin'`);
+      if (admins.rows[0].n <= 1) return res.status(409).json({ error: 'last_admin' });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Offene Buchungen freigeben, sonst zählt current_participants eine
+      // Person weiter, die es nicht mehr gibt.
+      const freed = await client.query(
+        `DELETE FROM bookings WHERE user_email = $1 AND status = 'confirmed' RETURNING course_id`,
+        [target.rows[0].email]
+      );
+      for (const row of freed.rows) {
+        await client.query(
+          'UPDATE courses SET current_participants = GREATEST(0, current_participants - 1) WHERE id = $1',
+          [row.course_id]
+        );
+      }
+      await client.query('DELETE FROM bookings WHERE user_email = $1', [target.rows[0].email]);
+      await client.query('DELETE FROM users WHERE id = $1', [req.params.id]);
+
+      await client.query('COMMIT');
+      res.json({ ok: true });
+    } catch (err) {
+      try { await client.query('ROLLBACK'); } catch {}
+      throw err;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

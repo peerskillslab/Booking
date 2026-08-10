@@ -134,11 +134,13 @@ function toast({ ...props }) {
     },
   });
 
-  setTimeout(() => dismiss(), props.duration ?? 4000);
+  // Timer merken, damit ein manuelles Schliessen ihn abräumt statt später
+  // erneut zu feuern.
+  const autoDismiss = setTimeout(() => dismiss(), props.duration ?? 4000);
 
   return {
     id,
-    dismiss,
+    dismiss: () => { clearTimeout(autoDismiss); dismiss(); },
     update,
   };
 }
@@ -154,7 +156,8 @@ function useToast() {
         listeners.splice(index, 1);
       }
     };
-  }, [state]);
+    // Bewusst leer: [state] hätte den Listener bei jedem Toast neu registriert.
+  }, []);
 
   return {
     ...state,

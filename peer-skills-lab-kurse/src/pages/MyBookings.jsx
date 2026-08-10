@@ -1,15 +1,11 @@
 // @ts-nocheck
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useEffect, useMemo } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Loader2, BookOpen, XCircle, ExternalLink, AlertTriangle, Download, RotateCcw, Mail } from "lucide-react";
 import { downloadICalFile } from "@/lib/icalGenerator";
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -24,16 +20,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { isCancellationWindowOpen, isCoursePast } from "@/lib/courseUtils";
+import {
+  isCancellationWindowOpen, isCoursePast, formatCourseDate,
+  MIN_PARTICIPANTS_THRESHOLD, CANCELLATION_WINDOW_HOURS,
+} from "@/lib/courseUtils";
 import { invalidateOnBookingCancel } from "@/lib/invalidationStrategy";
-
-const MIN_PARTICIPANTS_THRESHOLD = 3;
-
-const STATUS_LABELS = {
-  confirmed: { label: "Bestätigt", className: "border text-xs", style: { background: "oklch(94% 0.03 135)", color: "oklch(41% 0.10 135)", borderColor: "oklch(88% 0.03 135)" } },
-  cancelled: { label: "Storniert", className: "border text-xs", style: { background: "color-mix(in srgb, var(--psl-danger) 12%, transparent)", color: "var(--psl-danger)", borderColor: "color-mix(in srgb, var(--psl-danger) 20%, transparent)" } },
-  pending: { label: "Ausstehend", className: "border text-xs", style: { background: "oklch(94% 0.03 195)", color: "oklch(41% 0.10 195)", borderColor: "oklch(88% 0.03 195)" } },
-};
+import { useAuth } from "@/lib/AuthContext";
+import { queryKeys } from "@/lib/queryKeys";
+import { useToast } from "@/components/ui/use-toast";
+import { StatusBadge } from "@/components/courses/CategoryBadge";
 
 function BookingRow({ booking, course, status, action, lowParticipantsMessage }) {
   return (
@@ -56,15 +51,13 @@ function BookingRow({ booking, course, status, action, lowParticipantsMessage })
             >
               {booking.course_title}
             </Link>
-            <Badge className={status.className} style={status.style}>
-              {status.label}
-            </Badge>
+            <StatusBadge status={status} />
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             {course?.date && (
               <span className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
-                {format(new Date(`${course.date}T00:00:00`), "dd.MM.yyyy", { locale: de })}
+                {formatCourseDate(course.date)}
               </span>
             )}
             {course?.time && (
@@ -82,29 +75,24 @@ function BookingRow({ booking, course, status, action, lowParticipantsMessage })
 }
 
 export default function MyBookings() {
-  const [user, setUser] = useState(null);
   const queryClient = useQueryClient();
-
-  const handleRefresh = useCallback(async () => {
-    await queryClient.refetchQueries({ queryKey: ["myBookings"] });
-  }, [queryClient]);
-
-  const { pullDistance, isRefreshing, containerRef, handlers } = usePullToRefresh(handleRefresh);
+  const { toast } = useToast();
+  const { user, isLoadingAuth } = useAuth();
 
   useEffect(() => {
-    peerskillslab.auth.me().then(setUser).catch(() => {
+    if (!isLoadingAuth && !user) {
       peerskillslab.auth.redirectToLogin(window.location.href);
-    });
-  }, []);
+    }
+  }, [user, isLoadingAuth]);
 
   const { data: bookings = [], isLoading } = useQuery({
-    queryKey: ["myBookings", user?.email],
+    queryKey: queryKeys.myBookings(user?.email),
     queryFn: () => peerskillslab.entities.Booking.filter({ user_email: user.email }, "-created_date"),
     enabled: !!user?.email,
   });
 
   const { data: courses = [] } = useQuery({
-    queryKey: ["myBookingsCourses", user?.email],
+    queryKey: queryKeys.myBookingsCourses(user?.email),
     queryFn: () => peerskillslab.entities.Course.list("-date"),
     enabled: !!user?.email,
   });
@@ -123,14 +111,20 @@ export default function MyBookings() {
       invalidateOnBookingCancel(queryClient, booking.course_id, user?.email);
     },
     onError: (err) => {
-      if (err?.message === "cancellation_deadline_passed") {
-        alert("Stornierung nicht mehr möglich (Frist von 72h vor Kursbeginn abgelaufen).");
-      }
+      // Vorher wurde jeder andere Fehler (500, Netzwerk) still verschluckt und
+      // die Buchung sah weiterhin bestätigt aus.
+      toast({
+        title: "Stornierung fehlgeschlagen",
+        description: err?.message === "cancellation_deadline_passed"
+          ? `Die Frist von ${CANCELLATION_WINDOW_HOURS}h vor Kursbeginn ist abgelaufen.`
+          : "Bitte versuche es später erneut.",
+        variant: "destructive",
+        duration: 5000,
+      });
     },
   });
 
   const { upcomingBookings, cancelledBookings, pastBookings } = useMemo(() => {
-    const now = new Date();
     const upcoming = [];
     const past = [];
 
@@ -182,7 +176,7 @@ export default function MyBookings() {
   if (!user) return null;
 
   return (
-    <div ref={containerRef} className="psl-page">
+    <div className="psl-page">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-3xl font-bold text-foreground mb-2">Meine Buchungen</h1>
           <p className="text-muted-foreground mb-8">Übersicht aller gebuchten Kurse</p>
@@ -252,7 +246,7 @@ export default function MyBookings() {
                                 variant="ghost"
                                 disabled={!canCancel}
                                 className={canCancel ? "text-destructive hover:text-destructive hover:bg-destructive/10" : "text-muted-foreground opacity-50 cursor-not-allowed"}
-                                title={!canCancel ? "Stornierung nur bis 72h vor Kursbeginn möglich" : ""}
+                                title={!canCancel ? `Stornierung nur bis ${CANCELLATION_WINDOW_HOURS}h vor Kursbeginn möglich` : ""}
                                 style={{ height: 34, borderRadius: 9 }}
                               >
                                 <XCircle className="w-4 h-4 mr-1.5" />
@@ -297,7 +291,7 @@ export default function MyBookings() {
                           <BookingRow
                             booking={booking}
                             course={course}
-                            status={STATUS_LABELS[booking.status] || STATUS_LABELS.pending}
+                            status={booking.status || "pending"}
                             action={action}
                             lowParticipantsMessage={lowParticipantsMessage}
                           />
@@ -341,7 +335,7 @@ export default function MyBookings() {
                           <BookingRow
                             booking={booking}
                             course={course}
-                            status={STATUS_LABELS.cancelled}
+                            status="cancelled"
                             action={action}
                             lowParticipantsMessage={null}
                           />
@@ -384,7 +378,7 @@ export default function MyBookings() {
                           <BookingRow
                             booking={booking}
                             course={courseMap[booking.course_id]}
-                            status={STATUS_LABELS[booking.status] || STATUS_LABELS.pending}
+                            status={booking.status || "pending"}
                             action={action}
                             lowParticipantsMessage={null}
                           />

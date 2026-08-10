@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,13 +10,13 @@ import { Button } from "@/components/ui/button";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery } from "@tanstack/react-query";
 import { Mail, Loader2, Users } from "lucide-react";
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
 import { motion } from "framer-motion";
+import { formatCourseDate } from "@/lib/courseUtils";
+import { queryKeys } from "@/lib/queryKeys";
 
-export default function BookingsDialog({ open, onOpenChange, course, onBookingAdded }) {
-  const { data: bookings = [], isLoading: loadingBookings, refetch } = useQuery({
-    queryKey: ["courseBookings", course?.id],
+export default function BookingsDialog({ open, onOpenChange, course }) {
+  const { data: bookings = [], isLoading: loadingBookings } = useQuery({
+    queryKey: queryKeys.courseBookings(course?.id),
     queryFn: () => {
       if (!course?.id) return [];
       return peerskillslab.entities.Booking.filter(
@@ -28,12 +28,6 @@ export default function BookingsDialog({ open, onOpenChange, course, onBookingAd
     staleTime: 0,
   });
 
-  useEffect(() => {
-    if (open) {
-      refetch();
-    }
-  }, [open, refetch]);
-
   const handleOpenEmailClient = () => {
     const emails = bookings.map(b => b.user_email).join(",");
     const subject = encodeURIComponent(`Informationen zu: ${course.title}`);
@@ -41,21 +35,15 @@ export default function BookingsDialog({ open, onOpenChange, course, onBookingAd
     
     window.location.href = `mailto:${emails}?subject=${subject}&body=${body}`;
     onOpenChange(false);
-    onBookingAdded?.();
-  };
-
-  const handleClose = () => {
-    refetch();
-    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">Buchungen verwalten</DialogTitle>
           <DialogDescription>
-            {course?.title} • {format(new Date(course?.date), "dd.MM.yyyy", { locale: de })}
+            {course?.title} • {formatCourseDate(course?.date)}
           </DialogDescription>
         </DialogHeader>
 

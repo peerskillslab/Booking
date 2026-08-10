@@ -26,6 +26,10 @@ try {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Hinter dem Azure-Container-Apps-Ingress kommt jede Anfrage von der Envoy-IP.
+// Ohne trust proxy teilen sich alle Nutzer:innen einen Rate-Limit-Eimer.
+app.set('trust proxy', 1);
+
 console.log(`Port: ${PORT}`);
 console.log(`Database: ${process.env.DATABASE_URL ? 'configured' : 'NOT SET'}`);
 console.log('=== Setup complete ===');
@@ -49,7 +53,6 @@ app.use(express.json());
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // --- API Routes (mit CORS) ---
-app.use('/api/setup',                     apiCors, require('./routes/setup'));
 app.use('/api/auth',                      apiCors, require('./routes/auth'));
 app.use('/api/entities/courses',          apiCors, require('./routes/courses'));
 app.use('/api/entities/bookings',         apiCors, require('./routes/bookings'));
@@ -57,11 +60,21 @@ app.use('/api/entities/coursefeedbacks',  apiCors, require('./routes/courseFeedb
 app.use('/api/entities/users',            apiCors, require('./routes/users'));
 app.use('/api/entities/coursetemplates',  apiCors, require('./routes/courseTemplates'));
 app.use('/api/entities/monthlystatshots', apiCors, require('./routes/monthlyStats'));
-app.use('/api/functions',                 apiCors, require('./routes/functions'));
 
 // --- JSON 404 for unknown /api/* routes ---
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'not_found', message: 'API endpoint not found' });
+});
+
+// --- JSON error handler: ohne ihn liefert Express HTML statt der überall
+// sonst genutzten { error } -Form (z.B. bei ungültigem JSON im Body). ---
+app.use('/api', (err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'invalid_json' });
+  }
+  console.error(err);
+  res.status(err.status || 500).json({ error: 'Internal server error' });
 });
 
 // --- Statische Frontend-Dateien (kein CORS nötig) ---

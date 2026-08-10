@@ -1,28 +1,21 @@
 // @ts-nocheck
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import CourseCard from "@/components/courses/CourseCard";
 import CourseCalendar from "@/components/courses/CourseCalendar";
 import { Loader2 } from "lucide-react";
-import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { getCategoryOklch } from "@/lib/categoryStyles";
+import { queryKeys } from "@/lib/queryKeys";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedDate, setSelectedDate] = useState(null);
   const [view, setView] = useState("grid"); // "grid" | "calendar"
-  const queryClient = useQueryClient();
 
-  const handleRefresh = async () => {
-    await queryClient.refetchQueries({ queryKey: ["courses"] });
-  };
-
-  const { pullDistance, isRefreshing, containerRef, handlers } = usePullToRefresh(handleRefresh);
-
-  const { data: courses = [], isLoading, refetch } = useQuery({
-    queryKey: ["courses"],
+  const { data: courses = [], isLoading } = useQuery({
+    queryKey: queryKeys.courses(),
     queryFn: async () => {
       const allCourses = await peerskillslab.entities.Course.list();
       const today = new Date().toISOString().slice(0, 10);
@@ -52,15 +45,10 @@ export default function Home() {
     !selectedDate || (course.date && course.date.slice(0, 10) === selectedDate)
   );
 
-  // Listen for course updates via subscriptions
-  useEffect(() => {
-    const unsubscribe = peerskillslab.entities.Course.subscribe((event) => {
-      refetch();
-    });
-    return unsubscribe;
-  }, [refetch]);
-
-  const categories = [...new Set(courses.map(c => c.category).filter(Boolean))];
+  const categories = useMemo(
+    () => [...new Set(courses.map(c => c.category).filter(Boolean))],
+    [courses]
+  );
 
   return (
     <div className="psl-page">

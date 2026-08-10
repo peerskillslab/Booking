@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS course_feedbacks (
 
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
   id         TEXT PRIMARY KEY,
-  user_id    TEXT NOT NULL REFERENCES users(id),
+  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token      TEXT UNIQUE NOT NULL,
   expires_at TIMESTAMPTZ NOT NULL,
   used_at    TIMESTAMPTZ

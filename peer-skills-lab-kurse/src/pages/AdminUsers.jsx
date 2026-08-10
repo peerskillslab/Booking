@@ -13,6 +13,7 @@ import { Loader2, Users, User, Search, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { queryKeys } from "@/lib/queryKeys";
 import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/lib/AuthContext";
 
 const ROLES = [
   { value: "student", label: "Student:in" },
@@ -20,33 +21,27 @@ const ROLES = [
   { value: "admin", label: "Admin" },
 ];
 
-const roleBadgeClass = {
-  admin: "bg-destructive/10 text-destructive border-destructive/20",
-  tutor: "bg-primary/10 text-primary border-primary/20",
-  student: "bg-muted text-muted-foreground border-border",
-};
-
 export default function AdminUsers() {
   const { toast } = useToast();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user, isLoadingAuth } = useAuth();
+  const currentUser = user?.role === "admin" ? user : null;
   const [search, setSearch] = useState("");
   const [pendingRoleChange, setPendingRoleChange] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    peerskillslab.auth.me().then((u) => {
-      if (u?.role !== "admin") {
-        window.location.href = "/";
-      } else {
-        setCurrentUser(u);
-      }
-    }).catch(() => peerskillslab.auth.redirectToLogin(window.location.href));
-  }, []);
+    if (isLoadingAuth) return;
+    if (!user) {
+      peerskillslab.auth.redirectToLogin(window.location.href);
+    } else if (user.role !== "admin") {
+      window.location.href = "/";
+    }
+  }, [user, isLoadingAuth]);
 
   const { data: users = [], isLoading } = useQuery({
-    queryKey: ["adminUsers"],
-    queryFn: () => peerskillslab.entities.User.list("-created_date", 500),
+    queryKey: queryKeys.adminUsers(),
+    queryFn: () => peerskillslab.entities.User.list("-created_date"),
     enabled: !!currentUser,
   });
 
@@ -79,9 +74,11 @@ export default function AdminUsers() {
     onError: (err) => {
       toast({
         title: "Fehler beim Löschen",
-        description: err.data?.error || "Bitte versuche es später erneut.",
+        description: err.data?.error === "last_admin"
+          ? "Die letzte Admin-Person kann nicht gelöscht werden."
+          : "Bitte versuche es später erneut.",
         variant: "destructive",
-        duration: 3000
+        duration: 4000
       });
     },
   });

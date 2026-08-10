@@ -1,5 +1,6 @@
 // @ts-nocheck
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useIsDarkTheme } from "@/lib/useTheme";
 
 const CSS_LIGHT = {
   "--bg": "oklch(98% 0.004 130)", "--ink": "oklch(20% 0.01 130)", "--ink-2": "oklch(50% 0.01 130)", "--ink-3": "oklch(58% 0.01 130)",
@@ -12,8 +13,6 @@ const CSS_DARK = {
   "--surface": "oklch(23% 0.006 130)", "--line": "oklch(30% 0.008 130)", "--line-soft": "oklch(36% 0.008 130)",
   "--sage": "#3a4a38", "--accent": "#8FBF4E",
 };
-
-const A = { main: "#466E0E" };
 
 const FAQS = [
   {
@@ -82,20 +81,26 @@ function AccordionItem({ q, a, isDark }) {
   const accentColor = isDark ? "#8FBF4E" : "#466E0E";
 
   return (
-    <div
-      style={{
-        borderBottom: "1px solid var(--line)",
-        cursor: "pointer",
-      }}
-      onClick={() => setOpen((o) => !o)}
-    >
-      <div
+    <div style={{ borderBottom: "1px solid var(--line)" }}>
+      {/* Als button, nicht als klickbares div — sonst ist die FAQ per
+          Tastatur nicht bedienbar. */}
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
         style={{
           display: "flex",
+          width: "100%",
           justifyContent: "space-between",
           alignItems: "center",
           padding: "18px 0",
           gap: 16,
+          background: "none",
+          border: "none",
+          textAlign: "left",
+          cursor: "pointer",
+          font: "inherit",
+          color: "inherit",
         }}
       >
         <span style={{ fontSize: 16, fontWeight: 500, color: "var(--ink)", lineHeight: 1.35 }}>
@@ -124,7 +129,7 @@ function AccordionItem({ q, a, isDark }) {
             />
           </svg>
         </span>
-      </div>
+      </button>
       {open && (
         <div style={{ paddingBottom: 18, fontSize: 15, color: "var(--ink-2)", lineHeight: 1.6, paddingRight: 40 }}>
           {a}
@@ -135,20 +140,7 @@ function AccordionItem({ q, a, isDark }) {
 }
 
 export default function FAQ() {
-  const [isDark, setIsDark] = useState(() => {
-    const theme = document.documentElement.dataset.theme;
-    return theme === "dark" || (theme === undefined && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  });
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      const theme = document.documentElement.dataset.theme;
-      setIsDark(theme === "dark" || (theme === undefined && window.matchMedia("(prefers-color-scheme: dark)").matches));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
-  }, []);
-
+  const isDark = useIsDarkTheme();
   const CSS = isDark ? CSS_DARK : CSS_LIGHT;
 
   return (

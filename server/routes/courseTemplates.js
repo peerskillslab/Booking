@@ -2,7 +2,7 @@ const express = require('express');
 const { getPool } = require('../db/database');
 const { authenticate, requireAuth } = require('../middleware/authenticate');
 const { canReadTemplate, canWriteTemplate } = require('../middleware/authorize');
-const { newId, parseSort } = require('../utils');
+const { newId, parseSort, buildUpdate } = require('../utils');
 
 const router = express.Router();
 router.use(authenticate);
@@ -75,21 +75,14 @@ router.patch('/:id', requireAuth, async (req, res) => {
     if (!canWriteTemplate(req.user, tpl)) return res.status(403).json({ error: 'forbidden' });
 
     const editable = ['title','description','short_description','category','duration_minutes','max_participants','location','image_url','level','session_count'];
-    const updates = {};
-    for (const key of editable) {
-      if (req.body[key] !== undefined) updates[key] = req.body[key];
-    }
-    if (Object.keys(updates).length === 0) return res.json(tpl);
-
-    const keys = Object.keys(updates);
-    const values = Object.values(updates);
-    const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+    const { setClause, values, nextParam } = buildUpdate(req.body, editable);
+    if (!setClause) return res.json(tpl);
     values.push(req.params.id);
-    const placeholderCount = keys.length;
 
-    const resultUpdate = await pool.query(`UPDATE course_templates SET ${setClause} WHERE id = $${placeholderCount + 1}`, values);
-
-    const resultFinal = await pool.query('SELECT * FROM course_templates WHERE id = $1', [req.params.id]);
+    const resultFinal = await pool.query(
+      `UPDATE course_templates SET ${setClause} WHERE id = $${nextParam} RETURNING *`,
+      values
+    );
     res.json(resultFinal.rows[0]);
   } catch (err) {
     console.error(err);

@@ -2,7 +2,7 @@ const express = require('express');
 const { getPool } = require('../db/database');
 const { authenticate, requireAuth } = require('../middleware/authenticate');
 const { canReadBooking, canWriteBooking } = require('../middleware/authorize');
-const { newId, parseSort, buildWhere } = require('../utils');
+const { newId, parseSort, buildWhere, buildUpdate } = require('../utils');
 
 const router = express.Router();
 router.use(authenticate);
@@ -13,21 +13,40 @@ const ALLOWED_COLS = [
 ];
 const ALLOWED_SORT = ['created_date','status'];
 
+// Kurskontext für die Autorisierung: erlaubt Tutor:innen den Zugriff auf
+// Buchungen ihrer eigenen Kurse (Teilnehmendenliste, Anwesenheiten).
+function courseContext(row) {
+  return { created_by: row.course_created_by, instructor: row.course_instructor };
+}
+
+// Die Join-Spalten gehören nicht in die API-Antwort.
+function stripCourseContext(row) {
+  const { course_created_by, course_instructor, ...rest } = row;
+  return rest;
+}
+
 // GET /api/entities/bookings
 router.get('/', requireAuth, async (req, res) => {
   try {
     const pool = getPool();
-    const sort = parseSort(req.query.sort, ALLOWED_SORT) || { col: 'created_date', dir: 'DESC' };
-    const { conditions, values } = buildWhere(req.query, ALLOWED_COLS);
+    const sort = parseSort(req.query.sort, ALLOWED_SORT, 'b') || { col: 'b.created_date', dir: 'DESC' };
+    const { conditions, values } = buildWhere(req.query, ALLOWED_COLS, 'b');
 
-    let sql = 'SELECT b.*, u.studienjahr FROM bookings b LEFT JOIN users u ON b.user_email = u.email';
+    let sql = `
+      SELECT b.*, u.studienjahr,
+             c.created_by AS course_created_by, c.instructor AS course_instructor
+      FROM bookings b
+      LEFT JOIN users u   ON b.user_email = u.email
+      LEFT JOIN courses c ON b.course_id  = c.id`;
     if (conditions.length) {
       sql += ` WHERE ${conditions.join(' AND ')}`;
     }
     sql += ` ORDER BY ${sort.col} ${sort.dir}`;
 
     const result = await pool.query(sql, values);
-    const visible = result.rows.filter(b => canReadBooking(req.user, b));
+    const visible = result.rows
+      .filter(b => canReadBooking(req.user, b, courseContext(b)))
+      .map(stripCourseContext);
     res.json(visible);
   } catch (err) {
     console.error(err);
@@ -39,11 +58,16 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/:id', requireAuth, async (req, res) => {
   try {
     const pool = getPool();
-    const result = await pool.query('SELECT * FROM bookings WHERE id = $1', [req.params.id]);
+    const result = await pool.query(`
+      SELECT b.*, c.created_by AS course_created_by, c.instructor AS course_instructor
+      FROM bookings b LEFT JOIN courses c ON b.course_id = c.id
+      WHERE b.id = $1`, [req.params.id]);
     const booking = result.rows[0];
     if (!booking) return res.status(404).json({ error: 'not_found' });
-    if (!canReadBooking(req.user, booking)) return res.status(403).json({ error: 'forbidden' });
-    res.json(booking);
+    if (!canReadBooking(req.user, booking, courseContext(booking))) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+    res.json(stripCourseContext(booking));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -65,26 +89,27 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'forbidden' });
     }
 
-    const status = req.body.status || 'confirmed';
+    // Der Status wird nicht aus dem Body übernommen: sonst liesse sich mit
+    // status:"pending" die Kapazitätsprüfung überspringen und die Buchung
+    // anschliessend per PATCH auf "confirmed" heben.
+    const status = 'confirmed';
     const id = newId();
     const now = new Date().toISOString();
 
     await client.query('BEGIN');
 
-    if (status === 'confirmed') {
-      const courseRes = await client.query(
-        'SELECT current_participants, max_participants FROM courses WHERE id = $1 FOR UPDATE',
-        [course_id]
-      );
-      if (!courseRes.rows[0]) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({ error: 'course_not_found' });
-      }
-      const course = courseRes.rows[0];
-      if (course.current_participants >= course.max_participants) {
-        await client.query('ROLLBACK');
-        return res.status(409).json({ error: 'course_full' });
-      }
+    const courseRes = await client.query(
+      'SELECT current_participants, max_participants FROM courses WHERE id = $1 FOR UPDATE',
+      [course_id]
+    );
+    if (!courseRes.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'course_not_found' });
+    }
+    const course = courseRes.rows[0];
+    if (course.current_participants >= course.max_participants) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'course_full' });
     }
 
     const result = await client.query(`
@@ -101,17 +126,19 @@ router.post('/', requireAuth, async (req, res) => {
       req.user.email, now
     ]);
 
-    if (status === 'confirmed') {
-      await client.query(
-        'UPDATE courses SET current_participants = current_participants + 1 WHERE id = $1',
-        [course_id]
-      );
-    }
+    await client.query(
+      'UPDATE courses SET current_participants = current_participants + 1 WHERE id = $1',
+      [course_id]
+    );
 
     await client.query('COMMIT');
     res.status(201).json(result.rows[0]);
   } catch (err) {
     try { await client.query('ROLLBACK'); } catch {}
+    // Verletzung des Unique-Index auf (course_id, user_email)
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'already_booked' });
+    }
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
   } finally {
@@ -123,13 +150,24 @@ router.post('/', requireAuth, async (req, res) => {
 router.patch('/:id', requireAuth, async (req, res) => {
   try {
     const pool = getPool();
-    const resultSelect = await pool.query('SELECT b.*, c.date, c.time FROM bookings b JOIN courses c ON b.course_id = c.id WHERE b.id = $1', [req.params.id]);
+    const resultSelect = await pool.query(`
+      SELECT b.*, c.date, c.time,
+             c.created_by AS course_created_by, c.instructor AS course_instructor
+      FROM bookings b JOIN courses c ON b.course_id = c.id
+      WHERE b.id = $1`, [req.params.id]);
     const booking = resultSelect.rows[0];
     if (!booking) return res.status(404).json({ error: 'not_found' });
-    if (!canWriteBooking(req.user, booking)) return res.status(403).json({ error: 'forbidden' });
+    if (!canWriteBooking(req.user, booking, courseContext(booking))) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+
+    // Nur die buchende Person darf Status/Notizen ändern; Kurs-Tutor:innen
+    // dürfen ausschliesslich die Anwesenheit setzen.
+    const isOwnBooking = booking.user_email === req.user.email;
+    const isAdmin = req.user.role === 'admin';
 
     // Check cancellation deadline (user non-admin only)
-    if (req.body.status === 'cancelled' && req.user.role !== 'admin') {
+    if (req.body.status === 'cancelled' && !isAdmin) {
       const courseStart = new Date(`${booking.date}T${booking.time || '00:00'}`);
       const cutoff = new Date(courseStart.getTime() - 72 * 60 * 60 * 1000);
       if (new Date() > cutoff) {
@@ -140,40 +178,55 @@ router.patch('/:id', requireAuth, async (req, res) => {
     const editable = ['status', 'notes', 'price_paid', 'attended'];
     const updates = {};
     for (const key of editable) {
-      if (req.body[key] !== undefined) {
-        if (key === 'attended' && req.user.role !== 'admin' && req.user.role !== 'tutor') {
-          continue;
-        }
-        updates[key] = req.body[key];
+      if (req.body[key] === undefined) continue;
+      if (key === 'attended') {
+        if (req.user.role !== 'admin' && req.user.role !== 'tutor') continue;
+      } else if (!isOwnBooking && !isAdmin) {
+        continue;
       }
+      updates[key] = req.body[key];
     }
-    if (Object.keys(updates).length === 0) return res.json(booking);
+    if (Object.keys(updates).length === 0) return res.json(stripCourseContext(booking));
 
-    const keys = Object.keys(updates);
-    const values = Object.values(updates);
-    const setClause = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+    const { setClause, values, nextParam } = buildUpdate(updates, editable);
     values.push(req.params.id);
-    const placeholderCount = keys.length;
 
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
-      // Update and return in one query
+      // Reaktivierung einer stornierten Buchung: dieselbe Kapazitätsprüfung
+      // wie beim Anlegen, mit Row-Lock gegen parallele Buchungen.
+      if (updates.status === 'confirmed' && booking.status !== 'confirmed') {
+        const courseRes = await client.query(
+          'SELECT current_participants, max_participants FROM courses WHERE id = $1 FOR UPDATE',
+          [booking.course_id]
+        );
+        const course = courseRes.rows[0];
+        if (!course) {
+          await client.query('ROLLBACK');
+          return res.status(404).json({ error: 'course_not_found' });
+        }
+        if (course.current_participants >= course.max_participants) {
+          await client.query('ROLLBACK');
+          return res.status(409).json({ error: 'course_full' });
+        }
+      }
+
       const updateRes = await client.query(
-        `UPDATE bookings SET ${setClause} WHERE id = $${placeholderCount + 1} RETURNING *`,
+        `UPDATE bookings SET ${setClause} WHERE id = $${nextParam} RETURNING *`,
         values
       );
       const updatedBooking = updateRes.rows[0];
 
       // Keep current_participants in sync when status changes
       if (updates.status && updates.status !== booking.status) {
-        if (updates.status === 'cancelled' && booking.status === 'confirmed') {
+        if (booking.status === 'confirmed' && updates.status !== 'confirmed') {
           await client.query(
             'UPDATE courses SET current_participants = GREATEST(0, current_participants - 1) WHERE id = $1',
             [booking.course_id]
           );
-        } else if (updates.status === 'confirmed' && booking.status === 'cancelled') {
+        } else if (updates.status === 'confirmed' && booking.status !== 'confirmed') {
           await client.query(
             'UPDATE courses SET current_participants = current_participants + 1 WHERE id = $1',
             [booking.course_id]
@@ -196,22 +249,23 @@ router.patch('/:id', requireAuth, async (req, res) => {
 });
 
 // DELETE /api/entities/bookings/:id
+// Nur für Admins: Stornierung läuft für alle anderen über PATCH, das die
+// 72-Stunden-Frist prüft und die Buchung als Beleg erhält.
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
+    if (req.user.role !== 'admin') return res.status(403).json({ error: 'forbidden' });
+
     const pool = getPool();
     const resultSelect = await pool.query('SELECT * FROM bookings WHERE id = $1', [req.params.id]);
     const booking = resultSelect.rows[0];
     if (!booking) return res.status(404).json({ error: 'not_found' });
-    if (!canWriteBooking(req.user, booking)) return res.status(403).json({ error: 'forbidden' });
 
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
-      // Delete booking
       await client.query('DELETE FROM bookings WHERE id = $1', [req.params.id]);
 
-      // Update course participants if booking was confirmed
       if (booking.status === 'confirmed') {
         await client.query(
           'UPDATE courses SET current_participants = GREATEST(0, current_participants - 1) WHERE id = $1',

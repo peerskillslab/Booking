@@ -13,30 +13,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle2, Loader2, Calendar } from "lucide-react";
 import { peerskillslab } from "@/api/peerskillslabClient";
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { invalidateOnBookingCreate } from "@/lib/invalidationStrategy";
+import { formatCourseDate } from "@/lib/courseUtils";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function BookingDialog({ open, onOpenChange, course, user, onBooked }) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [step, setStep] = useState("form"); // form | success
   const [name, setName] = useState(user?.full_name || "");
   const [notes, setNotes] = useState("");
 
   const bookMutation = useMutation({
     mutationFn: async () => {
-      // Check for duplicate booking
-      const allBookings = await peerskillslab.entities.Booking.filter({
-        course_id: course.id,
-        user_email: user?.email || "",
-        status: "confirmed",
-      });
-      if (allBookings.length > 0) throw new Error("DUPLICATE");
-
-      // Create booking — backend checks capacity and increments current_participants atomically
+      // Doppelbuchungen fängt der Unique-Index auf der Datenbank ab
+      // (Fehlercode "already_booked"); ein Client-Check davor wäre nur eine
+      // Vorprüfung, die zwei schnelle Klicks ohnehin überholen.
       await peerskillslab.entities.Booking.create({
         course_id: course.id,
         course_title: course.title,
@@ -65,13 +60,16 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
     onError: (err, _vars, ctx) => {
       // Roll back optimistic update
       if (ctx?.previous) queryClient.setQueryData(queryKeys.courses(), ctx.previous);
-      if (err.message === "DUPLICATE") {
-        alert("Du hast diesen Kurs bereits gebucht!");
-      } else if (err.message === "course_full") {
-        alert("Der Kurs ist leider voll geworden.");
-      } else {
-        alert("Fehler beim Buchen: " + err.message);
-      }
+      const messages = {
+        already_booked: "Du hast diesen Kurs bereits gebucht.",
+        course_full: "Der Kurs ist leider voll geworden.",
+        course_not_found: "Dieser Kurs existiert nicht mehr.",
+      };
+      toast({
+        title: "Buchung fehlgeschlagen",
+        description: messages[err?.message] || "Bitte versuche es später erneut.",
+        variant: "destructive",
+      });
     },
 
     onSuccess: () => {
@@ -95,7 +93,7 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : handleClose())}>
       <DialogContent className="sm:max-w-md">
         <AnimatePresence mode="wait">
           {step === "form" && !bookMutation.isPending && (
@@ -118,7 +116,7 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
                   {course?.date && (
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
-                      {format(new Date(course.date), "dd.MM.yyyy", { locale: de })}
+                      {formatCourseDate(course.date)}
                     </span>
                   )}
 

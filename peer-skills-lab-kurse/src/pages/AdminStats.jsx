@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -19,50 +19,45 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/lib/AuthContext";
+import { queryKeys } from "@/lib/queryKeys";
+import { getInitials, downloadCsv } from "@/lib/utils";
+import { MIN_PARTICIPANTS_THRESHOLD, parseCourseDate } from "@/lib/courseUtils";
 
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
-const getInitials = (name) => {
-  if (!name) return "?";
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-};
-
 export default function AdminStats() {
-  const [currentUser, setCurrentUser] = useState(null);
   const autoSnapshotRef = React.useRef(false);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { user, isLoadingAuth } = useAuth();
+  const currentUser = user?.role === "admin" ? user : null;
 
   useEffect(() => {
-    peerskillslab.auth.me().then((u) => {
-      if (u?.role !== "admin") {
-        window.location.href = "/";
-      } else {
-        setCurrentUser(u);
-      }
-    }).catch(() => peerskillslab.auth.redirectToLogin(window.location.href));
-  }, []);
+    if (isLoadingAuth) return;
+    if (!user) {
+      peerskillslab.auth.redirectToLogin(window.location.href);
+    } else if (user.role !== "admin") {
+      window.location.href = "/";
+    }
+  }, [user, isLoadingAuth]);
 
   const { data: courses = [], isLoading: coursesLoading } = useQuery({
-    queryKey: ["statsCourses"],
+    queryKey: queryKeys.statsCourses(),
     queryFn: () => peerskillslab.entities.Course.list("-date"),
     enabled: !!currentUser,
   });
 
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery({
-    queryKey: ["statsBookings"],
+    queryKey: queryKeys.statsBookings(),
     queryFn: () => peerskillslab.entities.Booking.filter({ status: "confirmed" }),
     enabled: !!currentUser,
   });
 
   const { data: snapshots = [], isLoading: snapshotsLoading } = useQuery({
-    queryKey: ["statsSnapshots"],
+    queryKey: queryKeys.statsSnapshots(),
     queryFn: () => peerskillslab.entities.MonthlyStatSnapshot.list("-created_date"),
     enabled: !!currentUser,
   });
@@ -79,7 +74,7 @@ export default function AdminStats() {
 
     const lastMonthCourses = courses.filter((c) => {
       if (!c.date) return false;
-      const d = new Date(c.date);
+      const d = parseCourseDate(c.date);
       return d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
     });
     if (lastMonthCourses.length === 0) return;
@@ -118,10 +113,18 @@ export default function AdminStats() {
       reset_date: format(lastMonth, "yyyy-MM-dd"),
     };
 
-    peerskillslab.entities.MonthlyStatSnapshot.create(snapshotData).then(() => {
-      queryClient.invalidateQueries({ queryKey: ["statsSnapshots"] });
-    });
-  }, [currentUser, coursesLoading, bookingsLoading, snapshotsLoading, courses, bookings, snapshots]);
+    peerskillslab.entities.MonthlyStatSnapshot.create(snapshotData)
+      .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.statsSnapshots() }))
+      .catch(() => {
+        // Beim nächsten Laden erneut versuchen statt still zu scheitern.
+        autoSnapshotRef.current = false;
+        toast({
+          title: "Monats-Snapshot konnte nicht erstellt werden",
+          description: "Er wird beim nächsten Öffnen erneut versucht.",
+          variant: "destructive",
+        });
+      });
+  }, [currentUser, coursesLoading, bookingsLoading, snapshotsLoading, courses, bookings, snapshots, queryClient, toast]);
 
   if (!currentUser) return null;
 
@@ -131,7 +134,7 @@ export default function AdminStats() {
   const now = new Date();
   const currentMonthCourses = courses.filter((c) => {
     if (!c.date) return false;
-    const d = new Date(c.date);
+    const d = parseCourseDate(c.date);
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
   const currentMonthBookings = bookings.filter((b) => {
@@ -148,9 +151,9 @@ export default function AdminStats() {
   const totalBookings = bookings.length;
 
   // Vergangene Kurse – stattgefunden vs. nicht stattgefunden (< 3 Teilnehmende)
-  const pastCourses = courses.filter((c) => c.date && new Date(`${c.date}T00:00:00`) < now);
-  const coursesHeld = pastCourses.filter((c) => (c.current_participants || 0) >= 3);
-  const coursesCancelled = pastCourses.filter((c) => (c.current_participants || 0) < 3);
+  const pastCourses = courses.filter((c) => parseCourseDate(c.date) && parseCourseDate(c.date) < now);
+  const coursesHeld = pastCourses.filter((c) => (c.current_participants || 0) >= MIN_PARTICIPANTS_THRESHOLD);
+  const coursesCancelled = pastCourses.filter((c) => (c.current_participants || 0) < MIN_PARTICIPANTS_THRESHOLD);
 
   // YSSA-Statistik
   const yssaCourses = courses.filter(c => c.category === "YSSA");
@@ -176,7 +179,7 @@ export default function AdminStats() {
   pastCourses.forEach((c) => {
     const name = c.instructor || "Unbekannt";
     if (!pastTutorMap[name]) pastTutorMap[name] = { held: 0, cancelled: 0 };
-    if ((c.current_participants || 0) >= 3) pastTutorMap[name].held += 1;
+    if ((c.current_participants || 0) >= MIN_PARTICIPANTS_THRESHOLD) pastTutorMap[name].held += 1;
     else pastTutorMap[name].cancelled += 1;
   });
   const pastTutorData = Object.entries(pastTutorMap)
@@ -189,8 +192,12 @@ export default function AdminStats() {
     const rows = [
       ["Monat", "Kursname", "Tutor:in", "Datum", "Zeit", "Teilnehmende", "Max. Plätze", "Status"],
       ...currentMonthCourses.map((c) => {
-        const isPast = c.date && new Date(`${c.date}T00:00:00`) < now;
-        const status = !isPast ? "Ausstehend" : (c.current_participants || 0) >= 3 ? "Stattgefunden" : "Nicht stattgefunden";
+        const isPast = parseCourseDate(c.date) && parseCourseDate(c.date) < now;
+        const status = !isPast
+          ? "Ausstehend"
+          : (c.current_participants || 0) >= MIN_PARTICIPANTS_THRESHOLD
+            ? "Stattgefunden"
+            : "Nicht stattgefunden";
         return [
           monthLabel,
           c.title || "—",
@@ -203,14 +210,7 @@ export default function AdminStats() {
         ];
       }),
     ];
-    const csv = rows.map((r) => r.join(";")).join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `statistik_${format(now, "yyyy-MM")}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(rows, `statistik_${format(now, "yyyy-MM")}.csv`);
   };
 
   return (
@@ -442,22 +442,25 @@ export default function AdminStats() {
                         if (parsedCourses.length > 0) {
                           parsedCourses.forEach((c) => rows.push([snap.month_label, c.title || "—", c.instructor || "—", c.date || "—", c.time || "—", c.current_participants, c.max_participants]));
                         } else {
-                          // Fallback für alte Snapshots ohne course_data
-                          parsedTutors.forEach((t) => rows.push([snap.month_label, "—", t.name, "—", t.participants, "—"]));
-                          if (parsedTutors.length === 0) rows.push([snap.month_label, "—", "—", "—", snap.total_participants, "—"]);
+                          // Fallback für alte Snapshots ohne course_data — die
+                          // Zeilen brauchen genauso viele Spalten wie der Header,
+                          // sonst rutscht "Teilnehmende" in die Spalte "Zeit".
+                          parsedTutors.forEach((t) => rows.push([snap.month_label, "—", t.name, "—", "—", t.participants, "—"]));
+                          if (parsedTutors.length === 0) rows.push([snap.month_label, "—", "—", "—", "—", snap.total_participants, "—"]);
                         }
-                        const csv = rows.map((r) => r.join(";")).join("\n");
-                        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement("a");
-                        a.href = url;
-                        a.download = `statistik_${snap.month_label.replace(" ", "_")}.csv`;
-                        a.click();
-                        URL.revokeObjectURL(url);
+                        downloadCsv(rows, `statistik_${snap.month_label.replace(" ", "_")}.csv`);
                       };
                       const handleSnapDelete = async () => {
-                        await peerskillslab.entities.MonthlyStatSnapshot.delete(snap.id);
-                        queryClient.invalidateQueries({ queryKey: ["statsSnapshots"] });
+                        try {
+                          await peerskillslab.entities.MonthlyStatSnapshot.delete(snap.id);
+                          queryClient.invalidateQueries({ queryKey: queryKeys.statsSnapshots() });
+                        } catch {
+                          toast({
+                            title: "Archiv konnte nicht gelöscht werden",
+                            description: "Bitte versuche es später erneut.",
+                            variant: "destructive",
+                          });
+                        }
                       };
                       return (
                         <div key={snap.id} className="psl-admin-archive-row">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { peerskillslab } from '@/api/peerskillslabClient';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, BookOpen } from 'lucide-react';
@@ -7,6 +7,8 @@ import { de } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { getCourseStartDate, isCoursePast } from '@/lib/courseUtils';
 import { getCategoryOklch } from '@/lib/categoryStyles';
+import { useAuth } from '@/lib/AuthContext';
+import { queryKeys } from '@/lib/queryKeys';
 
 function CourseIcon() {
   return (
@@ -19,22 +21,22 @@ function CourseIcon() {
 }
 
 export default function MyStats() {
-  const [user, setUser] = useState(null);
+  const { user, isLoadingAuth } = useAuth();
 
   useEffect(() => {
-    peerskillslab.auth.me().then(setUser).catch(() => {
+    if (!isLoadingAuth && !user) {
       peerskillslab.auth.redirectToLogin(window.location.href);
-    });
-  }, []);
+    }
+  }, [user, isLoadingAuth]);
 
   const { data: bookings = [], isLoading } = useQuery({
-    queryKey: ['myStats', user?.email],
+    queryKey: queryKeys.myStats(user?.email),
     queryFn: () => peerskillslab.entities.Booking.filter({ user_email: user.email }, '-created_date'),
     enabled: !!user?.email,
   });
 
   const { data: courses = [] } = useQuery({
-    queryKey: ['myStatsCourses', user?.email],
+    queryKey: queryKeys.myStatsCourses(user?.email),
     queryFn: () => peerskillslab.entities.Course.list('-date'),
     enabled: !!user?.email,
   });
@@ -45,7 +47,6 @@ export default function MyStats() {
   );
 
   const attendedCourses = useMemo(() => {
-    const now = new Date();
     return bookings.filter((b) => {
       if (!b.attended || b.status !== 'confirmed') return false;
       const course = courseMap[b.course_id];

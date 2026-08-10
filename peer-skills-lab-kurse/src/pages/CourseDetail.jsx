@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,26 +9,26 @@ import {
   Calendar, Clock, MapPin, Users, ArrowLeft, User,
   BarChart3, Loader2
 } from "lucide-react";
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import BookingDialog from "@/components/booking/BookingDialog";
-import { getCategoryOklch } from "@/lib/categoryStyles";
+import { CategoryBadge } from "@/components/courses/CategoryBadge";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/lib/AuthContext";
+import { queryKeys } from "@/lib/queryKeys";
+import { invalidateOnBookingChange } from "@/lib/invalidationStrategy";
+import { formatCourseDate } from "@/lib/courseUtils";
 
 export default function CourseDetail() {
   const urlParams = new URLSearchParams(window.location.search);
   const courseId = urlParams.get("id");
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    peerskillslab.auth.me().then(setUser).catch(() => {});
-  }, []);
-
-  const { data: course, isLoading, refetch } = useQuery({
-    queryKey: ["course", courseId],
+  const { data: course, isLoading } = useQuery({
+    queryKey: queryKeys.course(courseId),
     queryFn: async () => {
       return peerskillslab.entities.Course.get(courseId);
     },
@@ -36,7 +36,7 @@ export default function CourseDetail() {
   });
 
   const { data: userBookings = [] } = useQuery({
-    queryKey: ["userBookings", courseId, user?.email],
+    queryKey: queryKeys.userBookings(courseId, user?.email),
     queryFn: async () => {
       return peerskillslab.entities.Booking.filter({
         course_id: courseId,
@@ -95,14 +95,7 @@ export default function CourseDetail() {
           <div className="md:col-span-2 space-y-6">
             <div>
               <div className="flex flex-wrap gap-2 mb-4">
-                {(() => {
-                  const colors = getCategoryOklch(course.category);
-                  return (
-                    <Badge style={{ background: colors.bg, color: colors.text, borderColor: colors.border }} className="border">
-                      {course.category}
-                    </Badge>
-                  );
-                })()}
+                <CategoryBadge category={course.category} className="border" />
                 {course.level && (
                   <Badge variant="secondary">{course.level}</Badge>
                 )}
@@ -143,7 +136,7 @@ export default function CourseDetail() {
                           {session.date && (
                             <div className="flex items-center gap-3 text-sm">
                               <Calendar className="w-4 h-4 text-primary" />
-                              <span>{format(new Date(session.date), "EEEE, dd. MMMM yyyy", { locale: de })}</span>
+                              <span>{formatCourseDate(session.date, "EEEE, dd. MMMM yyyy")}</span>
                             </div>
                           )}
                           {session.time && (
@@ -160,7 +153,7 @@ export default function CourseDetail() {
                           {course.date && (
                             <div className="flex items-center gap-3 text-sm">
                               <Calendar className="w-4 h-4 text-primary" />
-                              <span>{format(new Date(course.date), "EEEE, dd. MMMM yyyy", { locale: de })}</span>
+                              <span>{formatCourseDate(course.date, "EEEE, dd. MMMM yyyy")}</span>
                             </div>
                           )}
                           {course.time && (
@@ -177,7 +170,7 @@ export default function CourseDetail() {
                           {course.date && (
                             <div className="flex items-center gap-3 text-sm">
                               <Calendar className="w-4 h-4 text-primary" />
-                              <span>{format(new Date(course.date), "EEEE, dd. MMMM yyyy", { locale: de })}</span>
+                              <span>{formatCourseDate(course.date, "EEEE, dd. MMMM yyyy")}</span>
                             </div>
                           )}
                           {course.time && (
@@ -261,9 +254,7 @@ export default function CourseDetail() {
           onOpenChange={setBookingOpen}
           course={course}
           user={user}
-          onBooked={() => {
-            setTimeout(() => refetch(), 1000);
-          }}
+          onBooked={() => invalidateOnBookingChange(queryClient, courseId, user?.email)}
         />
       )}
     </div>

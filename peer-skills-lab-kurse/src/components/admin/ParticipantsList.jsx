@@ -4,12 +4,12 @@ import { peerskillslab } from "@/api/peerskillslabClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, User, Mail } from "lucide-react";
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { formatCourseDate } from "@/lib/courseUtils";
+import { queryKeys } from "@/lib/queryKeys";
 
 export default function ParticipantsList({ course }) {
   const { data: bookings = [], isLoading } = useQuery({
-    queryKey: ["courseParticipants", course.id],
+    queryKey: queryKeys.courseParticipants(course.id),
     queryFn: () => peerskillslab.entities.Booking.filter({
       course_id: course.id,
       status: "confirmed",
@@ -62,7 +62,7 @@ export default function ParticipantsList({ course }) {
               )}
             </div>
             <div className="text-xs text-muted-foreground">
-              {format(new Date(booking.created_date), "dd.MM.yyyy", { locale: de })}
+              {formatCourseDate(booking.created_date)}
             </div>
           </CardContent>
         </Card>

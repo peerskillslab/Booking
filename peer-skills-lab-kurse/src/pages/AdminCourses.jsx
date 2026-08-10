@@ -1,27 +1,19 @@
 // @ts-nocheck
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Pencil, Trash2, Loader2, Users, Eye, Search, X } from "lucide-react";
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
-import { motion } from "framer-motion";
+
+import { Loader2, Search, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import ParticipantsList from "../components/admin/ParticipantsList";
 import { CATEGORIES, LEVELS } from "@/lib/courseConstants";
@@ -30,7 +22,9 @@ import {
   invalidateOnCourseUpdate,
   invalidateOnCourseDelete,
 } from "@/lib/invalidationStrategy";
-import { getCategoryOklch } from "@/lib/categoryStyles";
+import { queryKeys } from "@/lib/queryKeys";
+import { useAuth } from "@/lib/AuthContext";
+import AdminCourseRow from "@/components/admin/AdminCourseRow";
 
 const emptyCourse = {
   title: "", description: "", short_description: "", category: "CST Abdomen",
@@ -41,7 +35,7 @@ const emptyCourse = {
 
 export default function AdminCourses() {
   const { toast } = useToast();
-  const [user, setUser] = useState(null);
+  const { user, isLoadingAuth } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
@@ -56,33 +50,28 @@ export default function AdminCourses() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    peerskillslab.auth.me().then(setUser).catch(() => {
-      peerskillslab.auth.redirectToLogin(window.location.href);
-    });
-  }, []);
+    if (isLoadingAuth) return;
+    if (!user) peerskillslab.auth.redirectToLogin(window.location.href);
+  }, [user, isLoadingAuth]);
 
-  const { data: courses = [], isLoading, refetch: refetchCourses } = useQuery({
-    queryKey: ["adminCourses"],
+  const { data: courses = [], isLoading } = useQuery({
+    queryKey: queryKeys.adminCourses(),
     queryFn: () => peerskillslab.entities.Course.list("date"),
   });
 
   const { data: allUsers = [] } = useQuery({
-    queryKey: ["usersForInstructor"],
-    queryFn: () => peerskillslab.entities.User.list("-created_date", 500),
+    queryKey: queryKeys.usersForInstructor(),
+    queryFn: () => peerskillslab.entities.User.list("-created_date"),
     enabled: !!user,
   });
 
-  const instructorOptions = allUsers
-    .filter((u) => (u.role === "tutor" || u.role === "admin") && u.full_name)
-    .map((u) => u.full_name)
-    .sort();
-
-  useEffect(() => {
-    const unsubscribe = peerskillslab.entities.Course.subscribe(() => {
-      setTimeout(() => refetchCourses(), 1000);
-    });
-    return unsubscribe;
-  }, [refetchCourses]);
+  const instructorOptions = useMemo(
+    () => allUsers
+      .filter((u) => (u.role === "tutor" || u.role === "admin") && u.full_name)
+      .map((u) => u.full_name)
+      .sort(),
+    [allUsers]
+  );
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
@@ -101,8 +90,16 @@ export default function AdminCourses() {
         // On create, invalidate course lists
         invalidateOnCourseCreate(queryClient, variables.status || 'active');
       }
-      toast({ id: "course-save", title: editingCourse ? "Kurs gespeichert" : "Kurs erstellt", description: form.title, duration: 3000 });
+      toast({ title: editingCourse ? "Kurs gespeichert" : "Kurs erstellt", description: form.title, duration: 3000 });
       closeDialog();
+    },
+    onError: (err) => {
+      toast({
+        title: "Speichern fehlgeschlagen",
+        description: err?.data?.error || "Bitte prüfe die Eingaben und versuche es erneut.",
+        variant: "destructive",
+        duration: 4000,
+      });
     },
   });
 
@@ -111,7 +108,7 @@ export default function AdminCourses() {
     onSuccess: (result, courseId) => {
       setDeleteError(null);
       invalidateOnCourseDelete(queryClient, courseId);
-      toast({ id: "course-delete", title: "Kurs gelöscht", description: result.courseTitle, duration: 3000 });
+      toast({ title: "Kurs gelöscht", description: result.courseTitle, duration: 3000 });
       // Wenn es Teilnehmende gibt, Dialog öffnen mit Notifications-Info
       if (result.emails && result.emails.length > 0) {
         setNotifyData(result);
@@ -127,12 +124,6 @@ export default function AdminCourses() {
       }
     },
   });
-
-  const openCreate = () => {
-    setEditingCourse(null);
-    setForm(emptyCourse);
-    setDialogOpen(true);
-  };
 
   const openEdit = (course) => {
     setEditingCourse(course);
@@ -165,10 +156,7 @@ export default function AdminCourses() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  const dateIsInPast = !editingCourse && !!form.date && form.date < getTodayStr();
-
   const handleSave = () => {
-    if (dateIsInPast) return;
     saveMutation.mutate({
       ...form,
       max_participants: Number(form.max_participants),
@@ -178,7 +166,7 @@ export default function AdminCourses() {
 
   const updateField = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
-  const filteredCourses = courses.filter((c) => {
+  const filteredCourses = useMemo(() => courses.filter((c) => {
     if (search) {
       const q = search.toLowerCase();
       const matchesTitle = c.title?.toLowerCase().includes(q);
@@ -188,14 +176,37 @@ export default function AdminCourses() {
     if (filterCategory !== "all" && c.category !== filterCategory) return false;
     if (filterDate && c.date !== filterDate) return false;
     return true;
-  });
+  }), [courses, search, filterCategory, filterDate]);
 
+  // Kurse ohne Datum bekommen eine eigene Gruppe. Vorher fielen sie aus beiden
+  // Listen (undefined >= s und undefined < s sind beide false), zählten aber im
+  // Zähler mit — sie waren schlicht unerreichbar.
   const today = getTodayStr();
-  const upcomingCourses = filteredCourses.filter((c) => c.date >= today);
-  const pastCourses = filteredCourses.filter((c) => c.date < today);
+  const upcomingCourses = filteredCourses.filter((c) => c.date && c.date >= today);
+  const pastCourses = filteredCourses.filter((c) => c.date && c.date < today);
+  const undatedCourses = filteredCourses.filter((c) => !c.date);
 
   const hasFilters = search || filterCategory !== "all" || filterDate;
 
+  const rowProps = {
+    onShowParticipants: (course) => {
+      setSelectedCourse(course);
+      setParticipantsDialogOpen(true);
+    },
+    onEdit: openEdit,
+    onDelete: (id) => deleteMutation.mutate(id),
+    deleteError,
+    onResetDeleteError: () => setDeleteError(null),
+    isDeleting: deleteMutation.isPending,
+  };
+
+  if (isLoadingAuth) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
   if (!user) return null;
 
   return (
@@ -253,102 +264,18 @@ export default function AdminCourses() {
                 <h2 className="text-lg font-semibold mb-3 text-foreground">Kommende Kurse ({upcomingCourses.length})</h2>
                 <div className="space-y-3">
                   {upcomingCourses.map((course, i) => (
-              <motion.div
-                key={course.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-              >
-                <Card className="border-border/60">
-                  <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        {course.kurs_nr && (
-                          <span className="text-xs font-mono font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
-                        )}
-                        <span className="font-semibold truncate">{course.title}</span>
-                        {(() => {
-                          const colors = getCategoryOklch(course.category);
-                          return <Badge className="text-xs border" style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}>{course.category}</Badge>;
-                        })()}
-                        <Badge
-                          className={`text-xs border ${
-                            course.status === "active"
-                              ? "bg-primary/10 text-primary border-primary/20"
-                              : course.status === "cancelled"
-                              ? "bg-destructive/10 text-destructive border-destructive/20"
-                              : "bg-muted text-muted-foreground border-border"
-                          }`}
-                        >
-                          {course.status}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                        {course.date && (
-                          <span>{format(new Date(course.date), "dd.MM.yyyy", { locale: de })}</span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3.5 h-3.5" />
-                          {course.current_participants || 0}/{course.max_participants}
-                        </span>
-                        {course.instructor && (
-                          <span>Tutor: {course.instructor}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Button variant="outline" onClick={() => {
-                        setSelectedCourse(course);
-                        setParticipantsDialogOpen(true);
-                      }} style={{ height: 32, borderRadius: 9 }}>
-                        <Eye className="w-3.5 h-3.5 mr-1" /> Teilnehmende
-                      </Button>
-                      <Button variant="outline" onClick={() => openEdit(course)} style={{ height: 32, borderRadius: 9 }}>
-                        <Pencil className="w-3.5 h-3.5 mr-1" /> Bearbeiten
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" style={{ height: 32, borderRadius: 9 }}>
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Kurs löschen?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              „{course.title}" wird unwiderruflich gelöscht.
-                              {(course.current_participants || 0) > 0 && (
-                                <div className="mt-2 text-sm font-semibold text-destructive">
-                                  Es gibt {course.current_participants} Anmeldung{course.current_participants !== 1 ? 'en' : ''}. Nach dem Löschen wird deine Mail-App mit allen Teilnehmenden geöffnet.
-                                </div>
-                              )}
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          {deleteError && (
-                            <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded px-3 py-2">
-                              {deleteError}
-                            </div>
-                          )}
-                          <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setDeleteError(null)}>Abbrechen</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => {
-                                setDeleteError(null);
-                                deleteMutation.mutate(course.id);
-                              }}
-                              disabled={deleteMutation.isPending}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              {deleteMutation.isPending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : null}
-                              Löschen
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </CardContent>
-                </Card>
-                  </motion.div>
+                    <AdminCourseRow key={course.id} course={course} index={i} {...rowProps} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {undatedCourses.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold mb-3 text-foreground">Ohne Datum ({undatedCourses.length})</h2>
+                <div className="space-y-3">
+                  {undatedCourses.map((course, i) => (
+                    <AdminCourseRow key={course.id} course={course} index={i} {...rowProps} />
                   ))}
                 </div>
               </div>
@@ -359,102 +286,7 @@ export default function AdminCourses() {
                 <h2 className="text-lg font-semibold mb-3 text-muted-foreground">Vergangene Kurse ({pastCourses.length})</h2>
                 <div className="space-y-3 opacity-60">
                   {pastCourses.map((course, i) => (
-                    <motion.div
-                      key={course.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.03 }}
-                    >
-                      <Card className="border-border/60">
-                        <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              {course.kurs_nr && (
-                          <span className="text-xs font-mono font-semibold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 shrink-0">K-{String(course.kurs_nr).padStart(3, '0')}</span>
-                        )}
-                        <span className="font-semibold truncate">{course.title}</span>
-                              {(() => {
-                                const colors = getCategoryOklch(course.category);
-                                return <Badge className="text-xs border" style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}>{course.category}</Badge>;
-                              })()}
-                              <Badge
-                                className={`text-xs border ${
-                                  course.status === "active"
-                                    ? "bg-primary/10 text-primary border-primary/20"
-                                    : course.status === "cancelled"
-                                    ? "bg-destructive/10 text-destructive border-destructive/20"
-                                    : "bg-muted text-muted-foreground border-border"
-                                }`}
-                              >
-                                {course.status}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                              {course.date && (
-                                <span>{format(new Date(course.date), "dd.MM.yyyy", { locale: de })}</span>
-                              )}
-                              <span className="flex items-center gap-1">
-                                <Users className="w-3.5 h-3.5" />
-                                {course.current_participants || 0}/{course.max_participants}
-                              </span>
-                              {course.instructor && (
-                                <span>Tutor: {course.instructor}</span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Button variant="outline" onClick={() => {
-                              setSelectedCourse(course);
-                              setParticipantsDialogOpen(true);
-                            }} style={{ height: 32, borderRadius: 9 }}>
-                              <Eye className="w-3.5 h-3.5 mr-1" /> Teilnehmende
-                            </Button>
-                            <Button variant="outline" onClick={() => openEdit(course)} style={{ height: 32, borderRadius: 9 }}>
-                              <Pencil className="w-3.5 h-3.5 mr-1" /> Bearbeiten
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" style={{ height: 32, borderRadius: 9 }}>
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Kurs löschen?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    „{course.title}" wird unwiderruflich gelöscht.
-                                    {(course.current_participants || 0) > 0 && (
-                                      <div className="mt-2 text-sm font-semibold text-destructive">
-                                        Es gibt {course.current_participants} Anmeldung{course.current_participants !== 1 ? 'en' : ''}. Nach dem Löschen wird deine Mail-App mit allen Teilnehmenden geöffnet.
-                                      </div>
-                                    )}
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                {deleteError && (
-                                  <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded px-3 py-2">
-                                    {deleteError}
-                                  </div>
-                                )}
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => {
-                                      setDeleteError(null);
-                                      deleteMutation.mutate(course.id);
-                                    }}
-                                    disabled={deleteMutation.isPending}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  >
-                                    {deleteMutation.isPending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : null}
-                                    Löschen
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
+                    <AdminCourseRow key={course.id} course={course} index={i} {...rowProps} />
                   ))}
                 </div>
               </div>
@@ -534,11 +366,14 @@ export default function AdminCourses() {
                 </Button>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm">
-                <p className="font-semibold text-blue-900">Wie versenden?</p>
-                <p className="text-blue-800 mt-1">1. E-Mail-Adressen kopieren → In dein E-Mail-Programm einfügen</p>
-                <p className="text-blue-800">2. Text kopieren → In dein E-Mail-Programm einfügen</p>
-                <p className="text-blue-800">3. Nachricht versenden</p>
+              <div
+                className="rounded p-3 text-sm border"
+                style={{ background: "var(--psl-accent-soft)", borderColor: "var(--psl-hairline-strong)" }}
+              >
+                <p className="font-semibold text-foreground">Wie versenden?</p>
+                <p className="text-muted-foreground mt-1">1. E-Mail-Adressen kopieren → In dein E-Mail-Programm einfügen</p>
+                <p className="text-muted-foreground">2. Text kopieren → In dein E-Mail-Programm einfügen</p>
+                <p className="text-muted-foreground">3. Nachricht versenden</p>
               </div>
             </div>
           )}
@@ -554,7 +389,7 @@ export default function AdminCourses() {
       <Dialog open={dialogOpen} onOpenChange={closeDialog}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingCourse ? "Kurs bearbeiten" : "Neuen Kurs erstellen"}</DialogTitle>
+            <DialogTitle>Kurs bearbeiten</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid sm:grid-cols-2 gap-4">
@@ -617,10 +452,7 @@ export default function AdminCourses() {
             <div className="grid sm:grid-cols-3 gap-4">
               <div>
                 <Label>Datum *</Label>
-                <Input type="date" value={form.date} min={!editingCourse ? getTodayStr() : undefined} onChange={(e) => updateField("date", e.target.value)} className={`mt-1.5 ${dateIsInPast ? "border-destructive" : ""}`} />
-                {dateIsInPast && (
-                  <p className="text-xs text-destructive mt-1">Datum darf nicht in der Vergangenheit liegen.</p>
-                )}
+                <Input type="date" value={form.date} onChange={(e) => updateField("date", e.target.value)} className="mt-1.5" />
               </div>
               <div>
                 <Label>Uhrzeit</Label>
@@ -648,7 +480,7 @@ export default function AdminCourses() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closeDialog}>Abbrechen</Button>
-            <Button onClick={handleSave} disabled={!form.title || !form.date || dateIsInPast || saveMutation.isPending}>
+            <Button onClick={handleSave} disabled={!form.title || !form.date || saveMutation.isPending}>
               {saveMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {editingCourse ? "Speichern" : "Erstellen"}
             </Button>

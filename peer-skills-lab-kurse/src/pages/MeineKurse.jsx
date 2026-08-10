@@ -4,11 +4,9 @@ import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { CalendarPlus, Trash2, Loader2, Users, Archive, Mail, Calendar } from "lucide-react";
 import { downloadICalFile } from "@/lib/icalGenerator";
-import { format, isPast, endOfDay } from "date-fns";
-import { de } from "date-fns/locale";
+import { isPast, endOfDay } from "date-fns";
 import { motion } from "framer-motion";
 import BookingsDialog from "@/components/tutor/BookingsDialog";
 import AttendanceDialog from "@/components/tutor/AttendanceDialog";
@@ -17,30 +15,29 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { queryKeys } from "@/lib/queryKeys";
-import { getCategoryOklch } from "@/lib/categoryStyles";
+import { useAuth } from "@/lib/AuthContext";
+import { CategoryBadge, StatusBadge } from "@/components/courses/CategoryBadge";
+import { formatCourseDate, parseCourseDate } from "@/lib/courseUtils";
 
 export default function MeineKurse() {
-  const [user, setUser] = useState(null);
   const [bookingsDialogOpen, setBookingsDialogOpen] = useState(false);
   const [attendanceDialogOpen, setAttendanceDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
   const queryClient = useQueryClient();
+  const { user, isLoadingAuth } = useAuth();
 
   useEffect(() => {
-    peerskillslab.auth.me().then((u) => {
-      if (u.role !== "admin" && u.role !== "tutor") {
-        window.location.href = "/";
-        return;
-      }
-      setUser(u);
-    }).catch(() => {
+    if (isLoadingAuth) return;
+    if (!user) {
       peerskillslab.auth.redirectToLogin(window.location.href);
-    });
-  }, []);
+    } else if (user.role !== "admin" && user.role !== "tutor") {
+      window.location.href = "/";
+    }
+  }, [user, isLoadingAuth]);
 
-  const { data: myCourses = [], isLoading, refetch } = useQuery({
-    queryKey: ["tutorCourses", user?.email],
+  const { data: myCourses = [], isLoading } = useQuery({
+    queryKey: queryKeys.tutorCourses(user?.email),
     queryFn: async () => {
       const allCourses = await peerskillslab.entities.Course.list();
       return allCourses
@@ -49,13 +46,6 @@ export default function MeineKurse() {
     },
     enabled: !!user,
   });
-
-  useEffect(() => {
-    const unsubscribe = peerskillslab.entities.Course.subscribe(() => {
-      setTimeout(() => refetch(), 1000);
-    });
-    return unsubscribe;
-  }, [refetch]);
 
   const deleteCourseMutation = useMutation({
     mutationFn: (id) => peerskillslab.entities.Course.delete(id),
@@ -83,33 +73,27 @@ export default function MeineKurse() {
 
   if (!user) return null;
 
-  const upcoming = myCourses.filter(c => !isPast(endOfDay(new Date(c.date))));
-  const past     = myCourses.filter(c =>  isPast(endOfDay(new Date(c.date))));
+  // Kurse ohne Datum gelten als kommend; parseCourseDate schützt vor
+  // Invalid Date, das isPast() sonst still als "nicht vergangen" liest.
+  const isCourseOver = (c) => {
+    const d = parseCourseDate(c.date);
+    return d ? isPast(endOfDay(d)) : false;
+  };
+  const upcoming = myCourses.filter(c => !isCourseOver(c));
+  const past     = myCourses.filter(isCourseOver);
 
-  const CourseRow = ({ course, i, isPastCourse }) => (
+  const renderCourseRow = (course, i, isPastCourse) => (
     <motion.div key={course.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
       <Card className={`border-border/60 ${isPastCourse ? "opacity-75" : ""}`}>
         <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className={`font-semibold truncate ${isPastCourse ? "text-muted-foreground" : ""}`}>{course.title}</span>
-              {(() => {
-                const colors = getCategoryOklch(course.category);
-                return <Badge className="text-xs border" style={{ background: colors.bg, color: colors.text, borderColor: colors.border }}>{course.category}</Badge>;
-              })()}
-              {isPastCourse ? (
-                <Badge className="text-xs border bg-muted text-muted-foreground border-border">Abgeschlossen</Badge>
-              ) : (
-                <Badge className={`text-xs border ${
-                  course.status === "active" ? "bg-primary/10 text-primary border-primary/20" :
-                  course.status === "cancelled" ? "bg-destructive/10 text-destructive border-destructive/20" :
-                  "bg-muted text-muted-foreground border-border"}`}>
-                  {course.status}
-                </Badge>
-              )}
+              <CategoryBadge category={course.category} />
+              <StatusBadge status={isPastCourse ? "completed" : course.status} />
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-              {course.date && <span>{format(new Date(course.date), "dd.MM.yyyy", { locale: de })}</span>}
+              <span>{formatCourseDate(course.date)}</span>
               {course.time && <span>{course.time}</span>}
               <span className="flex items-center gap-1">
                 <Users className="w-3.5 h-3.5" />
@@ -126,9 +110,9 @@ export default function MeineKurse() {
                 <Mail className="w-3.5 h-3.5 mr-1" /> Buchungen
               </Button>
               {(course.current_participants || 0) === 0 && (
-                <AlertDialog>
+                <AlertDialog onOpenChange={(open) => !open && setDeleteError(null)}>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" className="text-destructive hover:bg-destructive/10" style={{ height: 34, borderRadius: 9 }}>
+                    <Button variant="ghost" aria-label={`Kurs „${course.title}" löschen`} className="text-destructive hover:bg-destructive/10" style={{ height: 34, borderRadius: 9 }}>
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </AlertDialogTrigger>
@@ -143,8 +127,8 @@ export default function MeineKurse() {
                       </div>
                     )}
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => deleteCourseMutation.mutate(course.id)}
+                      <AlertDialogCancel onClick={() => setDeleteError(null)}>Abbrechen</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => { setDeleteError(null); deleteCourseMutation.mutate(course.id); }}
                         disabled={deleteCourseMutation.isPending}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                         {deleteCourseMutation.isPending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : null}
@@ -196,7 +180,7 @@ export default function MeineKurse() {
               </div>
             ) : (
               <div className="space-y-3">
-                {upcoming.map((course, i) => <CourseRow key={course.id} course={course} i={i} isPastCourse={false} />)}
+                {upcoming.map((course, i) => renderCourseRow(course, i, false))}
               </div>
             )}
           </div>
@@ -211,7 +195,7 @@ export default function MeineKurse() {
               </div>
             ) : (
               <div className="space-y-3">
-                {past.map((course, i) => <CourseRow key={course.id} course={course} i={i} isPastCourse={true} />)}
+                {past.map((course, i) => renderCourseRow(course, i, true))}
               </div>
             )}
           </div>

@@ -24,13 +24,17 @@ function authHeaders() {
   };
 }
 
+// Auf diesen Endpunkten bedeutet 401 "falsches Passwort", nicht "Session
+// abgelaufen" — ein Tippfehler beim Passwortwechsel darf nicht ausloggen.
+const CREDENTIAL_ENDPOINTS = ['/auth/me', '/auth/login'];
+
 async function apiFetch(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: { ...authHeaders(), ...(options.headers || {}) },
   });
 
-  if (res.status === 401) {
+  if (res.status === 401 && !CREDENTIAL_ENDPOINTS.includes(path.split('?')[0])) {
     clearToken();
     const err = new Error('auth_required');
     err.status = 401;

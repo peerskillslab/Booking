@@ -3,8 +3,7 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { formatCourseDate } from "@/lib/courseUtils";
 
 export default function RoomReservationDialog({ open, onOpenChange, course }) {
   if (!course) return null;
@@ -16,7 +15,7 @@ ich möchte den Raum 135 (1 OG, rechte Flurseite) für meinen Kurs im Peer Skill
 
 Kursinformationen:
 - Kurs: ${course.title}
-- Datum: ${format(new Date(course.date), "dd.MM.yyyy", { locale: de })}
+- Datum: ${formatCourseDate(course.date)}
 - Uhrzeit: ${course.time || "Nach Absprache"}
 - Max. Teilnehmer: ${course.max_participants}
 
@@ -43,7 +42,7 @@ Vielen Dank!`;
           </p>
           <p className="text-sm text-muted-foreground">
             <span className="font-medium">Datum:</span>{" "}
-            {format(new Date(course.date), "dd.MM.yyyy", { locale: de })}
+            {formatCourseDate(course.date)}
           </p>
           <p className="text-sm text-muted-foreground">
             <span className="font-medium">Uhrzeit:</span> {course.time || "Nach Absprache"}

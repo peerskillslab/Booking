@@ -1,5 +1,6 @@
 // @ts-nocheck
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo } from "react";
+import { useIsDarkTheme } from "@/lib/useTheme";
 import { Link } from "react-router-dom";
 
 // --- Custom SVG icons from design ---
@@ -97,14 +98,6 @@ const TONE_PAIRS = [
   ["#D7DDC8","#BFC9A4"], ["#EBE2CF","#DAC8A8"], ["#D5DCCA","#BAC4A1"],
 ];
 
-function PhotoPlaceholder({ ratio = "4/3", label = "Foto", round = 14 }) {
-  return (
-    <div style={{ aspectRatio: ratio, borderRadius: round, background: "repeating-linear-gradient(135deg, #E8E2CE 0 14px, #EFEADA 14px 28px)", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-3)", fontSize: 12.5 }}>
-      {label && <span style={{ background: "var(--bg)", padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", fontFamily: "ui-monospace, SF Mono, monospace" }}>{label}</span>}
-    </div>
-  );
-}
-
 function PhotoSquare({ tone = 0, style: sx }) {
   const [a, b] = TONE_PAIRS[tone % TONE_PAIRS.length];
   return <div style={{ width: "100%", height: "100%", borderRadius: 16, background: `repeating-linear-gradient(135deg, ${a} 0 12px, ${b} 12px 24px)`, border: "1px solid var(--line)", ...sx }} />;
@@ -118,7 +111,7 @@ function Pill({ icon: I, label, A }) {
   );
 }
 
-function HowCards({ A }) {
+function HowCards() {
   const steps = [
     { n: "01", icon: Icon.Users,       title: "Peers lehren Peers",        body: "Dadurch entsteht eine hohe soziale und kognitive Kongruenz, weil Inhalte verständlich, praxisnah und ähnlich der eigenen Denkstruktur erklärt werden." },
     { n: "02", icon: Icon.Repeat,      title: "Strategisch wiederholen",   body: "Mithilfe von Spaced Repetition werden Inhalte in zeitlich abgestuften Abständen wiederholt, damit Wissen langfristig im Gedächtnis verankert wird." },
@@ -135,7 +128,6 @@ function HowCards({ A }) {
       </div>
       <div className="au-how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
         {steps.map(s => {
-          const I = s.icon;
           return (
             <div key={s.n} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 16, padding: "28px 26px", display: "flex", flexDirection: "column", gap: 18, minHeight: 280 }}>
               <span style={{ fontSize: 14, color: "var(--ink-3)", fontWeight: 500 }}>{s.n}</span>
@@ -149,7 +141,7 @@ function HowCards({ A }) {
   );
 }
 
-function StatsBlock({ A }) {
+function StatsBlock() {
   const stats = [
     { n: "70", label: "Übungseinheiten",        sub: "seit Gründung 2025" },
     { n: "15", label: "aktive Peer-Tutor*innen", sub: "ab dem 7. Semester" },
@@ -165,7 +157,7 @@ function StatsBlock({ A }) {
           {stats.map((s, i) => {
             const isGreen = i % 2 === 0;
             return (
-              <div key={i} style={{
+              <div key={s.label || i} style={{
                 background: isGreen ? "#eef3e6" : "#e8f2f2",
                 borderRadius: 16,
                 padding: "24px 22px",
@@ -191,7 +183,7 @@ function StatsBlock({ A }) {
   );
 }
 
-function TeamSection({ A }) {
+function TeamSection() {
   // Fisher-Yates shuffle for stable randomization
   const shuffledTeam = useMemo(() => {
     const arr = [...TEAM];
@@ -217,7 +209,7 @@ function TeamSection({ A }) {
         {shuffledTeam.map((m, i) => {
           const spans = { c: "span 2", r: "span 2" };
           return (
-            <div key={i} className="au-team-cell" style={{ gridColumn: spans.c, gridRow: spans.r, display: "flex", flexDirection: "column", gap: 10 }}>
+            <div key={m.name || i} className="au-team-cell" style={{ gridColumn: spans.c, gridRow: spans.r, display: "flex", flexDirection: "column", gap: 10 }}>
               <div style={{ flex: 1, position: "relative", overflow: "hidden", borderRadius: 16, border: "1px solid var(--line)", minHeight: 0 }}>
                 {m.img
                   ? <img src={m.img} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center center", display: "block" }} onError={(e) => { e.currentTarget.style.display = "none"; e.currentTarget.nextSibling.style.display = "block"; }} />
@@ -238,7 +230,7 @@ function TeamSection({ A }) {
   );
 }
 
-function PartnersBand({ A }) {
+function PartnersBand() {
   return (
     <section className="au-section">
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22 }} className="au-partners-inner">
@@ -265,14 +257,14 @@ function PartnersBand({ A }) {
 
             if (p.url) {
               return (
-                <a key={i} href={p.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", display: "block" }}
+                <a key={p.name || i} href={p.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", display: "block" }}
                   onMouseEnter={e => { e.currentTarget.style.opacity = "0.75"; e.currentTarget.style.transform = "translateY(-2px)"; }}
                   onMouseLeave={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.transform = "translateY(0)"; }}>
                   {card}
                 </a>
               );
             }
-            return <div key={i}>{card}</div>;
+            return <div key={p.name || i}>{card}</div>;
           })}
         </div>
       </div>
@@ -300,7 +292,7 @@ function ContactRow({ label, value, href }) {
   return <div style={shared}>{inner}</div>;
 }
 
-function CoursesBlock({ A }) {
+function CoursesBlock() {
   return (
     <section className="au-section">
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22 }} className="au-courses-inner">
@@ -313,7 +305,7 @@ function CoursesBlock({ A }) {
         </p>
         <div className="au-courses-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
           {COURSES.map((c, i) => (
-            <div key={i} style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 16, padding: "28px 26px", display: "flex", flexDirection: "column", gap: 16 }}>
+            <div key={c.title || i} style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 16, padding: "28px 26px", display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <div style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.2, marginBottom: 10 }}>{c.name}</div>
                 <p style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink-2)", margin: 0 }}>{c.body}</p>
@@ -326,7 +318,7 @@ function CoursesBlock({ A }) {
   );
 }
 
-function JoinBlock({ A }) {
+function JoinBlock() {
   return (
     <section className="au-section au-section-join">
       <div className="au-join-right" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22, display: "flex", flexDirection: "column", gap: 18 }}>
@@ -347,19 +339,7 @@ function JoinBlock({ A }) {
 
 // --- Main page ---
 export default function AboutUs() {
-  const [isDark, setIsDark] = useState(() => {
-    const theme = document.documentElement.dataset.theme;
-    return theme === "dark" || (theme === undefined && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  });
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      const theme = document.documentElement.dataset.theme;
-      setIsDark(theme === "dark" || (theme === undefined && window.matchMedia("(prefers-color-scheme: dark)").matches));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
-  }, []);
+  const isDark = useIsDarkTheme();
 
   const CSS = isDark ? CSS_DARK : CSS_LIGHT;
   const A = isDark ? A_DARK : A_LIGHT;
@@ -495,12 +475,12 @@ export default function AboutUs() {
         </div>
       </section>
 
-      <HowCards A={A} />
-      <StatsBlock A={A} />
-      <CoursesBlock A={A} />
-      <TeamSection A={A} />
-      <PartnersBand A={A} />
-      <JoinBlock A={A} />
+      <HowCards />
+      <StatsBlock />
+      <CoursesBlock />
+      <TeamSection />
+      <PartnersBand />
+      <JoinBlock />
     </div>
   );
 }

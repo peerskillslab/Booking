@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   format,
   startOfMonth,
@@ -17,11 +17,10 @@ import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { getCategoryOklch } from "@/lib/categoryStyles";
-
-const fallbackColor = { bg: "oklch(94% 0.03 130)", text: "oklch(41% 0.10 130)", border: "oklch(88% 0.03 130)" };
+import { parseCourseDate } from "@/lib/courseUtils";
 
 function CourseChip({ course }) {
-  const color = getCategoryOklch(course.category) || fallbackColor;
+  const color = getCategoryOklch(course.category);
   return (
     <Link
       to={createPageUrl("CourseDetail") + `?id=${course.id}`}
@@ -45,11 +44,21 @@ function CourseChip({ course }) {
 }
 
 export default function CourseCalendar({ courses, selectedDate, onSelectDate }) {
-  const firstCourseDate = courses.length > 0
-    ? new Date(courses.slice().sort((a, b) => a.date?.localeCompare(b.date))[0].date)
-    : new Date();
+  // Kurse ohne Datum sind zulässig (Home.jsx lässt sie durch). Ohne den Filter
+  // liefert new Date(undefined) ein Invalid Date und format() wirft.
+  const firstCourseDate = useMemo(() => {
+    const dated = courses.filter((c) => parseCourseDate(c.date));
+    if (dated.length === 0) return new Date();
+    const earliest = dated.reduce((a, b) => (a.date <= b.date ? a : b));
+    return parseCourseDate(earliest.date);
+  }, [courses]);
 
   const [currentMonth, setCurrentMonth] = useState(firstCourseDate);
+
+  // Nach Filterwechsel auf den Monat des ersten Treffers springen.
+  useEffect(() => {
+    setCurrentMonth(firstCourseDate);
+  }, [firstCourseDate]);
 
   const coursesByDate = {};
   courses.forEach((c) => {
@@ -156,8 +165,8 @@ export default function CourseCalendar({ courses, selectedDate, onSelectDate }) 
 
                   {/* Course chips */}
                   <div className="flex flex-col gap-0.5 w-full">
-                    {dayCourses.slice(0, 3).map((course, i) => (
-                      <CourseChip key={i} course={course} />
+                    {dayCourses.slice(0, 3).map((course) => (
+                      <CourseChip key={course.id} course={course} />
                     ))}
                     {dayCourses.length > 3 && (
                       <span className="text-xs text-muted-foreground px-1">

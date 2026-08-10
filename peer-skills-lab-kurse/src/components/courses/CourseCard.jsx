@@ -4,6 +4,7 @@ import { createPageUrl } from "@/utils";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { getCategoryOklch } from "@/lib/categoryStyles";
+import { parseCourseDate } from "@/lib/courseUtils";
 
 const LEVEL_LABELS = {
   "Alle Studienjahre":   "ALLE STUDIENJAHRE",
@@ -29,15 +30,12 @@ export default function CourseCard({ course }) {
   const pct = max > 0 ? Math.min(100, (current / max) * 100) : 0;
   const colors = getCategoryOklch(course.category);
 
-  let dayAbbr = null, dayNum = null, monthAbbr = null;
-  if (course.date) {
-    try {
-      const d = new Date(course.date);
-      dayAbbr  = format(d, "EEE", { locale: de }).toUpperCase().replace(".", "");
-      dayNum   = format(d, "d");
-      monthAbbr = format(d, "MMM", { locale: de }).toUpperCase().replace(".", "");
-    } catch {}
-  }
+  // parseCourseDate liest "YYYY-MM-DD" als lokale Mitternacht — new Date()
+  // parst denselben String als UTC und kann den Tag verschieben.
+  const courseDate = parseCourseDate(course.date);
+  const dayAbbr = courseDate ? format(courseDate, "EEE", { locale: de }).toUpperCase().replace(".", "") : null;
+  const dayNum = courseDate ? format(courseDate, "d") : null;
+  const monthAbbr = courseDate ? format(courseDate, "MMM", { locale: de }).toUpperCase().replace(".", "") : null;
 
   const levelLabel = course.level ? (LEVEL_LABELS[course.level] || course.level.toUpperCase()) : null;
 

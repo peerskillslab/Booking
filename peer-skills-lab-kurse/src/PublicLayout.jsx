@@ -1,29 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import Logo from "@/components/Logo";
-
-
-function applyTheme(t) {
-  document.documentElement.setAttribute("data-theme", t);
-  document.documentElement.classList.toggle("dark", t === "dark");
-}
-
-function useTheme() {
-  const stored = typeof localStorage !== "undefined" ? localStorage.getItem("psl-theme") : null;
-  const [theme, setThemeState] = useState(stored || "light");
-
-  useEffect(() => { applyTheme(theme); }, [theme]);
-
-  const toggle = useCallback(() => {
-    setThemeState(prev => {
-      const next = prev === "dark" ? "light" : "dark";
-      localStorage.setItem("psl-theme", next);
-      return next;
-    });
-  }, []);
-
-  return [theme, toggle];
-}
+import { useTheme } from "@/lib/useTheme";
 
 export default function PublicLayout({ children }) {
   const [theme, toggleTheme] = useTheme();
@@ -34,7 +12,7 @@ export default function PublicLayout({ children }) {
       <header style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         height: 56, padding: "0 20px",
-        background: "#ffffff",
+        background: "var(--psl-toolbar-bg)",
         borderBottom: "0.5px solid var(--psl-hairline)",
         position: "sticky", top: 0, zIndex: 100,
       }}>

@@ -1,22 +1,17 @@
 // @ts-nocheck
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { peerskillslab, saveToken } from '@/api/peerskillslabClient';
 import { useAuth } from '@/lib/AuthContext';
 import Logo from '@/components/Logo';
-
-function useThemeInit() {
-  useEffect(() => {
-    const stored = localStorage.getItem('psl-theme');
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    document.documentElement.setAttribute('data-theme', stored || (mq.matches ? 'dark' : 'light'));
-  }, []);
-}
+import { useTheme } from '@/lib/useTheme';
+import { inputStyle, linkBtnStyle, authErrorMessage } from '@/lib/authFormStyles';
 
 export default function Login() {
   const { loginSuccess } = useAuth();
   const navigate = useNavigate();
-  useThemeInit();
+  // Setzt data-theme und .dark — dieselbe Quelle wie in beiden Layouts.
+  useTheme();
 
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
@@ -42,11 +37,7 @@ export default function Login() {
       sessionStorage.removeItem('returnUrl');
       navigate(returnUrl, { replace: true });
     } catch (err) {
-      const messages = {
-        invalid_credentials: 'E-Mail oder Passwort falsch.',
-        email_already_registered: 'Diese E-Mail ist bereits registriert.',
-      };
-      setError(messages[err.message] || err.message);
+      setError(authErrorMessage(err.message));
     } finally {
       setLoading(false);
     }
@@ -190,20 +181,3 @@ export default function Login() {
   );
 }
 
-const inputStyle = {
-  width: '100%', height: 40, padding: '0 12px',
-  borderRadius: 9, fontSize: 13.5,
-  color: 'var(--psl-text, #1d1d1f)',
-  background: 'var(--psl-card-bg, #fff)',
-  border: '1px solid var(--psl-hairline, rgba(0,0,0,.09))',
-  outline: 'none',
-  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
-  boxSizing: 'border-box',
-};
-
-const linkBtnStyle = {
-  border: 'none', background: 'none', cursor: 'pointer',
-  fontSize: 12.5, fontWeight: 600,
-  color: 'var(--psl-accent, #466E0E)',
-  fontFamily: 'inherit',
-};

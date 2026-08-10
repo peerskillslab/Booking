@@ -9,21 +9,27 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
 import { queryKeys } from '@/lib/queryKeys';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/lib/AuthContext';
+import { invalidateOnAttendanceChange } from '@/lib/invalidationStrategy';
 
 export default function AttendanceDialog({ open, onOpenChange, course }) {
   const { toast } = useToast();
   const [bookings, setBookings] = useState([]);
   const [attendance, setAttendance] = useState({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!open || !course) return;
+    let cancelled = false;
 
     (async () => {
       setLoading(true);
       try {
         const allBookings = await peerskillslab.entities.Booking.filter({ course_id: course.id });
+        if (cancelled) return;
         const confirmed = allBookings.filter(b => b.status === 'confirmed');
         setBookings(confirmed);
 
@@ -32,12 +38,17 @@ export default function AttendanceDialog({ open, onOpenChange, course }) {
           attendanceMap[b.id] = b.attended || false;
         });
         setAttendance(attendanceMap);
-      } catch (err) {
-        console.error('Error loading bookings:', err);
+      } catch {
+        if (cancelled) return;
+        setLoadError('Teilnehmende konnten nicht geladen werden.');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+
+    // Schnelles Schliessen und Wiederöffnen darf keine veraltete Antwort
+    // über den frischen State schreiben.
+    return () => { cancelled = true; };
   }, [open, course]);
 
   const updateMutation = useMutation({
@@ -49,11 +60,12 @@ export default function AttendanceDialog({ open, onOpenChange, course }) {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.myStats() });
+      // Ohne die E-Mail entstehen Keys wie ["myStats", undefined], die auf
+      // nichts passen — die Invalidierung lief bisher ins Leere.
+      queryClient.invalidateQueries({ queryKey: queryKeys.tutorCourses(user?.email) });
       queryClient.invalidateQueries({ queryKey: queryKeys.courseBookings(course?.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.courseParticipants(course?.id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.statsBookings() });
+      invalidateOnAttendanceChange(queryClient, user?.email);
       toast({
         title: "Anwesenheit gespeichert",
         duration: 2000
@@ -94,6 +106,8 @@ export default function AttendanceDialog({ open, onOpenChange, course }) {
           <div className="flex justify-center py-8">
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
           </div>
+        ) : loadError ? (
+          <p className="text-sm text-destructive text-center py-4">{loadError}</p>
         ) : bookings.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">Keine bestätigten Buchungen</p>
         ) : (

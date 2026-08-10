@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function MyProfile() {
-  const { user, navigateToLogin, checkAppState } = useAuth();
+  const { user, isLoadingAuth, checkAppState } = useAuth();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [studienjahr, setStudienjahr] = useState("1");
@@ -93,17 +94,24 @@ export default function MyProfile() {
   };
 
   useEffect(() => {
-    if (!user) {
-      navigateToLogin();
-      return;
-    }
+    if (!user) return;
     setFullName(user.full_name || "");
     setEmail(user.email || "");
     setStudienjahr((user.studienjahr || 1).toString());
   }, [user]);
 
+  if (isLoadingAuth) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Vorher wurde hier ein leerer navigateToLogin()-Stub gerufen und null
+  // gerendert — die Seite blieb dauerhaft weiss.
   if (!user) {
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   const attemptSave = () => {

@@ -16,11 +16,16 @@ export const queryKeys = {
   myBookingsCourses: (email) => ["myBookingsCourses", email],
   courseBookings: (courseId) => ["courseBookings", courseId],
   courseParticipants: (courseId) => ["courseParticipants", courseId],
+  userBookings: (courseId, email) => ["userBookings", courseId, email],
   statsBookings: () => ["statsBookings"],
 
   // Stats & Snapshots
   myStats: (email) => ["myStats", email],
+  myStatsCourses: (email) => ["myStatsCourses", email],
   statsSnapshots: () => ["statsSnapshots"],
+
+  // Auth
+  currentUser: () => ["user"],
 
   // Users
   adminUsers: () => ["adminUsers"],
