@@ -33,6 +33,11 @@ export default [
       "unused-imports": pluginUnusedImports,
     },
     rules: {
+      // Der `rules`-Block überschreibt die Regeln aus pluginJs.configs.recommended
+      // komplett, deshalb steht no-undef hier explizit. Ohne die Regel fällt ein
+      // versehentlich entfernter Prop erst zur Laufzeit auf — genau so ist die
+      // AboutUs-Seite mit "A is not defined" abgestürzt.
+      "no-undef": "error",
       "no-unused-vars": "off",
       "react/jsx-uses-vars": "error",
       "react/jsx-uses-react": "error",

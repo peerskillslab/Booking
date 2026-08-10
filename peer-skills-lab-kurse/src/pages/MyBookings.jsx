@@ -208,22 +208,31 @@ export default function MyBookings() {
                     {upcomingBookings.map((booking, i) => {
                       const course = courseMap[booking.course_id];
                       const canCancel = isCancellationWindowOpen(course);
+                      // instructor_email wandert bei einem Tutorwechsel mit;
+                      // created_by bleibt beim ursprünglichen Ersteller stehen
+                      // und ist nur der Fallback für Altbestände.
+                      const tutorEmail = course?.instructor_email || course?.created_by;
+                      const tutorName = course?.instructor || 'Tutor:in';
+
+                      const mailToTutor = (subject, body) =>
+                        `mailto:${tutorEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
                       const handleContactTutor = () => {
-                        // instructor_email wandert bei einem Tutorwechsel mit;
-                        // created_by bleibt beim ursprünglichen Ersteller stehen
-                        // und ist nur der Fallback für Altbestände.
-                        const tutorEmail = course?.instructor_email || course?.created_by;
-                        const tutorName = course?.instructor || 'Tutor:in';
-                        const subject = encodeURIComponent(`Frage zu meiner Buchung: ${booking.course_title}`);
-                        const body = encodeURIComponent(
+                        window.location.href = mailToTutor(
+                          `Frage zu meiner Buchung: ${booking.course_title}`,
                           `Hallo ${tutorName},\n\nIch habe eine Frage oder Mitteilung zu meiner Buchung für "${booking.course_title}":\n\n`
                         );
-                        window.location.href = `mailto:${tutorEmail}?subject=${subject}&body=${body}`;
                       };
 
-                      const lateCancelMail =
-                        `mailto:info@peerskillslab.ch?subject=${encodeURIComponent(`Kurzfristige Absage: ${booking.course_title}`)}` +
-                        `&body=${encodeURIComponent(`Hallo\n\nIch kann leider kurzfristig nicht am Kurs "${booking.course_title}" teilnehmen.\n\nGrund:\n\n`)}`;
+                      // Kurzfristige Absagen gehen an die Tutor:in des Kurses —
+                      // sie muss wissen, wer fehlt. Ohne hinterlegte Adresse
+                      // bleibt nur die allgemeine Vereinsadresse.
+                      const lateCancelMail = tutorEmail
+                        ? mailToTutor(
+                            `Kurzfristige Absage: ${booking.course_title}`,
+                            `Hallo ${tutorName},\n\nIch kann leider kurzfristig nicht am Kurs "${booking.course_title}" teilnehmen.\n\nGrund:\n\n`
+                          )
+                        : `mailto:info@peerskillslab.ch?subject=${encodeURIComponent(`Kurzfristige Absage: ${booking.course_title}`)}`;
 
                       const action = booking.status === "confirmed" ? (
                         <div className="flex flex-col items-start sm:items-end gap-2">
@@ -237,7 +246,7 @@ export default function MyBookings() {
                             <Download className="w-4 h-4 mr-1.5" />
                             Kalendereintrag hinzufügen
                           </Button>
-                          {(course?.instructor_email || course?.created_by) && (
+                          {tutorEmail && (
                             <Button
                               variant="outline"
                               onClick={handleContactTutor}
@@ -286,7 +295,7 @@ export default function MyBookings() {
                           <p className="text-xs text-muted-foreground max-w-sm sm:text-right">
                             Selbst stornieren ist nur bis {CANCELLATION_WINDOW_HOURS}h vor Kursbeginn möglich.{" "}
                             <a href={lateCancelMail} className="underline underline-offset-2 hover:text-foreground">
-                              Kurzfristig absagen
+                              {tutorEmail ? `Kurzfristig bei ${tutorName} absagen` : "Kurzfristig absagen"}
                             </a>
                           </p>
                         )}

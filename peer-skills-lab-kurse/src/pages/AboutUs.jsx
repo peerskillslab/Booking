@@ -183,7 +183,7 @@ function StatsBlock() {
   );
 }
 
-function TeamSection() {
+function TeamSection({ A }) {
   // Fisher-Yates shuffle for stable randomization
   const shuffledTeam = useMemo(() => {
     const arr = [...TEAM];
@@ -478,7 +478,7 @@ export default function AboutUs() {
       <HowCards />
       <StatsBlock />
       <CoursesBlock />
-      <TeamSection />
+      <TeamSection A={A} />
       <PartnersBand />
       <JoinBlock />
     </div>
