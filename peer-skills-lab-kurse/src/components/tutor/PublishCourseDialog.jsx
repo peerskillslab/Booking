@@ -52,6 +52,7 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
         duration_minutes: template.duration_minutes,
         image_url: template.image_url,
         instructor: user?.full_name || user?.email || "",
+        instructor_email: user?.email || "",
         date: primarySession.date,
         time: primarySession.timeStart && primarySession.timeEnd ? `${primarySession.timeStart} - ${primarySession.timeEnd}` : primarySession.timeStart || "",
         location,

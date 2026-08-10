@@ -209,7 +209,10 @@ export default function MyBookings() {
                       const course = courseMap[booking.course_id];
                       const canCancel = isCancellationWindowOpen(course);
                       const handleContactTutor = () => {
-                        const tutorEmail = course?.created_by;
+                        // instructor_email wandert bei einem Tutorwechsel mit;
+                        // created_by bleibt beim ursprünglichen Ersteller stehen
+                        // und ist nur der Fallback für Altbestände.
+                        const tutorEmail = course?.instructor_email || course?.created_by;
                         const tutorName = course?.instructor || 'Tutor:in';
                         const subject = encodeURIComponent(`Frage zu meiner Buchung: ${booking.course_title}`);
                         const body = encodeURIComponent(
@@ -229,7 +232,7 @@ export default function MyBookings() {
                             <Download className="w-4 h-4 mr-1.5" />
                             Kalendereintrag hinzufügen
                           </Button>
-                          {course?.created_by && (
+                          {(course?.instructor_email || course?.created_by) && (
                             <Button
                               variant="outline"
                               onClick={handleContactTutor}

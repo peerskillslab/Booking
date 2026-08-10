@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS courses (
   short_description    TEXT,
   category             TEXT NOT NULL,
   instructor           TEXT,
+  instructor_email     TEXT,
   date                 TEXT NOT NULL,
   time                 TEXT,
   duration_minutes     INTEGER,
@@ -31,6 +32,7 @@ CREATE TABLE IF NOT EXISTS courses (
 );
 
 ALTER TABLE courses ADD COLUMN IF NOT EXISTS kurs_nr INTEGER;
+ALTER TABLE courses ADD COLUMN IF NOT EXISTS instructor_email TEXT;
 
 CREATE TABLE IF NOT EXISTS bookings (
   id           TEXT PRIMARY KEY,

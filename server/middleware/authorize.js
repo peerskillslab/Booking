@@ -17,13 +17,14 @@ function canDeleteCourse(user, course) {
   return course.created_by === user.email || user.role === 'admin';
 }
 
-// Tutor:innen des Kurses. `course` darf {created_by, instructor} sein.
-// created_by ist die verlässliche Verknüpfung (serverseitig gesetzt); der
-// Namensvergleich deckt zusätzlich Kurse ab, die ein Admin einer Tutor:in
-// zugewiesen hat — so bestimmt auch MeineKurse.jsx die eigenen Kurse.
+// Tutor:in des Kurses. `course` darf {created_by, instructor_email, instructor}
+// sein. instructor_email ist die maßgebliche Verknüpfung und wandert bei einem
+// Tutorwechsel mit; created_by deckt Altbestände ab, der Namensvergleich nur
+// noch Kurse ohne aufgelöste Adresse.
 function ownsCourse(user, course) {
   if (!user || !course) return false;
   if (user.role !== 'tutor' && user.role !== 'admin') return false;
+  if (course.instructor_email) return course.instructor_email === user.email;
   return (
     course.created_by === user.email ||
     (!!user.full_name && course.instructor === user.full_name)

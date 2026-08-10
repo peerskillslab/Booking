@@ -11,7 +11,11 @@ const ALLOWED_COLS = ['id','course_id','instructor','q3_helpful','q4_recommend',
 const ALLOWED_SORT = ['created_date','q3_helpful'];
 
 function courseContext(row) {
-  return { created_by: row.course_created_by, instructor: row.course_instructor };
+  return {
+    created_by: row.course_created_by,
+    instructor: row.course_instructor,
+    instructor_email: row.course_instructor_email,
+  };
 }
 
 // GET /api/entities/coursefeedbacks
@@ -22,7 +26,8 @@ router.get('/', requireAuth, async (req, res) => {
     const { conditions, values } = buildWhere(req.query, ALLOWED_COLS, 'f');
 
     let sql = `
-      SELECT f.*, c.created_by AS course_created_by, c.instructor AS course_instructor
+      SELECT f.*, c.created_by AS course_created_by, c.instructor AS course_instructor,
+             c.instructor_email AS course_instructor_email
       FROM course_feedbacks f LEFT JOIN courses c ON f.course_id = c.id`;
     if (conditions.length) {
       sql += ` WHERE ${conditions.join(' AND ')}`;
@@ -35,7 +40,7 @@ router.get('/', requireAuth, async (req, res) => {
     const visible = result.rows
       .filter(f => canReadFeedback(req.user, f, courseContext(f)))
       .map(f => {
-        const { user_email, course_created_by, course_instructor, ...rest } = f;
+        const { user_email, course_created_by, course_instructor, course_instructor_email, ...rest } = f;
         return rest;
       });
     res.json(visible);
@@ -50,7 +55,8 @@ router.get('/:id', requireAuth, async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(`
-      SELECT f.*, c.created_by AS course_created_by, c.instructor AS course_instructor
+      SELECT f.*, c.created_by AS course_created_by, c.instructor AS course_instructor,
+             c.instructor_email AS course_instructor_email
       FROM course_feedbacks f LEFT JOIN courses c ON f.course_id = c.id
       WHERE f.id = $1`, [req.params.id]);
     const feedback = result.rows[0];
@@ -60,7 +66,7 @@ router.get('/:id', requireAuth, async (req, res) => {
     }
 
     // Remove user_email (anonymity)
-    const { user_email, course_created_by, course_instructor, ...rest } = feedback;
+    const { user_email, course_created_by, course_instructor, course_instructor_email, ...rest } = feedback;
     res.json(rest);
   } catch (err) {
     console.error(err);

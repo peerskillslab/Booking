@@ -16,12 +16,16 @@ const ALLOWED_SORT = ['created_date','status'];
 // Kurskontext für die Autorisierung: erlaubt Tutor:innen den Zugriff auf
 // Buchungen ihrer eigenen Kurse (Teilnehmendenliste, Anwesenheiten).
 function courseContext(row) {
-  return { created_by: row.course_created_by, instructor: row.course_instructor };
+  return {
+    created_by: row.course_created_by,
+    instructor: row.course_instructor,
+    instructor_email: row.course_instructor_email,
+  };
 }
 
 // Die Join-Spalten gehören nicht in die API-Antwort.
 function stripCourseContext(row) {
-  const { course_created_by, course_instructor, ...rest } = row;
+  const { course_created_by, course_instructor, course_instructor_email, ...rest } = row;
   return rest;
 }
 
@@ -34,7 +38,8 @@ router.get('/', requireAuth, async (req, res) => {
 
     let sql = `
       SELECT b.*, u.studienjahr,
-             c.created_by AS course_created_by, c.instructor AS course_instructor
+             c.created_by AS course_created_by, c.instructor AS course_instructor,
+             c.instructor_email AS course_instructor_email
       FROM bookings b
       LEFT JOIN users u   ON b.user_email = u.email
       LEFT JOIN courses c ON b.course_id  = c.id`;
@@ -59,7 +64,8 @@ router.get('/:id', requireAuth, async (req, res) => {
   try {
     const pool = getPool();
     const result = await pool.query(`
-      SELECT b.*, c.created_by AS course_created_by, c.instructor AS course_instructor
+      SELECT b.*, c.created_by AS course_created_by, c.instructor AS course_instructor,
+             c.instructor_email AS course_instructor_email
       FROM bookings b LEFT JOIN courses c ON b.course_id = c.id
       WHERE b.id = $1`, [req.params.id]);
     const booking = result.rows[0];
@@ -152,7 +158,8 @@ router.patch('/:id', requireAuth, async (req, res) => {
     const pool = getPool();
     const resultSelect = await pool.query(`
       SELECT b.*, c.date, c.time,
-             c.created_by AS course_created_by, c.instructor AS course_instructor
+             c.created_by AS course_created_by, c.instructor AS course_instructor,
+             c.instructor_email AS course_instructor_email
       FROM bookings b JOIN courses c ON b.course_id = c.id
       WHERE b.id = $1`, [req.params.id]);
     const booking = resultSelect.rows[0];

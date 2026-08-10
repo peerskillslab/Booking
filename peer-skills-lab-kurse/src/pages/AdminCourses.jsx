@@ -28,7 +28,7 @@ import AdminCourseRow from "@/components/admin/AdminCourseRow";
 
 const emptyCourse = {
   title: "", description: "", short_description: "", category: "CST Abdomen",
-  instructor: "", date: "", time: "", duration_minutes: 60,
+  instructor: "", instructor_email: "", date: "", time: "", duration_minutes: 60,
   max_participants: 10, location: "", image_url: "",
   level: "Alle Studienjahre", status: "active",
 };
@@ -72,6 +72,11 @@ export default function AdminCourses() {
       .sort(),
     [allUsers]
   );
+
+  // Zum gewählten Namen die Kontaktadresse mitschicken, damit der Server sie
+  // nicht über den Namen erraten muss.
+  const emailForInstructor = (name) =>
+    allUsers.find((u) => u.full_name === name)?.email || "";
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
@@ -133,6 +138,7 @@ export default function AdminCourses() {
       short_description: course.short_description || "",
       category: course.category || "CST Abdomen",
       instructor: course.instructor || "",
+      instructor_email: course.instructor_email || "",
       date: course.date || "",
       time: course.time || "",
       duration_minutes: course.duration_minutes || 60,
@@ -399,7 +405,12 @@ export default function AdminCourses() {
               </div>
               <div>
                 <Label>Kursleiter:in</Label>
-                <Select value={form.instructor} onValueChange={(v) => updateField("instructor", v)}>
+                <Select
+                  value={form.instructor}
+                  onValueChange={(v) => setForm((f) => ({
+                    ...f, instructor: v, instructor_email: emailForInstructor(v),
+                  }))}
+                >
                   <SelectTrigger className="mt-1.5"><SelectValue placeholder="Person auswählen…" /></SelectTrigger>
                   <SelectContent>
                     {[...new Set([...instructorOptions, ...(form.instructor && !instructorOptions.includes(form.instructor) ? [form.instructor] : [])])].map((name) => (

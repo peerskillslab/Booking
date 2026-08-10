@@ -41,7 +41,13 @@ export default function MeineKurse() {
     queryFn: async () => {
       const allCourses = await peerskillslab.entities.Course.list();
       return allCourses
-        .filter(c => c.instructor === (user?.full_name || user?.email))
+        // Über die Adresse statt über den Anzeigenamen: so folgt "Meine Kurse"
+        // einem Tutorwechsel und übersteht eine Namensänderung im Profil.
+        .filter(c => (
+          c.instructor_email
+            ? c.instructor_email === user?.email
+            : c.instructor === (user?.full_name || user?.email)
+        ))
         .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
     },
     enabled: !!user,

@@ -118,6 +118,28 @@ function initDb() {
         console.log('⚠ bookings unique index migration failed:', err.message);
       }
 
+      // instructor war bisher nur ein Anzeigename; die Kontaktadresse wurde
+      // aus created_by abgeleitet. Nach einem Tutorwechsel liefen beide
+      // auseinander — Mails gingen weiter an die ursprünglich anlegende Person.
+      try {
+        const filled = await pool.query(`
+          UPDATE courses c SET instructor_email = u.email
+          FROM users u
+          WHERE c.instructor_email IS NULL
+            AND c.instructor IS NOT NULL
+            AND u.full_name = c.instructor
+        `);
+        // Kurse, deren instructor zu keinem Konto passt: created_by ist die
+        // beste verfügbare Näherung.
+        const fallback = await pool.query(`
+          UPDATE courses SET instructor_email = created_by
+          WHERE instructor_email IS NULL AND created_by IS NOT NULL
+        `);
+        console.log(`✓ instructor_email gesetzt (${filled.rowCount} über Name, ${fallback.rowCount} über created_by)`);
+      } catch (err) {
+        console.log('⚠ instructor_email backfill failed:', err.message);
+      }
+
       console.log('✓ Migrations applied');
     } catch (err) {
       console.error('⚠ Database error:', err.message);
