@@ -221,7 +221,12 @@ export default function MyBookings() {
                         window.location.href = `mailto:${tutorEmail}?subject=${subject}&body=${body}`;
                       };
 
+                      const lateCancelMail =
+                        `mailto:info@peerskillslab.ch?subject=${encodeURIComponent(`Kurzfristige Absage: ${booking.course_title}`)}` +
+                        `&body=${encodeURIComponent(`Hallo\n\nIch kann leider kurzfristig nicht am Kurs "${booking.course_title}" teilnehmen.\n\nGrund:\n\n`)}`;
+
                       const action = booking.status === "confirmed" ? (
+                        <div className="flex flex-col items-start sm:items-end gap-2">
                         <div className="flex gap-2 flex-wrap">
                           <Button
                             variant="outline"
@@ -249,9 +254,6 @@ export default function MyBookings() {
                                 variant="ghost"
                                 disabled={!canCancel}
                                 className={canCancel ? "text-destructive hover:text-destructive hover:bg-destructive/10" : "text-muted-foreground opacity-50 cursor-not-allowed"}
-                                title={!canCancel
-                                  ? `Selbst stornieren ist nur bis ${CANCELLATION_WINDOW_HOURS}h vor Kursbeginn möglich. Kurzfristige Absagen bitte per E-Mail an info@peerskillslab.ch.`
-                                  : ""}
                                 style={{ height: 34, borderRadius: 9 }}
                               >
                                 <XCircle className="w-4 h-4 mr-1.5" />
@@ -276,6 +278,18 @@ export default function MyBookings() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                           </AlertDialog>
+                        </div>
+                        {/* Sichtbar statt als title-Tooltip: auf einem disabled
+                            Button feuern keine Maus-Events, und auf Touch gibt
+                            es ohnehin keinen Hover. */}
+                        {!canCancel && (
+                          <p className="text-xs text-muted-foreground max-w-sm sm:text-right">
+                            Selbst stornieren ist nur bis {CANCELLATION_WINDOW_HOURS}h vor Kursbeginn möglich.{" "}
+                            <a href={lateCancelMail} className="underline underline-offset-2 hover:text-foreground">
+                              Kurzfristig absagen
+                            </a>
+                          </p>
+                        )}
                         </div>
                       ) : null;
 
