@@ -16,13 +16,18 @@ export default function PublicLayout({ children }) {
         borderBottom: "0.5px solid var(--psl-hairline)",
         position: "sticky", top: 0, zIndex: 100,
       }}>
-        {/* Brand */}
-        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+        {/* Brand — führt zurück zur Startseite. Vorher war weder das Logo
+            noch sonst irgendetwas im PublicLayout ein Link zurück zu
+            AboutUs; von FAQ/Impressum/Datenschutz kam man nicht mehr weg. */}
+        <Link
+          to="/AboutUs"
+          style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}
+        >
           <Logo size={28} />
           <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--psl-text)", letterSpacing: "-0.01em" }}>
             PeerSkills Lab
           </span>
-        </div>
+        </Link>
 
         {/* Right actions */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
