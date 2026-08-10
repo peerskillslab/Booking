@@ -76,6 +76,25 @@ export default function PublicLayout({ children }) {
       <main>
         {children}
       </main>
+
+      {/* Footer — es gab in der App bisher keinen einzigen Link auf
+          /Impressum oder /Datenschutz; beide Seiten existierten, waren aber
+          von nirgends erreichbar. Rechtlich muss ein Impressum leicht
+          auffindbar sein. */}
+      <footer style={{
+        borderTop: "0.5px solid var(--psl-hairline)",
+        padding: "24px 20px",
+        display: "flex", flexWrap: "wrap", alignItems: "center",
+        justifyContent: "space-between", gap: 12,
+        fontSize: 12.5, color: "var(--psl-text-3)",
+      }}>
+        <span>© {new Date().getFullYear()} Peer Skills Lab</span>
+        <nav style={{ display: "flex", gap: 20 }}>
+          <Link to="/FAQ" style={{ color: "inherit", textDecoration: "none" }}>FAQ</Link>
+          <Link to="/Datenschutz" style={{ color: "inherit", textDecoration: "none" }}>Datenschutz</Link>
+          <Link to="/Impressum" style={{ color: "inherit", textDecoration: "none" }}>Impressum</Link>
+        </nav>
+      </footer>
     </div>
   );
 }
