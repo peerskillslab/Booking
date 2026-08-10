@@ -38,7 +38,7 @@ export default function Impressum() {
 
       <section className="space-y-2">
         <h2 style={{ fontSize: 14.5, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Hosting</h2>
-        <p className="text-muted-foreground">Diese Webseite wird bei Hostpoint gehostet.</p>
+        <p className="text-muted-foreground">Diese Webseite wird bei Microsoft Azure gehostet.</p>
       </section>
 
       <section className="space-y-2">

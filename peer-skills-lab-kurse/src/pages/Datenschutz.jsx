@@ -49,7 +49,7 @@ export default function Datenschutz() {
 
       <section className="space-y-2">
         <h2 style={{ fontSize: 14.5, fontWeight: 700, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>5. Hosting</h2>
-        <p className="text-muted-foreground">Diese Webseite wird bei Hostpoint gehostet. Beim Besuch der Webseite werden durch den Hostinganbieter automatisch technische Informationen in sogenannten Server-Logfiles gespeichert. Dazu gehören beispielsweise:</p>
+        <p className="text-muted-foreground">Diese Webseite wird bei Microsoft Azure (Rechenzentrum in Schweden) gehostet. Beim Besuch der Webseite werden durch den Hostinganbieter automatisch technische Informationen in sogenannten Server-Logfiles gespeichert. Dazu gehören beispielsweise:</p>
         <ul className="list-disc list-inside text-muted-foreground space-y-1">
           <li>IP-Adresse</li>
           <li>Datum und Uhrzeit des Zugriffs</li>
@@ -92,7 +92,7 @@ export default function Datenschutz() {
         <p className="text-muted-foreground">Wir behalten uns vor, diese Datenschutzerklärung jederzeit anzupassen, damit sie den aktuellen rechtlichen Anforderungen entspricht oder Änderungen unserer Leistungen berücksichtigt.</p>
       </section>
 
-      <p className="text-sm text-muted-foreground pt-4 border-t border-border">Stand: Mai 2026</p>
+      <p className="text-sm text-muted-foreground pt-4 border-t border-border">Stand: August 2026</p>
     </div>
   );
 }
