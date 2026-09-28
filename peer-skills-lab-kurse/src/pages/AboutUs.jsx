@@ -67,7 +67,6 @@ const TEAM = [
   { name: "Mira",     role: "Vorstand",   tone: 5, img: "/team/mira.jpg" },
   { name: "Surya",    role: "Vorstand",   tone: 0, img: "/team/surya.jpg" },
   { name: "Liam",     role: "Vorstand",   tone: 1, img: "/team/Liam.jpeg" },
-  { name: "Anna",     role: "Vorstand",   tone: 2, img: "/team/anna.jpeg" },
   { name: "Elena",    role: "Peer-Tutorin", tone: 1, img: "/team/elena.jpg" },
   { name: "Luzia",    role: "Peer-Tutorin", tone: 2, img: "/team/luzia.jpg" },
 ];
