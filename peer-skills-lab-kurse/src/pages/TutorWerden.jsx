@@ -36,7 +36,7 @@ const TIMELINE = [
   {
     month: "Ende September",
     title: "Umfrage bei aktiven Tutor:innen",
-    body: "Wir fragen die aktiven Tutor:innen, wer im nächsten Semester weiterhin tutorieren wird – daraus ergibt sich der Bedarf an neuen Tutor:innen.",
+    body: "Wir fragen die aktiven Tutor:innen, wer im nächsten Semester weiterhin tutorieren wird, daraus ergibt sich der Bedarf an neuen Tutor:innen.",
   },
   {
     month: "Oktober",
@@ -51,7 +51,7 @@ const TIMELINE = [
   {
     month: "Januar – Februar",
     title: "Auswahl & Kontaktierung",
-    body: "Wir schauen uns eure Bewerbungen an, und die ausgewählten Studierenden werden kontaktiert.",
+    body: "Wir schauen uns eure Bewerbungen an und melden uns für ein Treffen mit euch.",
   },
   {
     month: "März",
