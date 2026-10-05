@@ -62,11 +62,11 @@ const FAQS = [
     items: [
       {
         q: "Wie kann ich selbst Tutor:in werden?",
-        a: "Wir sind immer wieder auf der Suche nach neuen, motivierten Tutor:innen. Wenn du dich also dafür interessierst, bei uns mitzumachen, oder wenn du Ideen für neue Kursangebote hast, melde dich einfach direkt bei uns.",
+        a: "Einmal im Jahr rekrutieren wir neue Peer-Tutor:innen über ein Bewerbungsverfahren mit Fragebogen und Motivationsschreiben. Alle Infos dazu findest du auf unserer Seite „Tutor:in werden“.",
       },
       {
         q: "Welche Voraussetzungen brauche ich, um zu unterrichten?",
-        a: "Derzeit können wir nur Studierende ab dem vierten Studienjahr als Tutor:innen engagieren. Eine Mitarbeit im Vorstand ist jedoch auch früher möglich.",
+        a: "Du kannst dich ab bestandenem 3. Studienjahr bewerben. Fix dazu gehört die Teilnahme am eintägigen Didaktikkurs im März. Details siehe „Tutor:in werden“.",
       },
       {
         q: "Wie kann ich dem Verein beitreten?",

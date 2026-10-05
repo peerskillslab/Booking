@@ -8,6 +8,7 @@ export default function PublicLayout({ children }) {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--psl-content-bg)", fontFamily: "var(--psl-font)" }}>
+      <style>{`@media (max-width: 560px) { .psl-brand-name { display: none; } }`}</style>
       {/* Top bar */}
       <header style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -24,7 +25,7 @@ export default function PublicLayout({ children }) {
           style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}
         >
           <Logo size={28} />
-          <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--psl-text)", letterSpacing: "-0.01em" }}>
+          <span className="psl-brand-name" style={{ fontSize: 13.5, fontWeight: 600, color: "var(--psl-text)", letterSpacing: "-0.01em" }}>
             PeerSkills Lab
           </span>
         </Link>
@@ -52,6 +53,21 @@ export default function PublicLayout({ children }) {
               </svg>
             )}
           </button>
+
+          {/* Tutor:in werden — im Header, damit der Einstieg sofort sichtbar ist */}
+          <Link
+            to="/TutorWerden"
+            style={{
+              height: 38, padding: "0 16px", borderRadius: 10,
+              border: "1.5px solid var(--psl-brand)", background: "transparent",
+              color: "var(--psl-brand)",
+              fontSize: 13.5, fontWeight: 600,
+              display: "flex", alignItems: "center",
+              textDecoration: "none", letterSpacing: "0.01em", whiteSpace: "nowrap",
+            }}
+          >
+            Tutor:in werden
+          </Link>
 
           {/* Login button */}
           <Link

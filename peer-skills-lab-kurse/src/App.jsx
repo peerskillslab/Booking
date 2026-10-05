@@ -25,6 +25,7 @@ import ResetPassword from './pages/ResetPassword';
 import Datenschutz from './pages/Datenschutz';
 import Impressum from './pages/Impressum';
 import FAQ from './pages/FAQ';
+import TutorWerden from './pages/TutorWerden';
 import MyStats from './pages/MyStats';
 import Layout from './Layout.jsx';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -133,6 +134,7 @@ function App() {
               <Route path="/Datenschutz" element={publicPage(Datenschutz)} />
               <Route path="/Impressum" element={publicPage(Impressum)} />
               <Route path="/FAQ" element={publicPage(FAQ)} />
+              <Route path="/TutorWerden" element={publicPage(TutorWerden)} />
               <Route path="/*" element={<AuthenticatedApp />} />
             </Routes>
           </Router>
