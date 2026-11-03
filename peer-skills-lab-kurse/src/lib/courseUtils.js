@@ -74,6 +74,21 @@ export function isCancellationWindowOpen(course) {
 }
 
 /**
+ * Is the course close enough that students can no longer cancel themselves?
+ *
+ * True while the course has not started yet and less than
+ * CANCELLATION_WINDOW_HOURS remain. Counterpart of isCancellationWindowOpen
+ * (exactly 72 h before the start still counts as open there).
+ */
+export function isShortNoticeWindow(course) {
+  const start = getCourseStartDateTime(course);
+  if (!start) return false;
+
+  const hoursUntilStart = (start - new Date()) / (1000 * 60 * 60);
+  return hoursUntilStart > 0 && hoursUntilStart < CANCELLATION_WINDOW_HOURS;
+}
+
+/**
  * Check if a course has already started (is in the past)
  */
 export function isCoursePast(course) {

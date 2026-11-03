@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/AuthContext";
 import { queryKeys } from "@/lib/queryKeys";
 import { invalidateOnBookingChange } from "@/lib/invalidationStrategy";
 import { formatCourseDate } from "@/lib/courseUtils";
+import ShortNoticeBanner from "@/components/courses/ShortNoticeBanner";
 
 export default function CourseDetail() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -217,6 +218,8 @@ export default function CourseDetail() {
                     ? "Dieser Kurs ist ausgebucht"
                     : `Noch ${spotsLeft} ${spotsLeft === 1 ? "Platz" : "Plätze"} frei`}
                 </p>
+
+                {!isOwnCourse && <ShortNoticeBanner course={course} />}
 
                 {isOwnCourse ? (
                    <div className="text-center p-3 bg-muted rounded-xl">

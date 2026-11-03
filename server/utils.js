@@ -48,4 +48,34 @@ function buildUpdate(body, editable) {
   return { setClause: parts.join(', '), values, nextParam: values.length + 1 };
 }
 
-module.exports = { newId, parseSort, buildWhere, buildUpdate };
+const COURSE_TIME_ZONE = 'Europe/Zurich';
+
+// Versatz von `tz` zu UTC in Millisekunden zum Zeitpunkt `utcMs` (inkl. Sommerzeit).
+function tzOffsetMs(utcMs, tz) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, hourCycle: 'h23',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    }).formatToParts(new Date(utcMs)).map((p) => [p.type, p.value])
+  );
+  const asUtc = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+  return asUtc - utcMs;
+}
+
+// Kursbeginn als Date. Kurse haben `date` ("YYYY-MM-DD") und `time` ("10:00 - 12:00"
+// oder "10:00") als Schweizer Ortszeit. Der Server läuft in UTC, deshalb wird die
+// Zeit ausdrücklich als Europe/Zurich gelesen. Ohne lesbare Uhrzeit gilt Mitternacht,
+// ohne lesbares Datum null. Gleiche Regel wie getCourseStartDateTime im Frontend.
+function courseStart(dateStr, timeStr) {
+  const d = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr || ''));
+  if (!d) return null;
+  const t = /^(\d{1,2}):(\d{2})/.exec(String(timeStr || '').split(' - ')[0].trim());
+  const guess = Date.UTC(+d[1], +d[2] - 1, +d[3], t ? +t[1] : 0, t ? +t[2] : 0);
+  // Zweimal angleichen, damit auch der Moment der Zeitumstellung stimmt.
+  let ms = guess - tzOffsetMs(guess, COURSE_TIME_ZONE);
+  ms = guess - tzOffsetMs(ms, COURSE_TIME_ZONE);
+  return new Date(ms);
+}
+
+module.exports = { newId, parseSort, buildWhere, buildUpdate, courseStart };

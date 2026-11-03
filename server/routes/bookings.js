@@ -2,7 +2,7 @@ const express = require('express');
 const { getPool } = require('../db/database');
 const { authenticate, requireAuth } = require('../middleware/authenticate');
 const { canReadBooking, canWriteBooking } = require('../middleware/authorize');
-const { newId, parseSort, buildWhere, buildUpdate } = require('../utils');
+const { newId, parseSort, buildWhere, buildUpdate, courseStart } = require('../utils');
 
 const router = express.Router();
 router.use(authenticate);
@@ -175,9 +175,10 @@ router.patch('/:id', requireAuth, async (req, res) => {
 
     // Check cancellation deadline (user non-admin only)
     if (req.body.status === 'cancelled' && !isAdmin) {
-      const courseStart = new Date(`${booking.date}T${booking.time || '00:00'}`);
-      const cutoff = new Date(courseStart.getTime() - 72 * 60 * 60 * 1000);
-      if (new Date() > cutoff) {
+      // `time` ist meist "10:00 - 12:00", `new Date("…T10:00 - 12:00")` wäre ungültig
+      // und die Sperre hätte nie gegriffen. Ohne lesbares Datum wird nicht gesperrt.
+      const start = courseStart(booking.date, booking.time);
+      if (start && new Date() > new Date(start.getTime() - 72 * 60 * 60 * 1000)) {
         return res.status(403).json({ error: 'cancellation_deadline_passed' });
       }
     }

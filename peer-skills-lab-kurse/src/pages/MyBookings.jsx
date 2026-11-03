@@ -28,9 +28,10 @@ import { invalidateOnBookingCancel } from "@/lib/invalidationStrategy";
 import { useAuth } from "@/lib/AuthContext";
 import { queryKeys } from "@/lib/queryKeys";
 import { useToast } from "@/components/ui/use-toast";
+import ShortNoticeBanner from "@/components/courses/ShortNoticeBanner";
 import { StatusBadge } from "@/components/courses/CategoryBadge";
 
-function BookingRow({ booking, course, status, action, lowParticipantsMessage }) {
+function BookingRow({ booking, course, status, action, lowParticipantsMessage, shortNoticeCourse }) {
   return (
     <Card className={lowParticipantsMessage ? "border-amber-300" : "border-border/60"}>
       {lowParticipantsMessage && (
@@ -39,6 +40,8 @@ function BookingRow({ booking, course, status, action, lowParticipantsMessage })
           <span>{lowParticipantsMessage}</span>
         </div>
       )}
+      {/* Volle Breite über dem Inhalt: Kurs beginnt in < 72 h, Absage nur noch bei der Tutor:in */}
+      <ShortNoticeBanner course={shortNoticeCourse} fallbackEmail="info@peerskillslab.ch" className="mx-5 mt-4" />
       <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -224,16 +227,6 @@ export default function MyBookings() {
                         );
                       };
 
-                      // Kurzfristige Absagen gehen an die Tutor:in des Kurses —
-                      // sie muss wissen, wer fehlt. Ohne hinterlegte Adresse
-                      // bleibt nur die allgemeine Vereinsadresse.
-                      const lateCancelMail = tutorEmail
-                        ? mailToTutor(
-                            `Kurzfristige Absage: ${booking.course_title}`,
-                            `Hallo ${tutorName},\n\nIch kann leider kurzfristig nicht am Kurs "${booking.course_title}" teilnehmen.\n\nGrund:\n\n`
-                          )
-                        : `mailto:info@peerskillslab.ch?subject=${encodeURIComponent(`Kurzfristige Absage: ${booking.course_title}`)}`;
-
                       const action = booking.status === "confirmed" ? (
                         <div className="flex flex-col items-start sm:items-end gap-2">
                         <div className="flex gap-2 flex-wrap">
@@ -288,17 +281,6 @@ export default function MyBookings() {
                           </AlertDialogContent>
                           </AlertDialog>
                         </div>
-                        {/* Sichtbar statt als title-Tooltip: auf einem disabled
-                            Button feuern keine Maus-Events, und auf Touch gibt
-                            es ohnehin keinen Hover. */}
-                        {!canCancel && (
-                          <p className="text-xs text-muted-foreground max-w-sm sm:text-right">
-                            Selbst stornieren ist nur bis {CANCELLATION_WINDOW_HOURS}h vor Kursbeginn möglich.{" "}
-                            <a href={lateCancelMail} className="underline underline-offset-2 hover:text-foreground">
-                              {tutorEmail ? `Kurzfristig bei ${tutorName} absagen` : "Kurzfristig absagen"}
-                            </a>
-                          </p>
-                        )}
                         </div>
                       ) : null;
 
@@ -322,6 +304,7 @@ export default function MyBookings() {
                             status={booking.status || "pending"}
                             action={action}
                             lowParticipantsMessage={lowParticipantsMessage}
+                            shortNoticeCourse={booking.status === "confirmed" ? course : null}
                           />
                         </motion.div>
                       );
