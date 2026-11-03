@@ -105,13 +105,13 @@ export default function FAQ() {
           <span style={{ color: isDark ? "#8FBF4E" : "#466E0E" }}>Fragen.</span>
         </h1>
 
-        <p style={{ fontSize: 17, color: "var(--ink-2)", lineHeight: 1.5, margin: "0 0 56px", maxWidth: 520 }}>
+        <p id="intro" style={{ fontSize: 17, color: "var(--ink-2)", lineHeight: 1.5, margin: "0 0 56px", maxWidth: 520 }}>
           {linkify(content.intro)}
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
           {content.sections.map((section, si) => (
-            <div key={`${section.category}-${si}`}>
+            <div id={`cat-${si}`} key={`${section.category}-${si}`}>
               <div style={{ fontSize: 13, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 4 }}>
                 {section.category}
               </div>

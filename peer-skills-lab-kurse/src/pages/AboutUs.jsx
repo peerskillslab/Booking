@@ -90,7 +90,7 @@ function Pill({ icon: I, label, A }) {
 function HowCards({ c }) {
   const steps = c.steps.map((st, i) => ({ ...st, n: String(i + 1).padStart(2, "0") }));
   return (
-    <section className="au-section">
+    <section id="how" className="au-section">
       <div className="au-how-header" style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 32 }}>
         <h2 className="au-h2" style={{ fontWeight: 600, lineHeight: 1.0, margin: 0, maxWidth: 720 }}>
           {lines(c.howTitle)}
@@ -115,7 +115,7 @@ function HowCards({ c }) {
 function StatsBlock({ c }) {
   const stats = c.stats;
   return (
-    <section className="au-section">
+    <section id="stats" className="au-section">
       <div className="au-stats-inner">
         <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 32 }}>{c.statsKicker}</div>
         <h2 className="au-h2" style={{ fontWeight: 600, lineHeight: 1.05, margin: "0 0 56px", maxWidth: 540 }}>{c.statsTitle}</h2>
@@ -161,7 +161,7 @@ function TeamSection({ A, c }) {
   }, [c.team]);
 
   return (
-    <section className="au-section">
+    <section id="team" className="au-section">
       <div className="au-team-header" style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 32 }}>
         <div>
           <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 14 }}>{c.teamKicker}</div>
@@ -198,7 +198,7 @@ function TeamSection({ A, c }) {
 
 function PartnersBand({ c }) {
   return (
-    <section className="au-section">
+    <section id="partners" className="au-section">
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22 }} className="au-partners-inner">
         <div className="au-partners-header" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 28 }}>
           <h2 style={{ fontSize: 32, fontWeight: 600, margin: 0 }}>{c.partnersTitle}</h2>
@@ -260,7 +260,7 @@ function ContactRow({ label, value, href }) {
 
 function CoursesBlock({ c: content }) {
   return (
-    <section className="au-section">
+    <section id="courses" className="au-section">
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22 }} className="au-courses-inner">
         <div className="au-partners-header" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 28 }}>
           <h2 style={{ fontSize: 32, fontWeight: 600, margin: 0 }}>{content.coursesTitle}</h2>
@@ -286,7 +286,7 @@ function CoursesBlock({ c: content }) {
 
 function JoinBlock({ c }) {
   return (
-    <section className="au-section au-section-join">
+    <section id="contact" className="au-section au-section-join">
       <div className="au-join-right" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22, display: "flex", flexDirection: "column", gap: 18 }}>
         <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500 }}>{c.contactTitle}</div>
         <div className="au-contact-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
@@ -377,7 +377,7 @@ export default function AboutUs() {
       `}</style>
 
       {/* HERO */}
-      <section className="au-hero-padding" style={{ padding: "64px 56px 32px" }}>
+      <section id="hero" className="au-hero-padding" style={{ padding: "64px 56px 32px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--ink-3)", fontSize: 14, marginBottom: 32 }}>
           <span style={{ width: 28, height: 1, background: "var(--ink-3)", display: "block" }} />
           <span style={{ textTransform: "uppercase", fontWeight: 500 }}>{c.heroKicker}</span>
@@ -412,7 +412,7 @@ export default function AboutUs() {
       </section>
 
       {/* IMAGE BAND */}
-      <section className="au-imgband-padding" style={{ padding: "24px 56px 88px" }}>
+      <section id="images" className="au-imgband-padding" style={{ padding: "24px 56px 88px" }}>
         <div className="au-img-band" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
           {c.images.map((item, i) => (
             <div key={`${item.label}-${i}`} style={{ display: "flex", flexDirection: "column", gap: 10 }}>

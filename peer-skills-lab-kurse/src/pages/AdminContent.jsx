@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +10,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, FileText, ArrowUp, ArrowDown, Trash2, Plus, ExternalLink } from "lucide-react";
+import { Loader2, FileText, ArrowUp, ArrowDown, Trash2, Plus, ExternalLink, ChevronDown } from "lucide-react";
+import ContentPreview from "@/components/admin/ContentPreview";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/AuthContext";
 import { siteContentKey, mergeContent } from "@/lib/siteContent";
@@ -25,7 +26,7 @@ const PAGES = [
     path: "/AboutUs",
     defaults: ABOUT_DEFAULTS,
     fields: [
-      { type: "heading", label: "Startbereich" },
+      { type: "heading", label: "Startbereich", anchor: "hero" },
       { key: "heroKicker", label: "Kleine Zeile über dem Titel" },
       { key: "heroTitle1", label: "Titel, erste Zeile" },
       { key: "heroTitle2", label: "Titel, zweite Zeile (grün)" },
@@ -37,7 +38,7 @@ const PAGES = [
         hint: "Die Symbole davor ergeben sich aus der Reihenfolge.",
         fields: [{ key: "label", label: "Stichwort" }],
       },
-      { type: "heading", label: "Fotos unter dem Startbereich" },
+      { type: "heading", label: "Fotos unter dem Startbereich", anchor: "images" },
       {
         key: "images", label: "Beschriftungen", type: "list", itemLabel: "Foto", fixed: true,
         hint: "Die drei Fotos selbst bleiben fest, hier ändern sich nur die Beschriftungen.",
@@ -46,7 +47,7 @@ const PAGES = [
           { key: "caption", label: "Untertitel" },
         ],
       },
-      { type: "heading", label: "Vier Prinzipien" },
+      { type: "heading", label: "Vier Prinzipien", anchor: "how" },
       { key: "howKicker", label: "Kleine Zeile" },
       { key: "howTitle", label: "Überschrift", multiline: true, hint: "Enter erzeugt eine neue Zeile." },
       {
@@ -56,7 +57,7 @@ const PAGES = [
           { key: "body", label: "Text", multiline: true },
         ],
       },
-      { type: "heading", label: "In Zahlen" },
+      { type: "heading", label: "In Zahlen", anchor: "stats" },
       { key: "statsKicker", label: "Kleine Zeile" },
       { key: "statsTitle", label: "Überschrift" },
       {
@@ -67,7 +68,7 @@ const PAGES = [
           { key: "sub", label: "Zusatz" },
         ],
       },
-      { type: "heading", label: "Kurse" },
+      { type: "heading", label: "Kurse", anchor: "courses" },
       { key: "coursesTitle", label: "Überschrift" },
       { key: "coursesIntro", label: "Einleitung", multiline: true },
       {
@@ -78,7 +79,7 @@ const PAGES = [
           { key: "body", label: "Beschreibung", multiline: true },
         ],
       },
-      { type: "heading", label: "Team" },
+      { type: "heading", label: "Team", anchor: "team" },
       { key: "teamKicker", label: "Kleine Zeile" },
       { key: "teamTitle", label: "Überschrift", multiline: true, hint: "Enter erzeugt eine neue Zeile." },
       { key: "teamText", label: "Text zum Mitmachen", multiline: true },
@@ -90,7 +91,7 @@ const PAGES = [
           { key: "role", label: "Rolle" },
         ],
       },
-      { type: "heading", label: "Partner" },
+      { type: "heading", label: "Partner", anchor: "partners" },
       { key: "partnersTitle", label: "Überschrift" },
       { key: "partnersIntro", label: "Text", multiline: true },
       {
@@ -101,7 +102,7 @@ const PAGES = [
           { key: "url", label: "Web-Adresse" },
         ],
       },
-      { type: "heading", label: "Kontakt" },
+      { type: "heading", label: "Kontakt", anchor: "contact" },
       { key: "contactTitle", label: "Überschrift" },
       {
         key: "contacts", label: "Kontaktwege", type: "list", itemLabel: "Kontaktweg",
@@ -120,7 +121,9 @@ const PAGES = [
     path: "/TutorWerden",
     defaults: TUTOR_WERDEN_DEFAULTS,
     fields: [
+      { type: "heading", label: "Einleitung", anchor: "intro" },
       { key: "intro", label: "Einleitung", multiline: true },
+      { type: "heading", label: "Voraussetzungen", anchor: "requirements" },
       {
         key: "requirements", label: "Voraussetzungen", type: "list", itemLabel: "Voraussetzung",
         fields: [
@@ -128,6 +131,7 @@ const PAGES = [
           { key: "body", label: "Text", multiline: true },
         ],
       },
+      { type: "heading", label: "Ablauf der Bewerbung", anchor: "timeline" },
       {
         key: "timeline", label: "Ablauf der Bewerbung", type: "list", itemLabel: "Schritt",
         fields: [
@@ -136,8 +140,10 @@ const PAGES = [
           { key: "body", label: "Text", multiline: true },
         ],
       },
+      { type: "heading", label: "Hinweis zur Anzahl Plätze", anchor: "seats" },
       { key: "seatsTitle", label: "Hinweis zur Anzahl Plätze: Titel" },
       { key: "seatsBody", label: "Hinweis zur Anzahl Plätze: Text", multiline: true },
+      { type: "heading", label: "Kontaktkasten", anchor: "contact" },
       { key: "contactTitle", label: "Kontaktkasten: Titel" },
       { key: "contactBody", label: "Kontaktkasten: Text", multiline: true },
     ],
@@ -148,7 +154,9 @@ const PAGES = [
     path: "/FAQ",
     defaults: FAQ_DEFAULTS,
     fields: [
+      { type: "heading", label: "Einleitung", anchor: "intro" },
       { key: "intro", label: "Einleitung", multiline: true },
+      { type: "heading", label: "Fragen und Antworten" },
       {
         key: "sections", label: "Kategorien", type: "list", itemLabel: "Kategorie",
         fields: [
@@ -166,6 +174,32 @@ const PAGES = [
   },
 ];
 
+// Teilt die Feldliste an den Überschriften in Abschnitte
+function groupSections(fields) {
+  const out = [];
+  for (const f of fields) {
+    if (f.type === "heading") out.push({ title: f.label, anchor: f.anchor, fields: [] });
+    else {
+      if (!out.length) out.push({ title: "", fields: [] });
+      out[out.length - 1].fields.push(f);
+    }
+  }
+  return out;
+}
+
+function Section({ section, open, onToggle, children }) {
+  return (
+    <div className="rounded-xl border border-border bg-card">
+      <button type="button" onClick={onToggle} aria-expanded={open}
+        className="w-full flex items-center gap-2 px-4 py-3 text-left">
+        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "" : "-rotate-90"}`} />
+        <span className="text-base font-semibold text-foreground">{section.title}</span>
+      </button>
+      {open && <div className="px-4 pb-4 space-y-4">{children}</div>}
+    </div>
+  );
+}
+
 // Leerer Eintrag passend zu einer Feldbeschreibung
 function blankItem(fields) {
   return Object.fromEntries(
@@ -181,52 +215,75 @@ function move(list, from, to) {
   return next;
 }
 
-function Field({ field, value, onChange, depth }) {
-  if (field.type === "heading") {
-    return (
-      <h2 className="text-lg font-semibold text-foreground pt-4 pb-2 border-b border-border">{field.label}</h2>
-    );
+// Kurzbezeichnung eines Listeneintrags für die Kopfzeile (erstes ausgefülltes Textfeld)
+function itemSummary(field, item) {
+  for (const f of field.fields) {
+    if (f.type !== "list" && typeof item[f.key] === "string" && item[f.key].trim()) {
+      return item[f.key].replace(/\s+/g, " ").slice(0, 70);
+    }
   }
+  return "";
+}
+
+function ListItem({ field, item, index, count, depth, onMove, onRemove, onChangeItem, startOpen }) {
+  const [open, setOpen] = useState(startOpen);
+  const summary = itemSummary(field, item);
+  return (
+    <Card className="border-border/60" style={depth > 0 ? { background: "var(--psl-fill, transparent)" } : undefined}>
+      <div className="flex items-center gap-1 pr-2">
+        <button type="button" onClick={() => setOpen(!open)} aria-expanded={open}
+          className="flex-1 min-w-0 flex items-center gap-2 text-left px-4 py-2.5">
+          <ChevronDown className={`w-4 h-4 shrink-0 text-muted-foreground transition-transform ${open ? "" : "-rotate-90"}`} />
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide shrink-0">
+            {field.itemLabel} {index + 1}
+          </span>
+          {!open && summary && <span className="text-sm text-foreground truncate">{summary}</span>}
+        </button>
+        {!field.fixed && <div className="flex gap-1 shrink-0">
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label="Nach oben"
+            disabled={index === 0} onClick={() => onMove(index - 1)}>
+            <ArrowUp />
+          </Button>
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label="Nach unten"
+            disabled={index === count - 1} onClick={() => onMove(index + 1)}>
+            <ArrowDown />
+          </Button>
+          <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label="Löschen"
+            onClick={onRemove}>
+            <Trash2 />
+          </Button>
+        </div>}
+      </div>
+      {open && (
+        <CardContent className="px-4 pb-4 pt-0 space-y-3">
+          {field.fields.map((sub) => (
+            <Field key={sub.key} field={sub} value={item[sub.key]} depth={depth + 1}
+              onChange={(v) => onChangeItem(sub.key, v)} />
+          ))}
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
+function Field({ field, value, onChange, depth }) {
+  if (field.type === "heading") return null;
   if (field.type === "list") {
     const items = Array.isArray(value) ? value : [];
+    // Einträge, die beim Öffnen schon da waren, starten zugeklappt; neue offen
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const initialCount = useRef(items.length);
     return (
       <div>
         <div className="text-sm font-semibold text-foreground mb-1">{field.label}</div>
         {field.hint && <p className="text-xs text-muted-foreground mb-2">{field.hint}</p>}
         <div className="space-y-3 mt-2">
           {items.map((item, i) => (
-            <Card key={i} className="border-border/60" style={depth > 0 ? { background: "var(--psl-fill, transparent)" } : undefined}>
-              <CardContent className="p-4 space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    {field.itemLabel} {i + 1}
-                  </span>
-                  {!field.fixed && <div className="flex gap-1">
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label="Nach oben"
-                      disabled={i === 0} onClick={() => onChange(move(items, i, i - 1))}>
-                      <ArrowUp />
-                    </Button>
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8" aria-label="Nach unten"
-                      disabled={i === items.length - 1} onClick={() => onChange(move(items, i, i + 1))}>
-                      <ArrowDown />
-                    </Button>
-                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label="Löschen"
-                      onClick={() => onChange(items.filter((_, j) => j !== i))}>
-                      <Trash2 />
-                    </Button>
-                  </div>}
-                </div>
-                {field.fields.map((sub) => (
-                  <Field
-                    key={sub.key}
-                    field={sub}
-                    value={item[sub.key]}
-                    depth={depth + 1}
-                    onChange={(v) => onChange(items.map((it, j) => (j === i ? { ...it, [sub.key]: v } : it)))}
-                  />
-                ))}
-              </CardContent>
-            </Card>
+            <ListItem key={i} field={field} item={item} index={i} count={items.length} depth={depth}
+              onMove={(to) => onChange(move(items, i, to))}
+              onRemove={() => onChange(items.filter((_, j) => j !== i))}
+              onChangeItem={(sub, v) => onChange(items.map((it, j) => (j === i ? { ...it, [sub]: v } : it)))}
+              startOpen={i >= initialCount.current} />
           ))}
         </div>
         {!field.fixed && (
@@ -262,8 +319,12 @@ export default function AdminContent() {
   const [pageKey, setPageKey] = useState(PAGES[0].key);
   const [draft, setDraft] = useState(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [openSection, setOpenSection] = useState(0);
+  const [anchor, setAnchor] = useState(null);
+  const [mobileView, setMobileView] = useState("edit");
 
   const page = PAGES.find((p) => p.key === pageKey);
+  const sections = useMemo(() => groupSections(page.fields), [page]);
 
   useEffect(() => {
     if (isLoadingAuth) return;
@@ -334,6 +395,8 @@ export default function AdminContent() {
     if (key === pageKey) return;
     if (dirty && !window.confirm("Ungespeicherte Änderungen gehen verloren. Trotzdem wechseln?")) return;
     setDraft(null);
+    setOpenSection(0);
+    setAnchor(null);
     setPageKey(key);
   };
 
@@ -344,7 +407,7 @@ export default function AdminContent() {
   );
 
   return (
-    <div className="psl-page">
+    <div className="psl-page" style={{ maxWidth: 1600 }}>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <FileText className="w-5 h-5 text-primary" />
@@ -355,7 +418,7 @@ export default function AdminContent() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
         {PAGES.map((p) => (
           <Button key={p.key} type="button" size="sm"
             variant={p.key === pageKey ? "default" : "outline"}
@@ -363,6 +426,10 @@ export default function AdminContent() {
             {p.label}
           </Button>
         ))}
+        <div className="flex gap-1 ml-auto xl:hidden">
+          <Button type="button" size="sm" variant={mobileView === "edit" ? "secondary" : "ghost"} onClick={() => setMobileView("edit")}>Bearbeiten</Button>
+          <Button type="button" size="sm" variant={mobileView === "preview" ? "secondary" : "ghost"} onClick={() => setMobileView("preview")}>Vorschau</Button>
+        </div>
       </div>
 
       {isLoading || !draft ? (
@@ -370,36 +437,56 @@ export default function AdminContent() {
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       ) : (
-        <div className="space-y-6" style={{ maxWidth: 760 }}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-muted-foreground">
-              {data?.updated_date
-                ? `Zuletzt geändert von ${data.updated_by || "unbekannt"} am ${new Date(data.updated_date).toLocaleString("de-CH")}`
-                : "Noch nicht geändert, es gelten die Standardtexte."}
-            </p>
-            <a href={page.path} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
-              Seite ansehen <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+        <div className="xl:grid xl:gap-6" style={{ gridTemplateColumns: "minmax(380px, 500px) minmax(0, 1fr)" }}>
+          <div className={`min-w-0 flex flex-col ${mobileView === "edit" ? "" : "hidden xl:flex"}`}
+            style={{ maxWidth: 760 }}>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <p className="text-sm text-muted-foreground">
+                {data?.updated_date
+                  ? `Zuletzt geändert von ${data.updated_by || "unbekannt"} am ${new Date(data.updated_date).toLocaleString("de-CH")}`
+                  : "Noch nicht geändert, es gelten die Standardtexte."}
+              </p>
+              <a href={page.path} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+                Seite ansehen <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+            <div className="space-y-3">
+              {sections.map((s, si) => (
+                <Section key={s.title || si} section={s} open={openSection === si}
+                  onToggle={() => {
+                    const opening = openSection !== si;
+                    setOpenSection(opening ? si : -1);
+                    if (opening && s.anchor) setAnchor({ id: s.anchor, n: Date.now() });
+                  }}>
+                  {s.fields.map((f) => (
+                    <Field key={f.key || f.label} field={f} depth={0} value={draft[f.key]}
+                      onChange={(v) => setDraft({ ...draft, [f.key]: v })} />
+                  ))}
+                </Section>
+              ))}
+            </div>
+
+            <div className="sticky bottom-0 mt-4 py-3 flex flex-wrap items-center gap-3 border-t border-border bg-background">
+              <Button type="button" disabled={!dirty || saveMutation.isPending} onClick={() => saveMutation.mutate()}>
+                {saveMutation.isPending && <Loader2 className="animate-spin" />}
+                Speichern
+              </Button>
+              <Button type="button" variant="outline" disabled={!dirty} onClick={() => setDraft(saved)}>
+                Änderungen verwerfen
+              </Button>
+              {dirty && <span className="text-xs text-amber-600">Ungespeicherte Änderungen</span>}
+              <Button type="button" variant="ghost" className="ml-auto text-destructive"
+                disabled={!data?.updated_date} onClick={() => setConfirmReset(true)}>
+                Auf Standardtexte zurücksetzen
+              </Button>
+            </div>
           </div>
 
-          {page.fields.map((f) => (
-            <Field key={f.key || f.label} field={f} depth={0} value={draft[f.key]}
-              onChange={(v) => setDraft({ ...draft, [f.key]: v })} />
-          ))}
-
-          <div className="sticky bottom-0 -mx-1 px-1 py-3 flex flex-wrap items-center gap-3 border-t border-border bg-background">
-            <Button type="button" disabled={!dirty || saveMutation.isPending} onClick={() => saveMutation.mutate()}>
-              {saveMutation.isPending && <Loader2 className="animate-spin" />}
-              Speichern
-            </Button>
-            <Button type="button" variant="outline" disabled={!dirty} onClick={() => setDraft(saved)}>
-              Änderungen verwerfen
-            </Button>
-            <Button type="button" variant="ghost" className="ml-auto text-destructive"
-              disabled={!data?.updated_date} onClick={() => setConfirmReset(true)}>
-              Auf Standardtexte zurücksetzen
-            </Button>
+          <div className={`min-w-0 xl:sticky xl:top-4 xl:self-start ${mobileView === "preview" ? "" : "hidden xl:block"}`}
+            style={{ height: "calc(100vh - 140px)", minHeight: 420 }}>
+            <ContentPreview path={page.path} contentKey={pageKey} draft={draft} anchor={anchor} />
           </div>
         </div>
       )}

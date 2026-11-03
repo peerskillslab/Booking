@@ -87,12 +87,12 @@ export default function TutorWerden() {
           <span style={{ color: accentColor }}>Tutor:in.</span>
         </h1>
 
-        <p style={{ fontSize: 17, color: "var(--ink-2)", lineHeight: 1.55, margin: "0 0 56px", maxWidth: 720 }}>
+        <p id="intro" style={{ fontSize: 17, color: "var(--ink-2)", lineHeight: 1.55, margin: "0 0 56px", maxWidth: 720 }}>
           {linkify(content.intro)}
         </p>
 
         {/* Voraussetzungen */}
-        <section style={{ marginBottom: 56 }}>
+        <section id="requirements" style={{ marginBottom: 56 }}>
           <div style={{ fontSize: 13, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 16 }}>
             Voraussetzungen
           </div>
@@ -126,7 +126,7 @@ export default function TutorWerden() {
         </section>
 
         {/* Ablauf */}
-        <section style={{ marginBottom: 56 }}>
+        <section id="timeline" style={{ marginBottom: 56 }}>
           <div style={{ fontSize: 13, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 24 }}>
             So funktioniert die Bewerbung
           </div>
@@ -134,7 +134,7 @@ export default function TutorWerden() {
         </section>
 
         {/* Hinweis zur Anzahl Plätze */}
-        <section style={{ marginBottom: 56 }}>
+        <section id="seats" style={{ marginBottom: 56 }}>
           <div
             style={{
               padding: "20px 24px",
@@ -152,7 +152,7 @@ export default function TutorWerden() {
         </section>
 
         {/* Kontakt */}
-        <div style={{ padding: "28px 32px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 18 }}>
+        <div id="contact" style={{ padding: "28px 32px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 18 }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", marginBottom: 6 }}>{content.contactTitle}</div>
           <p style={{ fontSize: 14, color: "var(--ink-2)", margin: "0 0 14px", lineHeight: 1.5 }}>
             {linkify(content.contactBody)}

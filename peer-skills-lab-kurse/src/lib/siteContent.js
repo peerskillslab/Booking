@@ -1,16 +1,20 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { peerskillslab } from "@/api/peerskillslabClient";
 
 export const siteContentKey = (key) => ["siteContent", key];
 
-// Leere Vorlage mit derselben Struktur wie `template`: Strings werden zu "",
-// Listen zu [] und Objekte feldweise. Fehlende Felder in gespeicherten
-// Listeneinträgen werden damit leer statt mit Text eines anderen Eintrags gefüllt.
-function blankOf(template) {
-  if (typeof template === "string") return "";
-  if (Array.isArray(template)) return [];
+// Eintrag einer gespeicherten Liste gegen die Struktur des ersten Standard-Eintrags
+// prüfen. Fehlende Felder werden leer statt mit Text eines anderen Eintrags gefüllt;
+// verschachtelte Listen (z. B. FAQ: Kategorie → Fragen) behalten ihre Struktur.
+function mergeItem(template, stored) {
+  if (typeof template === "string") return typeof stored === "string" ? stored : "";
+  if (Array.isArray(template)) {
+    return Array.isArray(stored) ? stored.map((s) => mergeItem(template[0], s)) : [];
+  }
   if (template && typeof template === "object") {
-    return Object.fromEntries(Object.entries(template).map(([k, v]) => [k, blankOf(v)]));
+    const src = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+    return Object.fromEntries(Object.entries(template).map(([k, v]) => [k, mergeItem(v, src[k])]));
   }
   return template;
 }
@@ -24,8 +28,7 @@ export function mergeContent(defaults, stored) {
   }
   if (Array.isArray(defaults)) {
     if (!Array.isArray(stored)) return defaults;
-    const blank = blankOf(defaults[0]);
-    return stored.map((item) => mergeContent(blank, item));
+    return stored.map((item) => mergeItem(defaults[0], item));
   }
   if (defaults && typeof defaults === "object") {
     const src = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
@@ -36,6 +39,13 @@ export function mergeContent(defaults, stored) {
   return defaults;
 }
 
+// Vorschau im Admin-Bereich: Die Seite läuft dann im iframe mit ?preview=1 und
+// bekommt den Entwurf per postMessage (nur vom selben Origin).
+const IS_PREVIEW =
+  typeof window !== "undefined" &&
+  window.parent !== window &&
+  new URLSearchParams(window.location.search).get("preview") === "1";
+
 // Inhalt einer Infoseite: gespeicherte Werte aus der Datenbank, sonst Standardtexte.
 // Beim Laden und bei Fehlern erscheinen sofort die Standardtexte.
 export function useSiteContent(key, defaults) {
@@ -44,5 +54,22 @@ export function useSiteContent(key, defaults) {
     queryFn: () => peerskillslab.content.get(key),
     staleTime: 60 * 1000,
   });
-  return mergeContent(defaults, data?.value);
+  const [draft, setDraft] = useState(null);
+
+  useEffect(() => {
+    if (!IS_PREVIEW) return;
+    const onMessage = (e) => {
+      if (e.origin !== window.location.origin || !e.data) return;
+      if (e.data.type === "psl-content-preview" && e.data.key === key) {
+        setDraft(e.data.value);
+      } else if (e.data.type === "psl-scroll" && typeof e.data.anchor === "string") {
+        document.getElementById(e.data.anchor)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+    window.addEventListener("message", onMessage);
+    window.parent.postMessage({ type: "psl-preview-ready" }, window.location.origin);
+    return () => window.removeEventListener("message", onMessage);
+  }, [key]);
+
+  return mergeContent(defaults, IS_PREVIEW && draft ? draft : data?.value);
 }
