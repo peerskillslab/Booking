@@ -41,7 +41,6 @@ export default function MyProfile() {
   const [passwordStatus, setPasswordStatus] = useState(null); // success | error
   const [passwordMessage, setPasswordMessage] = useState("");
 
-
   const handleChangePassword = async () => {
     // Validate
     if (!currentPassword.trim()) {

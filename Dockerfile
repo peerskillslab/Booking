@@ -5,7 +5,7 @@ WORKDIR /build/frontend
 COPY peer-skills-lab-kurse/ ./
 RUN npm install
 
-# Produkions-API-URL: relativ, damit der Container überall funktioniert
+# Produktions-API-URL: relativ, damit der Container überall funktioniert
 ENV VITE_API_BASE_URL=/api
 RUN npm run build
 
@@ -23,16 +23,11 @@ RUN npm ci --omit=dev
 # Server-Code kopieren
 COPY server/ ./
 
-# Gebautes Frontend in den Server-Ordner kopieren
-# Express serviert es als statische Dateien aus /app/public (siehe index.js);
-# die getrackten Dateien in server/public (Team-Fotos) bleiben dabei erhalten
+# Gebautes Frontend (inkl. Bilder aus peer-skills-lab-kurse/public) in den
+# Server-Ordner kopieren. Express serviert es aus /app/public (siehe index.js).
 COPY --from=frontend-builder /build/frontend/dist ./public
 
-# Verzeichnis für die SQLite-Datenbank anlegen (wird als Volume gemountet)
-RUN mkdir -p /data
-
 ENV PORT=3001
-ENV DB_PATH=/data/peerskills.db
 ENV NODE_ENV=production
 
 EXPOSE 3001

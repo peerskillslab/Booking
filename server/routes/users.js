@@ -1,16 +1,10 @@
 const express = require('express');
 const { getPool } = require('../db/database');
 const { authenticate, requireAuth, requireRole } = require('../middleware/authenticate');
-const { parseSort, buildUpdate } = require('../utils');
+const { parseSort, buildUpdate, sanitizeUser: sanitize } = require('../utils');
 
 const router = express.Router();
 router.use(authenticate);
-
-function sanitize(user) {
-  if (!user) return null;
-  const { password_hash, ...safe } = user;
-  return safe;
-}
 
 // GET /api/entities/users  — admin only
 router.get('/', requireRole('admin'), async (req, res) => {
@@ -62,6 +56,13 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
       if (!Number.isInteger(year) || year < 1 || year > 6) {
         return res.status(400).json({ error: 'studienjahr muss zwischen 1 und 6 liegen' });
       }
+    }
+
+    // Ohne Admin gäbe es keinen Weg zurück in die Verwaltung. Bisher war nur
+    // das Löschen geschützt, nicht der Rollenwechsel.
+    if (req.body.role !== undefined && req.body.role !== 'admin' && user.role === 'admin') {
+      const admins = await pool.query(`SELECT COUNT(*)::int AS n FROM users WHERE role = 'admin'`);
+      if (admins.rows[0].n <= 1) return res.status(409).json({ error: 'last_admin' });
     }
 
     // Zusatzberechtigung «Inhalte bearbeiten»: Nur wer sie selbst hat, darf sie

@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { getPool } = require('../db/database');
 const { authenticate, requireAuth, JWT_SECRET } = require('../middleware/authenticate');
-const { newId, buildUpdate } = require('../utils');
+const { newId, buildUpdate, sanitizeUser: sanitize } = require('../utils');
 const { sendResetEmail } = require('../emailService');
 
 const router = express.Router();
@@ -139,6 +139,13 @@ router.patch('/me', limitPasswordChange, requireAuth, async (req, res) => {
       }
     }
 
+    if (studienjahr !== undefined) {
+      const year = Number(studienjahr);
+      if (!Number.isInteger(year) || year < 1 || year > 6) {
+        return res.status(400).json({ error: 'studienjahr muss zwischen 1 und 6 liegen' });
+      }
+    }
+
     const updates = {};
     if (full_name !== undefined) updates.full_name = full_name;
     if (studienjahr !== undefined) updates.studienjahr = studienjahr;
@@ -150,14 +157,28 @@ router.patch('/me', limitPasswordChange, requireAuth, async (req, res) => {
     const { setClause, values, nextParam } = buildUpdate(updates, ['full_name', 'studienjahr', 'password_hash', 'email']);
     values.push(req.user.id);
 
-    await pool.query(`UPDATE users SET ${setClause} WHERE id = $${nextParam}`, values);
-
-    // If email changed, update denormalized email fields in bookings and course_feedbacks
-    if (email !== undefined) {
-      const newEmail = email.toLowerCase().trim();
-      const oldEmail = req.user.email;
-      await pool.query('UPDATE bookings SET user_email = $1 WHERE user_email = $2', [newEmail, oldEmail]);
-      await pool.query('UPDATE course_feedbacks SET user_email = $1 WHERE user_email = $2', [newEmail, oldEmail]);
+    // Die Mailadresse steht auch in Buchungen, Kursen und Vorlagen. Alles in
+    // einer Transaktion, sonst verliert eine Tutor:in nach einer Adressänderung
+    // ihre Kurse («Meine Kurse» leer, keine Bearbeitungsrechte).
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(`UPDATE users SET ${setClause} WHERE id = $${nextParam}`, values);
+      if (email !== undefined && updates.email !== req.user.email) {
+        const params = [updates.email, req.user.email];
+        await client.query('UPDATE bookings SET user_email = $1 WHERE user_email = $2', params);
+        await client.query('UPDATE bookings SET created_by = $1 WHERE created_by = $2', params);
+        await client.query('UPDATE course_feedbacks SET user_email = $1 WHERE user_email = $2', params);
+        await client.query('UPDATE courses SET instructor_email = $1 WHERE instructor_email = $2', params);
+        await client.query('UPDATE courses SET created_by = $1 WHERE created_by = $2', params);
+        await client.query('UPDATE course_templates SET created_by = $1 WHERE created_by = $2', params);
+      }
+      await client.query('COMMIT');
+    } catch (err) {
+      try { await client.query('ROLLBACK'); } catch {}
+      throw err;
+    } finally {
+      client.release();
     }
 
     const updatedResult = await pool.query('SELECT * FROM users WHERE id = $1', [req.user.id]);
@@ -240,11 +261,5 @@ router.post('/reset-password', authLimiter, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
-function sanitize(user) {
-  if (!user) return null;
-  const { password_hash, ...safe } = user;
-  return safe;
-}
 
 module.exports = router;

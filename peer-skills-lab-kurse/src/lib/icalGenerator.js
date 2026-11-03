@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from "@/lib/contact";
 export const DEFAULT_LOCATION = 'Raum 135 (1 OG, rechte Flurseite)';
 
 /**
@@ -86,7 +87,7 @@ export function generateICalFile(course) {
     `DESCRIPTION:${escapeText(course.description)}`,
     `LOCATION:${escapeText(course.location || DEFAULT_LOCATION)}`,
     // ORGANIZER erwartet eine CAL-ADDRESS (mailto:), kein Klartextname.
-    `ORGANIZER;CN=${escapeText(course.instructor || 'PeerSkills Lab')}:mailto:info@peerskillslab.ch`,
+    `ORGANIZER;CN=${escapeText(course.instructor || 'PeerSkills Lab')}:mailto:${CONTACT_EMAIL}`,
     'END:VEVENT',
     'END:VCALENDAR',
   ];

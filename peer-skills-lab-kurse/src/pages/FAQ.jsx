@@ -1,25 +1,12 @@
 // @ts-nocheck
 import React, { useState } from "react";
-import { useIsDarkTheme } from "@/lib/useTheme";
+import { useInfoTheme, ContactBox } from "@/components/info/infoTheme";
 import { useSiteContent } from "@/lib/siteContent";
 import { linkify } from "@/lib/linkify";
 import { FAQ_DEFAULTS } from "@/content/defaults";
 
-const CSS_LIGHT = {
-  "--bg": "oklch(98% 0.004 130)", "--ink": "oklch(20% 0.01 130)", "--ink-2": "oklch(50% 0.01 130)", "--ink-3": "oklch(58% 0.01 130)",
-  "--surface": "#ffffff", "--line": "oklch(92% 0.006 130)", "--line-soft": "oklch(94% 0.006 130)",
-  "--sage": "#eef3e6", "--accent": "#466E0E",
-};
-
-const CSS_DARK = {
-  "--bg": "oklch(18% 0.006 130)", "--ink": "oklch(96% 0.004 130)", "--ink-2": "oklch(74% 0.006 130)", "--ink-3": "oklch(62% 0.006 130)",
-  "--surface": "oklch(23% 0.006 130)", "--line": "oklch(30% 0.008 130)", "--line-soft": "oklch(36% 0.008 130)",
-  "--sage": "#3a4a38", "--accent": "#8FBF4E",
-};
-
-function AccordionItem({ q, a, isDark }) {
+function AccordionItem({ q, a, accentColor }) {
   const [open, setOpen] = useState(false);
-  const accentColor = isDark ? "#8FBF4E" : "#466E0E";
 
   return (
     <div style={{ borderBottom: "1px solid var(--line)" }}>
@@ -81,8 +68,7 @@ function AccordionItem({ q, a, isDark }) {
 }
 
 export default function FAQ() {
-  const isDark = useIsDarkTheme();
-  const CSS = isDark ? CSS_DARK : CSS_LIGHT;
+  const { style: CSS, accent } = useInfoTheme();
   const content = useSiteContent("faq", FAQ_DEFAULTS);
 
   return (
@@ -102,7 +88,7 @@ export default function FAQ() {
 
         <h1 style={{ fontWeight: 600, fontSize: "clamp(32px, 7vw, 72px)", lineHeight: 0.95, margin: "0 0 16px", wordBreak: "break-word" }}>
           Häufige<br />
-          <span style={{ color: isDark ? "#8FBF4E" : "#466E0E" }}>Fragen.</span>
+          <span style={{ color: accent }}>Fragen.</span>
         </h1>
 
         <p id="intro" style={{ fontSize: 17, color: "var(--ink-2)", lineHeight: 1.5, margin: "0 0 56px", maxWidth: 520 }}>
@@ -117,32 +103,16 @@ export default function FAQ() {
               </div>
               <div>
                 {section.items.map((item, ii) => (
-                  <AccordionItem key={`${item.q}-${ii}`} q={item.q} a={item.a} isDark={isDark} />
+                  <AccordionItem key={`${item.q}-${ii}`} q={item.q} a={item.a} accentColor={accent} />
                 ))}
               </div>
             </div>
           ))}
         </div>
 
-        <div style={{ marginTop: 64, padding: "28px 32px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 18 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", marginBottom: 6 }}>Noch eine Frage?</div>
-          <p style={{ fontSize: 14, color: "var(--ink-2)", margin: "0 0 14px", lineHeight: 1.5 }}>
-            Falls du keine Antwort gefunden hast, schreib uns einfach eine Mail.
-          </p>
-          <a
-            href="mailto:info@peerskillslab.ch"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              fontSize: 14, fontWeight: 600, color: isDark ? "#8FBF4E" : "#466E0E",
-              textDecoration: "none",
-            }}
-          >
-            info@peerskillslab.ch
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
-          </a>
-        </div>
+        <ContactBox title="Noch eine Frage?" accent={accent} style={{ marginTop: 64 }}>
+          Falls du keine Antwort gefunden hast, schreib uns einfach eine Mail.
+        </ContactBox>
       </div>
     </div>
   );

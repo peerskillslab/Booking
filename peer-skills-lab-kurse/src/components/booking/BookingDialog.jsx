@@ -37,7 +37,6 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
         course_title: course.title,
         user_email: user?.email || "",
         user_name: name,
-        status: "confirmed",
         notes,
         price_paid: 0,
       });
@@ -64,6 +63,7 @@ export default function BookingDialog({ open, onOpenChange, course, user, onBook
         already_booked: "Du hast diesen Kurs bereits gebucht.",
         course_full: "Der Kurs ist leider voll geworden.",
         course_not_found: "Dieser Kurs existiert nicht mehr.",
+        course_not_bookable: "Dieser Kurs ist abgesagt oder hat bereits begonnen.",
       };
       toast({
         title: "Buchung fehlgeschlagen",

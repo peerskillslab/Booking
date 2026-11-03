@@ -102,8 +102,6 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
 CREATE TABLE IF NOT EXISTS site_content (
   -- Bearbeitbare Inhalte der öffentlichen Infoseiten, ein JSON-Dokument pro Seite.
   -- Fehlt ein Eintrag, zeigt das Frontend die Standardtexte aus dem Code.
-  -- (Der Kommentar steht bewusst innerhalb der Anweisung: initDb() überspringt
-  -- Anweisungen, die mit einem Kommentar beginnen.)
   key           TEXT PRIMARY KEY,
   value         JSONB NOT NULL,
   updated_by    TEXT,

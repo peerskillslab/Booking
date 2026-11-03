@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,19 +21,26 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  isCancellationWindowOpen, isCoursePast, formatCourseDate,
+  isCancellationWindowOpen, isShortNoticeWindow, isCoursePast, isCourseBookable, formatCourseDate,
   MIN_PARTICIPANTS_THRESHOLD, CANCELLATION_WINDOW_HOURS,
 } from "@/lib/courseUtils";
 import { invalidateOnBookingCancel } from "@/lib/invalidationStrategy";
-import { useAuth } from "@/lib/AuthContext";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 import { queryKeys } from "@/lib/queryKeys";
 import { useToast } from "@/components/ui/use-toast";
 import ShortNoticeBanner from "@/components/courses/ShortNoticeBanner";
 import { StatusBadge } from "@/components/courses/CategoryBadge";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
-function BookingRow({ booking, course, status, action, lowParticipantsMessage, shortNoticeCourse }) {
+function BookingRow({ booking, course, status, action, lowParticipantsMessage, shortNoticeCourse, courseCancelled }) {
   return (
-    <Card className={lowParticipantsMessage ? "border-amber-300" : "border-border/60"}>
+    <Card className={courseCancelled ? "border-destructive/40" : lowParticipantsMessage ? "border-amber-300" : "border-border/60"}>
+      {courseCancelled && (
+        <div className="flex items-center gap-2 px-5 pt-3 pb-0 text-destructive text-sm font-medium">
+          <XCircle className="w-4 h-4 shrink-0" />
+          <span>Dieser Kurs wurde abgesagt und findet nicht statt.</span>
+        </div>
+      )}
       {lowParticipantsMessage && (
         <div className="flex items-center gap-2 px-5 pt-3 pb-0 text-amber-700 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -41,7 +48,7 @@ function BookingRow({ booking, course, status, action, lowParticipantsMessage, s
         </div>
       )}
       {/* Volle Breite über dem Inhalt: Kurs beginnt in < 72 h, Absage nur noch bei der Tutor:in */}
-      <ShortNoticeBanner course={shortNoticeCourse} fallbackEmail="info@peerskillslab.ch" className="mx-5 mt-4" />
+      <ShortNoticeBanner course={shortNoticeCourse} fallbackEmail={CONTACT_EMAIL} className="mx-5 mt-4" />
       <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -54,7 +61,8 @@ function BookingRow({ booking, course, status, action, lowParticipantsMessage, s
             >
               {booking.course_title}
             </Link>
-            <StatusBadge status={status} />
+            {/* Bei abgesagtem Kurs wäre «Bestätigt» irreführend, der rote Hinweis sagt es */}
+            {!courseCancelled && <StatusBadge status={status} />}
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             {course?.date && (
@@ -80,13 +88,7 @@ function BookingRow({ booking, course, status, action, lowParticipantsMessage, s
 export default function MyBookings() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user, isLoadingAuth } = useAuth();
-
-  useEffect(() => {
-    if (!isLoadingAuth && !user) {
-      peerskillslab.auth.redirectToLogin(window.location.href);
-    }
-  }, [user, isLoadingAuth]);
+  const { user } = useRequireAuth();
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: queryKeys.myBookings(user?.email),
@@ -94,10 +96,15 @@ export default function MyBookings() {
     enabled: !!user?.email,
   });
 
+  // Nur die gebuchten Kurse laden, nicht alle Kurse aller Zeiten
+  const courseIds = useMemo(
+    () => [...new Set(bookings.map((b) => b.course_id))].sort().join(","),
+    [bookings]
+  );
   const { data: courses = [] } = useQuery({
-    queryKey: queryKeys.myBookingsCourses(user?.email),
-    queryFn: () => peerskillslab.entities.Course.list("-date"),
-    enabled: !!user?.email,
+    queryKey: [...queryKeys.myBookingsCourses(user?.email), courseIds],
+    queryFn: () => peerskillslab.entities.Course.filter({ ids: courseIds }),
+    enabled: !!user?.email && !!courseIds,
   });
 
   const courseMap = useMemo(
@@ -210,7 +217,11 @@ export default function MyBookings() {
                   <AnimatePresence>
                     {upcomingBookings.map((booking, i) => {
                       const course = courseMap[booking.course_id];
+                      const courseCancelled = course?.status === "cancelled";
                       const canCancel = isCancellationWindowOpen(course);
+                      // In den letzten 72 h erklärt der Balken, dass die Abmeldung über
+                      // die Tutor:in läuft; ein ausgegrauter Knopf wäre doppelt.
+                      const shortNotice = isShortNoticeWindow(course);
                       // instructor_email wandert bei einem Tutorwechsel mit;
                       // created_by bleibt beim ursprünglichen Ersteller stehen
                       // und ist nur der Fallback für Altbestände.
@@ -227,7 +238,7 @@ export default function MyBookings() {
                         );
                       };
 
-                      const action = booking.status === "confirmed" ? (
+                      const action = booking.status === "confirmed" && !courseCancelled ? (
                         <div className="flex flex-col items-start sm:items-end gap-2">
                         <div className="flex gap-2 flex-wrap">
                           <Button
@@ -250,7 +261,7 @@ export default function MyBookings() {
                               Tutor kontaktieren
                             </Button>
                           )}
-                          <AlertDialog>
+                          {!shortNotice && <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button
                                 variant="ghost"
@@ -279,13 +290,13 @@ export default function MyBookings() {
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
-                          </AlertDialog>
+                          </AlertDialog>}
                         </div>
                         </div>
                       ) : null;
 
                       const lowParticipantsMessage =
-                        booking.status === "confirmed" &&
+                        booking.status === "confirmed" && !courseCancelled &&
                         course?.current_participants != null &&
                         course.current_participants < MIN_PARTICIPANTS_THRESHOLD
                           ? `Dieser Kurs findet möglicherweise nicht statt – aktuell nur ${course.current_participants} Teilnehmende angemeldet.`
@@ -304,7 +315,8 @@ export default function MyBookings() {
                             status={booking.status || "pending"}
                             action={action}
                             lowParticipantsMessage={lowParticipantsMessage}
-                            shortNoticeCourse={booking.status === "confirmed" ? course : null}
+                            shortNoticeCourse={booking.status === "confirmed" && !courseCancelled ? course : null}
+                            courseCancelled={courseCancelled}
                           />
                         </motion.div>
                       );
@@ -324,7 +336,8 @@ export default function MyBookings() {
                   <AnimatePresence>
                     {cancelledBookings.map((booking, i) => {
                       const course = courseMap[booking.course_id];
-                      const action = (
+                      // Nur anbieten, wenn der Kurs noch buchbar ist (nicht abgesagt, nicht begonnen)
+                      const action = isCourseBookable(course) && (
                         <Link to={createPageUrl("CourseDetail") + `?id=${booking.course_id}`}>
                           <Button
                             variant="outline"
@@ -349,6 +362,7 @@ export default function MyBookings() {
                             status="cancelled"
                             action={action}
                             lowParticipantsMessage={null}
+                            courseCancelled={course?.status === "cancelled"}
                           />
                         </motion.div>
                       );
@@ -367,7 +381,8 @@ export default function MyBookings() {
                 <div className="space-y-4">
                   <AnimatePresence>
                     {pastBookings.map((booking, i) => {
-                      const action = booking.status === "confirmed" ? (
+                      const courseCancelled = courseMap[booking.course_id]?.status === "cancelled";
+                      const action = booking.status === "confirmed" && !courseCancelled ? (
                         <Button
                           variant="ghost"
                           onClick={() => window.open("https://forms.cloud.microsoft/e/sZ3XW4XpMy", "_blank")}
@@ -392,6 +407,7 @@ export default function MyBookings() {
                             status={booking.status || "pending"}
                             action={action}
                             lowParticipantsMessage={null}
+                            courseCancelled={courseCancelled}
                           />
                         </motion.div>
                       );

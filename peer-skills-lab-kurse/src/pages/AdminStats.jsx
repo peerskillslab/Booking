@@ -20,11 +20,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/lib/AuthContext";
+import { useRequireAuth, isAdminUser } from "@/lib/useRequireAuth";
 import { queryKeys } from "@/lib/queryKeys";
 import { getInitials, downloadCsv } from "@/lib/utils";
 import { MIN_PARTICIPANTS_THRESHOLD, parseCourseDate } from "@/lib/courseUtils";
-
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -32,17 +31,8 @@ export default function AdminStats() {
   const autoSnapshotRef = React.useRef(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user, isLoadingAuth } = useAuth();
+  const { user } = useRequireAuth(isAdminUser);
   const currentUser = user?.role === "admin" ? user : null;
-
-  useEffect(() => {
-    if (isLoadingAuth) return;
-    if (!user) {
-      peerskillslab.auth.redirectToLogin(window.location.href);
-    } else if (user.role !== "admin") {
-      window.location.href = "/";
-    }
-  }, [user, isLoadingAuth]);
 
   const { data: courses = [], isLoading: coursesLoading } = useQuery({
     queryKey: queryKeys.statsCourses(),
@@ -73,7 +63,8 @@ export default function AdminStats() {
     if (snapshots.some((s) => s.month_label === lastMonthLabel)) return;
 
     const lastMonthCourses = courses.filter((c) => {
-      if (!c.date) return false;
+      // Abgesagte Kurse und Entwürfe zählen nicht
+      if (!c.date || c.status === "cancelled" || c.status === "draft") return false;
       const d = parseCourseDate(c.date);
       return d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
     });
@@ -115,7 +106,12 @@ export default function AdminStats() {
 
     peerskillslab.entities.MonthlyStatSnapshot.create(snapshotData)
       .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.statsSnapshots() }))
-      .catch(() => {
+      .catch((err) => {
+        // Eine andere Admin-Person hat ihn gerade angelegt: nur neu laden.
+        if (err?.status === 409) {
+          queryClient.invalidateQueries({ queryKey: queryKeys.statsSnapshots() });
+          return;
+        }
         // Beim nächsten Laden erneut versuchen statt still zu scheitern.
         autoSnapshotRef.current = false;
         toast({
@@ -133,7 +129,7 @@ export default function AdminStats() {
   // Aktuelle Monatsstatistik (nur Kurse dieses Monats)
   const now = new Date();
   const currentMonthCourses = courses.filter((c) => {
-    if (!c.date) return false;
+    if (!c.date || c.status === "cancelled" || c.status === "draft") return false;
     const d = parseCourseDate(c.date);
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });

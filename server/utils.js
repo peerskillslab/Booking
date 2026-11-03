@@ -78,4 +78,11 @@ function courseStart(dateStr, timeStr) {
   return new Date(ms);
 }
 
-module.exports = { newId, parseSort, buildWhere, buildUpdate, courseStart };
+// Nutzerdaten ohne Passwort-Hash für API-Antworten
+function sanitizeUser(user) {
+  if (!user) return null;
+  const { password_hash, ...safe } = user;
+  return safe;
+}
+
+module.exports = { newId, parseSort, buildWhere, buildUpdate, courseStart, sanitizeUser };

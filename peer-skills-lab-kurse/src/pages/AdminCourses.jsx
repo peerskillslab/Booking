@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import {
   invalidateOnCourseDelete,
 } from "@/lib/invalidationStrategy";
 import { queryKeys } from "@/lib/queryKeys";
-import { useAuth } from "@/lib/AuthContext";
+import { useRequireAuth, isAdminUser } from "@/lib/useRequireAuth";
 import AdminCourseRow from "@/components/admin/AdminCourseRow";
 
 const emptyCourse = {
@@ -35,7 +35,7 @@ const emptyCourse = {
 
 export default function AdminCourses() {
   const { toast } = useToast();
-  const { user, isLoadingAuth } = useAuth();
+  const { user, isLoadingAuth } = useRequireAuth(isAdminUser);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
@@ -48,11 +48,6 @@ export default function AdminCourses() {
   const [notifyDialogOpen, setNotifyDialogOpen] = useState(false);
   const [notifyData, setNotifyData] = useState(null);
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (isLoadingAuth) return;
-    if (!user) peerskillslab.auth.redirectToLogin(window.location.href);
-  }, [user, isLoadingAuth]);
 
   const { data: courses = [], isLoading } = useQuery({
     queryKey: queryKeys.adminCourses(),

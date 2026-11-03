@@ -1,12 +1,11 @@
 // @ts-nocheck
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarPlus, Trash2, Loader2, Users, Archive, Mail, Calendar } from "lucide-react";
 import { downloadICalFile } from "@/lib/icalGenerator";
-import { isPast, endOfDay } from "date-fns";
 import { motion } from "framer-motion";
 import BookingsDialog from "@/components/tutor/BookingsDialog";
 import AttendanceDialog from "@/components/tutor/AttendanceDialog";
@@ -15,9 +14,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { queryKeys } from "@/lib/queryKeys";
-import { useAuth } from "@/lib/AuthContext";
+import { useRequireAuth, isTutorOrAdmin } from "@/lib/useRequireAuth";
 import { CategoryBadge, StatusBadge } from "@/components/courses/CategoryBadge";
-import { formatCourseDate, parseCourseDate } from "@/lib/courseUtils";
+import { formatCourseDate, isCoursePast } from "@/lib/courseUtils";
 
 export default function MeineKurse() {
   const [bookingsDialogOpen, setBookingsDialogOpen] = useState(false);
@@ -25,29 +24,16 @@ export default function MeineKurse() {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
   const queryClient = useQueryClient();
-  const { user, isLoadingAuth } = useAuth();
-
-  useEffect(() => {
-    if (isLoadingAuth) return;
-    if (!user) {
-      peerskillslab.auth.redirectToLogin(window.location.href);
-    } else if (user.role !== "admin" && user.role !== "tutor") {
-      window.location.href = "/";
-    }
-  }, [user, isLoadingAuth]);
+  const { user } = useRequireAuth(isTutorOrAdmin);
 
   const { data: myCourses = [], isLoading } = useQuery({
     queryKey: queryKeys.tutorCourses(user?.email),
     queryFn: async () => {
-      const allCourses = await peerskillslab.entities.Course.list();
-      return allCourses
-        // Über die Adresse statt über den Anzeigenamen: so folgt "Meine Kurse"
-        // einem Tutorwechsel und übersteht eine Namensänderung im Profil.
-        .filter(c => (
-          c.instructor_email
-            ? c.instructor_email === user?.email
-            : c.instructor === (user?.full_name || user?.email)
-        ))
+      // Über die Adresse statt über den Anzeigenamen: so folgt "Meine Kurse"
+      // einem Tutorwechsel und übersteht eine Namensänderung im Profil. Der
+      // Server setzt instructor_email bei jedem Kurs (Migration in database.js).
+      const mine = await peerskillslab.entities.Course.filter({ instructor_email: user.email });
+      return mine
         .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
     },
     enabled: !!user,
@@ -79,14 +65,9 @@ export default function MeineKurse() {
 
   if (!user) return null;
 
-  // Kurse ohne Datum gelten als kommend; parseCourseDate schützt vor
-  // Invalid Date, das isPast() sonst still als "nicht vergangen" liest.
-  const isCourseOver = (c) => {
-    const d = parseCourseDate(c.date);
-    return d ? isPast(endOfDay(d)) : false;
-  };
-  const upcoming = myCourses.filter(c => !isCourseOver(c));
-  const past     = myCourses.filter(isCourseOver);
+  // Gleiche Regel wie überall: vergangen = Kursende vorbei, ohne Datum kommend
+  const upcoming = myCourses.filter(c => !isCoursePast(c));
+  const past     = myCourses.filter(isCoursePast);
 
   const renderCourseRow = (course, i, isPastCourse) => (
     <motion.div key={course.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
@@ -96,7 +77,7 @@ export default function MeineKurse() {
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className={`font-semibold truncate ${isPastCourse ? "text-muted-foreground" : ""}`}>{course.title}</span>
               <CategoryBadge category={course.category} />
-              <StatusBadge status={isPastCourse ? "completed" : course.status} />
+              <StatusBadge status={isPastCourse && course.status !== "cancelled" ? "completed" : course.status} />
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
               <span>{formatCourseDate(course.date)}</span>

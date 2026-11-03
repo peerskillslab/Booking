@@ -33,16 +33,6 @@ export function formatCourseDate(date, pattern = "dd.MM.yyyy") {
   return d ? format(d, pattern, { locale: de }) : "—";
 }
 
-export function getCourseStartDate(course) {
-  if (!course || !course.date) return null;
-
-  const d = parseCourseDate(course.date);
-  if (!d) return null;
-
-  const timeStr = course.time ? course.time.split(" - ")[0]?.trim() : null;
-  return { date: d, time: timeStr };
-}
-
 /**
  * Exact start of a course, date and time combined. The server derives the
  * cancellation deadline the same way, so both sides agree on the cutoff.
@@ -89,10 +79,41 @@ export function isShortNoticeWindow(course) {
 }
 
 /**
- * Check if a course has already started (is in the past)
+ * End of a course: the part after " - " in `time` ("10:00 - 12:00"), otherwise
+ * the end of the course day.
+ */
+export function getCourseEndDateTime(course) {
+  const d = parseCourseDate(course?.date);
+  if (!d) return null;
+
+  const endStr = course.time?.split(" - ")[1]?.trim();
+  const [h, m] = (endStr || "").split(":").map(Number);
+  if (Number.isInteger(h) && Number.isInteger(m)) d.setHours(h, m, 0, 0);
+  else d.setHours(23, 59, 59, 999);
+  return d;
+}
+
+/**
+ * Has the course already started? Booking is no longer possible from then on
+ * (the server checks the same).
+ */
+export function hasCourseStarted(course) {
+  const start = getCourseStartDateTime(course);
+  return !!start && start <= new Date();
+}
+
+/**
+ * Is the course over? The one rule for "vergangen" everywhere: course overview,
+ * Meine Buchungen, Meine Kurse, Meine Statistik. Courses without a date count as
+ * upcoming. (Before, each page had its own rule: a course from today already
+ * showed up as past at midnight in Meine Buchungen.)
  */
 export function isCoursePast(course) {
-  const start = getCourseStartDate(course);
-  if (!start?.date) return false;
-  return start.date <= new Date();
+  const end = getCourseEndDateTime(course);
+  return !!end && end <= new Date();
+}
+
+/** Can the course still be booked? Same rule as the server. */
+export function isCourseBookable(course) {
+  return course?.status === "active" && !hasCourseStarted(course);
 }

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import { Loader2, Users, User, Search, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { queryKeys } from "@/lib/queryKeys";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/lib/AuthContext";
+import { useRequireAuth, isAdminUser } from "@/lib/useRequireAuth";
 
 const ROLES = [
   { value: "student", label: "Student:in" },
@@ -24,21 +24,12 @@ const ROLES = [
 
 export default function AdminUsers() {
   const { toast } = useToast();
-  const { user, isLoadingAuth } = useAuth();
+  const { user } = useRequireAuth(isAdminUser);
   const currentUser = user?.role === "admin" ? user : null;
   const [search, setSearch] = useState("");
   const [pendingRoleChange, setPendingRoleChange] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (isLoadingAuth) return;
-    if (!user) {
-      peerskillslab.auth.redirectToLogin(window.location.href);
-    } else if (user.role !== "admin") {
-      window.location.href = "/";
-    }
-  }, [user, isLoadingAuth]);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: queryKeys.adminUsers(),

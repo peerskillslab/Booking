@@ -1,13 +1,13 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { peerskillslab } from '@/api/peerskillslabClient';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, BookOpen } from 'lucide-react';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 import { motion } from 'framer-motion';
-import { getCourseStartDate, isCoursePast } from '@/lib/courseUtils';
+import { getCourseStartDateTime, isCoursePast } from '@/lib/courseUtils';
 import { getCategoryOklch } from '@/lib/categoryStyles';
-import { useAuth } from '@/lib/AuthContext';
+import { useRequireAuth } from "@/lib/useRequireAuth";
 import { queryKeys } from '@/lib/queryKeys';
 
 function CourseIcon() {
@@ -21,13 +21,7 @@ function CourseIcon() {
 }
 
 export default function MyStats() {
-  const { user, isLoadingAuth } = useAuth();
-
-  useEffect(() => {
-    if (!isLoadingAuth && !user) {
-      peerskillslab.auth.redirectToLogin(window.location.href);
-    }
-  }, [user, isLoadingAuth]);
+  const { user } = useRequireAuth();
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: queryKeys.myStats(user?.email),
@@ -35,10 +29,15 @@ export default function MyStats() {
     enabled: !!user?.email,
   });
 
+  // Nur die gebuchten Kurse laden, nicht alle Kurse aller Zeiten
+  const courseIds = useMemo(
+    () => [...new Set(bookings.map((b) => b.course_id))].sort().join(','),
+    [bookings]
+  );
   const { data: courses = [] } = useQuery({
-    queryKey: queryKeys.myStatsCourses(user?.email),
-    queryFn: () => peerskillslab.entities.Course.list('-date'),
-    enabled: !!user?.email,
+    queryKey: [...queryKeys.myStatsCourses(user?.email), courseIds],
+    queryFn: () => peerskillslab.entities.Course.filter({ ids: courseIds }),
+    enabled: !!user?.email && !!courseIds,
   });
 
   const courseMap = useMemo(
@@ -68,17 +67,17 @@ export default function MyStats() {
   const lastCourse = useMemo(() => {
     if (attendedCourses.length === 0) return null;
     const sorted = [...attendedCourses].sort((a, b) => {
-      const dateA = getCourseStartDate(courseMap[a.course_id])?.date;
-      const dateB = getCourseStartDate(courseMap[b.course_id])?.date;
+      const dateA = getCourseStartDateTime(courseMap[a.course_id]);
+      const dateB = getCourseStartDateTime(courseMap[b.course_id]);
       return (dateB || new Date(0)) - (dateA || new Date(0));
     });
     const booking = sorted[0];
     const course = courseMap[booking.course_id];
-    const courseStart = getCourseStartDate(course);
+    const courseStart = getCourseStartDateTime(course);
     return {
       title: booking.course_title,
       category: course?.category || 'Sonstiges',
-      date: courseStart?.date ? format(courseStart.date, "dd.MM.yyyy '·' HH:mm 'Uhr'", { locale: de }) : '—',
+      date: courseStart ? format(courseStart, "dd.MM.yyyy '·' HH:mm 'Uhr'", { locale: de }) : '—',
     };
   }, [attendedCourses, courseMap]);
 
@@ -197,7 +196,7 @@ export default function MyStats() {
             <div className="psl-stats-card-list">
               {attendedCourses.map((booking) => {
                 const course = courseMap[booking.course_id];
-                const courseStart = getCourseStartDate(course);
+                const courseStart = getCourseStartDateTime(course);
                 const colors = getCategoryOklch(course?.category);
                 return (
                   <div key={booking.id} className="psl-stats-course-row">
@@ -209,7 +208,7 @@ export default function MyStats() {
                       <p className="psl-stats-course-meta">
                         {course?.category || 'Sonstiges'}
                         <span className="psl-stats-course-sep">·</span>
-                        {courseStart?.date ? format(courseStart.date, 'dd.MM.yyyy · HH:mm', { locale: de }) : '—'}
+                        {courseStart ? format(courseStart, 'dd.MM.yyyy · HH:mm', { locale: de }) : '—'}
                       </p>
                     </div>
                     <div className="psl-stats-badge">Besucht</div>

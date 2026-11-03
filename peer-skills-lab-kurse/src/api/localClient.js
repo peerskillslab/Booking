@@ -1,5 +1,5 @@
-// Local API adapter — presents the same interface as the Base44 SDK.
-// All pages and components continue to work without modification.
+// API-Client für das eigene Backend. Die Schnittstelle (entities.X.list/filter/…)
+// stammt noch aus der Base44-Zeit, damit die Seiten unverändert bleiben konnten.
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 const TOKEN_KEY = 'peerskills_access_token';
@@ -58,7 +58,6 @@ async function apiFetch(path, options = {}) {
 const ENTITY_PATHS = {
   Course:               'courses',
   Booking:              'bookings',
-  CourseFeedback:       'coursefeedbacks',
   User:                 'users',
   CourseTemplate:       'coursetemplates',
   MonthlyStatSnapshot:  'monthlystatshots',
@@ -105,12 +104,6 @@ function makeEntityClient(entityName) {
       return apiFetch(`/entities/${seg}/${id}`, { method: 'DELETE' });
     },
 
-    // subscribe() used by Home, TutorDashboard, AdminCourses.
-    // Real-time push replaced by React Query's refetchInterval.
-    // Returns a no-op unsubscribe so existing useEffect cleanups keep working.
-    subscribe(_callback) {
-      return () => {};
-    },
   };
 }
 
@@ -170,7 +163,6 @@ export const localClient = {
   entities: {
     Course:              makeEntityClient('Course'),
     Booking:             makeEntityClient('Booking'),
-    CourseFeedback:      makeEntityClient('CourseFeedback'),
     User:                makeEntityClient('User'),
     CourseTemplate:      makeEntityClient('CourseTemplate'),
     MonthlyStatSnapshot: makeEntityClient('MonthlyStatSnapshot'),
@@ -190,15 +182,6 @@ export const localClient = {
     },
     reset(key) {
       return apiFetch(`/content/${key}`, { method: 'DELETE' });
-    },
-  },
-
-  functions: {
-    invoke(name, args) {
-      return apiFetch(`/functions/${name}`, {
-        method: 'POST',
-        body: JSON.stringify(args),
-      });
     },
   },
 };

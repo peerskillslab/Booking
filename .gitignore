@@ -24,6 +24,5 @@ yarn-error.log*
 .deploy-azure.log
 .dev-pids
 
-# Frontend-Build im Server (nur im Docker-Image; Team-Fotos bleiben getrackt)
+# Frontend-Build im Server (entsteht nur im Docker-Image; Bilder liegen in peer-skills-lab-kurse/public)
 server/public/
-!server/public/team/

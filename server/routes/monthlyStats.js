@@ -40,6 +40,8 @@ router.post('/', requireRole('admin'), async (req, res) => {
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
+    // Unique-Index auf month_label: Snapshot für diesen Monat gibt es schon
+    if (err.code === '23505') return res.status(409).json({ error: 'snapshot_exists' });
     console.error(err);
     res.status(500).json({ error: 'Database error' });
   }

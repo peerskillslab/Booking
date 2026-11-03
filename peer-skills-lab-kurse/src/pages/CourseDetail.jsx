@@ -17,7 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/AuthContext";
 import { queryKeys } from "@/lib/queryKeys";
 import { invalidateOnBookingChange } from "@/lib/invalidationStrategy";
-import { formatCourseDate } from "@/lib/courseUtils";
+import { formatCourseDate, isCourseBookable } from "@/lib/courseUtils";
 import ShortNoticeBanner from "@/components/courses/ShortNoticeBanner";
 
 export default function CourseDetail() {
@@ -50,8 +50,15 @@ export default function CourseDetail() {
   const alreadyBooked = userBookings.length > 0;
   const spotsLeft = (course?.max_participants || 0) - (course?.current_participants || 0);
   const isFull = spotsLeft <= 0;
-  const isOwnCourse = user && course &&
-    user.full_name === course.instructor;
+  // Wie überall: Zuordnung über die Mailadresse der Tutor:in, nicht über den Namen
+  const isOwnCourse = !!(user && course &&
+    (course.instructor_email || course.created_by) === user.email);
+  const bookable = isCourseBookable(course);
+  const notBookableReason = course?.status === "cancelled"
+    ? "Dieser Kurs wurde abgesagt."
+    : course?.status === "draft"
+      ? "Dieser Kurs ist noch nicht veröffentlicht."
+      : "Dieser Kurs hat bereits begonnen oder ist vorbei.";
 
   if (isLoading) {
     return (
@@ -218,15 +225,19 @@ export default function CourseDetail() {
                     : `Noch ${spotsLeft} ${spotsLeft === 1 ? "Platz" : "Plätze"} frei`}
                 </p>
 
-                {!isOwnCourse && <ShortNoticeBanner course={course} />}
+                {!isOwnCourse && bookable && <ShortNoticeBanner course={course} />}
 
                 {isOwnCourse ? (
                    <div className="text-center p-3 bg-muted rounded-xl">
                      <p className="text-sm font-medium text-muted-foreground">Das ist dein Kurs</p>
                    </div>
-                 ) : alreadyBooked ? (
+                 ) : alreadyBooked && bookable ? (
                    <div className="text-center p-3 bg-primary/5 rounded-xl">
                      <p className="text-sm font-medium text-primary">✓ Du bist bereits angemeldet</p>
+                   </div>
+                 ) : !bookable ? (
+                   <div className="text-center p-3 bg-muted rounded-xl">
+                     <p className="text-sm font-medium text-muted-foreground">{notBookableReason}</p>
                    </div>
                  ) : (
                    <Button

@@ -10,6 +10,7 @@ try {
 console.log('Loading dependencies...');
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('path');
 
 console.log('Loading database module...');
@@ -47,6 +48,8 @@ const apiCors = cors({
   credentials: true,
 });
 
+// gzip für alle Antworten: JavaScript und JSON schrumpfen damit auf rund ein Viertel.
+app.use(compression());
 app.use(express.json());
 
 // --- Health Check (schnell, blockiert nicht) ---
@@ -56,7 +59,6 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth',                      apiCors, require('./routes/auth'));
 app.use('/api/entities/courses',          apiCors, require('./routes/courses'));
 app.use('/api/entities/bookings',         apiCors, require('./routes/bookings'));
-app.use('/api/entities/coursefeedbacks',  apiCors, require('./routes/courseFeedbacks'));
 app.use('/api/entities/users',            apiCors, require('./routes/users'));
 app.use('/api/entities/coursetemplates',  apiCors, require('./routes/courseTemplates'));
 app.use('/api/entities/monthlystatshots', apiCors, require('./routes/monthlyStats'));
@@ -85,8 +87,27 @@ console.log(`Frontend exists: ${require('fs').existsSync(DIST)}`);
 
 if (require('fs').existsSync(DIST)) {
   console.log('✓ Serving frontend from', DIST);
-  app.use(express.static(DIST));
-  app.get('*', (req, res) => res.sendFile(path.join(DIST, 'index.html')));
+  app.use(express.static(DIST, {
+    setHeaders(res, filePath) {
+      if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+        // Vite hängt einen Inhalts-Hash an den Dateinamen: Diese Dateien ändern sich nie.
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (filePath.endsWith('.html')) {
+        // index.html immer neu prüfen, damit ein Deploy sofort ankommt.
+        res.setHeader('Cache-Control', 'no-cache');
+      } else {
+        // Fotos, Logos: einen Tag zwischenspeichern.
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+      }
+    },
+  }));
+  // Seitenaufrufe der App bekommen index.html. Fehlende Dateien (z. B. ein
+  // gelöschtes Foto) antworten mit 404 statt mit der HTML-Seite.
+  app.get('*', (req, res) => {
+    if (path.extname(req.path)) return res.status(404).end();
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.join(DIST, 'index.html'));
+  });
 } else {
   console.warn('⚠ Frontend not found at', DIST);
   app.get('/', (req, res) => res.send('Frontend not found'));

@@ -2,6 +2,7 @@
 import React, { useMemo } from "react";
 import { useIsDarkTheme } from "@/lib/useTheme";
 import { Link } from "react-router-dom";
+import { useInfoTheme } from "@/components/info/infoTheme";
 import { useSiteContent } from "@/lib/siteContent";
 import { ABOUT_DEFAULTS } from "@/content/defaults";
 
@@ -41,20 +42,6 @@ const Icon = {
       <path d="M8 3.5v3M16 3.5v3" /><path d="M8 13.5l1.6 1.6L13 11.7" />
     </svg>
   ),
-};
-
-const CSS_LIGHT = {
-  "--bg": "oklch(98% 0.004 130)", "--ink": "oklch(20% 0.01 130)",
-  "--ink-2": "oklch(50% 0.01 130)", "--ink-3": "oklch(58% 0.01 130)",
-  "--surface": "#ffffff", "--line": "oklch(92% 0.006 130)", "--line-soft": "oklch(94% 0.006 130)",
-  "--sage": "#eef3e6", "--accent": "#466E0E",
-};
-
-const CSS_DARK = {
-  "--bg": "oklch(18% 0.006 130)", "--ink": "oklch(96% 0.004 130)",
-  "--ink-2": "oklch(74% 0.006 130)", "--ink-3": "oklch(62% 0.006 130)",
-  "--surface": "oklch(23% 0.006 130)", "--line": "oklch(30% 0.008 130)", "--line-soft": "oklch(36% 0.008 130)",
-  "--sage": "#3a4a38", "--accent": "#8FBF4E",
 };
 
 const A_LIGHT = { main: "#466E0E", soft: "#E3EAD0", ink: "#1F2C0A", deep: "#2F4A09" };
@@ -305,7 +292,7 @@ function JoinBlock({ c }) {
 export default function AboutUs() {
   const isDark = useIsDarkTheme();
 
-  const CSS = isDark ? CSS_DARK : CSS_LIGHT;
+  const { style: CSS } = useInfoTheme();
   const A = isDark ? A_DARK : A_LIGHT;
   const c = useSiteContent("about", ABOUT_DEFAULTS);
 

@@ -84,7 +84,7 @@ export const FAQ_DEFAULTS = {
         },
         {
           q: "Bis wann kann ich eine Buchung stornieren?",
-          a: "Buchungen können bis 72 Stunden vor Kursbeginn selbstständig storniert werden. Kurzfristige Absagen aus Krankheitsgründen oder aus anderen wichtigen Gründen müssen per E-Mail an info@peerskillslab.ch erfolgen.",
+          a: "Buchungen können bis 72 Stunden vor Kursbeginn selbstständig unter «Meine Buchungen» storniert werden. Danach meldest du dich bitte direkt per E-Mail bei der Tutor:in des Kurses ab, zum Beispiel bei Krankheit. Den Link dazu findest du beim Kurs.",
         },
         {
           q: "Was passiert, wenn ein Kurs ausgebucht ist?",
@@ -105,11 +105,11 @@ export const FAQ_DEFAULTS = {
       items: [
         {
           q: "Wie kann ich selbst Tutor:in werden?",
-          a: "Einmal im Jahr rekrutieren wir neue Peer-Tutor:innen über ein Bewerbungsverfahren mit Fragebogen und Motivationsschreiben. Alle Infos dazu findest du auf unserer Seite „Tutor:in werden“.",
+          a: "Einmal im Jahr rekrutieren wir neue Peer-Tutor:innen. Ablauf, Termine und Voraussetzungen findest du auf unserer Seite „Tutor:in werden“.",
         },
         {
           q: "Welche Voraussetzungen brauche ich, um zu unterrichten?",
-          a: "Du kannst dich ab bestandenem 3. Studienjahr bewerben. Fix dazu gehört die Teilnahme am eintägigen Didaktikkurs im März. Details siehe „Tutor:in werden“.",
+          a: "Alle Voraussetzungen stehen auf der Seite „Tutor:in werden“. Erfahrung im Tutorieren brauchst du keine.",
         },
         {
           q: "Wie kann ich dem Verein beitreten?",

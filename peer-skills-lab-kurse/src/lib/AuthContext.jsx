@@ -16,15 +16,11 @@ export const AuthProvider = ({ children }) => {
       const currentUser = await peerskillslab.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
-    } catch (error) {
+    } catch {
       setIsAuthenticated(false);
       setUser(null);
-      if (error.data?.type === 'user_not_registered') {
-        setAuthError({ type: 'user_not_registered', message: 'Nutzer nicht registriert' });
-      } else {
-        // 401, Netzwerkfehler, kein Token — alles → Login
-        setAuthError({ type: 'auth_required', message: 'Bitte einloggen' });
-      }
+      // 401, Netzwerkfehler, kein Token — alles → Login
+      setAuthError({ type: 'auth_required', message: 'Bitte einloggen' });
     } finally {
       setIsLoadingAuth(false);
     }

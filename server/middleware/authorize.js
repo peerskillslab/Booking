@@ -1,20 +1,26 @@
-// Row-Level Security — mirrors the rules in base44/entities/*.jsonc
+// Zugriffsregeln pro Datensatz (ursprünglich aus den Base44-Entitäten übernommen)
 
 function canReadCourse(user, course) {
   if (!course) return false;
   if (course.status === 'active') return true;
   if (!user) return false;
-  return course.created_by === user.email || user.role === 'admin';
+  // Abgesagte und abgeschlossene Kurse sehen alle Eingeloggten: Wer gebucht
+  // hat, soll in «Meine Buchungen» erkennen, dass der Kurs abgesagt wurde.
+  if (course.status === 'cancelled' || course.status === 'completed') return true;
+  // Entwürfe nur die Tutor:in, wer ihn angelegt hat, und Admins
+  return user.role === 'admin' || course.created_by === user.email || ownsCourse(user, course);
 }
 
+// Bearbeiten und Löschen darf die Tutor:in des Kurses (siehe ownsCourse), nicht
+// mehr die Person, die ihn ursprünglich angelegt hat. So gilt überall dieselbe
+// Regel wie in «Meine Kurse», auch nach einem Tutorwechsel.
 function canWriteCourse(user, course) {
   if (!user) return false;
-  return course.created_by === user.email || user.role === 'admin';
+  return user.role === 'admin' || ownsCourse(user, course);
 }
 
 function canDeleteCourse(user, course) {
-  if (!user) return false;
-  return course.created_by === user.email || user.role === 'admin';
+  return canWriteCourse(user, course);
 }
 
 // Tutor:in des Kurses. `course` darf {created_by, instructor_email, instructor}
@@ -57,25 +63,9 @@ function isAdmin(user) {
   return user && user.role === 'admin';
 }
 
-// `course` ist der zugehörige Kurs ({created_by, instructor}). Die Zuordnung
-// über den Kurs statt über feedback.instructor === user.full_name verhindert,
-// dass zwei gleichnamige Tutor:innen gegenseitig ihr Feedback lesen — und dass
-// jemand sich per PATCH /auth/me in einen fremden Namen umbenennt.
-function canReadFeedback(user, feedback, course) {
-  if (!user) return false;
-  if (user.role === 'admin') return true;
-  return ownsCourse(user, course);
-}
-
-function canWriteFeedback(user, feedback) {
-  if (!user) return false;
-  return feedback.user_email === user.email || user.role === 'admin';
-}
-
 module.exports = {
   canReadCourse, canWriteCourse, canDeleteCourse,
   ownsCourse, isAdmin,
   canReadBooking, canWriteBooking,
   canReadTemplate, canWriteTemplate,
-  canReadFeedback, canWriteFeedback,
 };

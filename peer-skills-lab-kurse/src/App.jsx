@@ -30,7 +30,6 @@ import TutorWerden from './pages/TutorWerden';
 import MyStats from './pages/MyStats';
 import Layout from './Layout.jsx';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { useInactivityLogout } from '@/lib/useInactivityLogout';
 import PublicLayout from './PublicLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -91,10 +90,6 @@ const AuthenticatedApp = () => {
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
       </div>
     );
-  }
-
-  if (authError?.type === 'user_not_registered') {
-    return <UserNotRegisteredError />;
   }
 
   if (authError?.type === 'auth_required') {

@@ -13,6 +13,11 @@ const ALLOWED_COLS = [
   'location','image_url','level','status','kurs_nr','created_by','created_date',
 ];
 const ALLOWED_SORT = ['created_date','date','title','status'];
+const COURSE_STATUSES = ['active', 'cancelled', 'completed', 'draft'];
+
+function isValidMax(n) {
+  return Number.isInteger(n) && n >= 1 && n <= 500;
+}
 
 // Die Kursliste ist öffentlich. Ohne Login gibt es keinen Grund, die
 // E-Mail-Adressen der Tutor:innen mitzuliefern.
@@ -51,6 +56,14 @@ router.get('/', async (req, res) => {
     const pool = getPool();
     const sort = parseSort(req.query.sort, ALLOWED_SORT) || { col: 'created_date', dir: 'DESC' };
     const { conditions, values } = buildWhere(req.query, ALLOWED_COLS);
+
+    // ids=a,b,c: nur diese Kurse (z. B. die gebuchten in «Meine Buchungen»),
+    // statt jedes Mal alle Kurse aller Zeiten zu laden.
+    if (typeof req.query.ids === 'string') {
+      const ids = req.query.ids.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 500);
+      values.push(ids);
+      conditions.push(`id = ANY($${values.length})`);
+    }
 
     let sql = `SELECT * FROM courses`;
     if (conditions.length) {
@@ -94,8 +107,11 @@ router.post('/', requireAuth, requireRole('tutor', 'admin'), async (req, res) =>
       return res.status(400).json({ error: 'title, category, date, max_participants sind erforderlich' });
     }
     const maxParticipants = Number(max_participants);
-    if (!Number.isInteger(maxParticipants) || maxParticipants < 1 || maxParticipants > 500) {
+    if (!isValidMax(maxParticipants)) {
       return res.status(400).json({ error: 'max_participants muss zwischen 1 und 500 liegen' });
+    }
+    if (rest.status !== undefined && !COURSE_STATUSES.includes(rest.status)) {
+      return res.status(400).json({ error: 'invalid_status' });
     }
 
     const id = newId();
@@ -150,6 +166,18 @@ router.patch('/:id', requireAuth, async (req, res) => {
     // zeigen lassen. Sie wird ausschliesslich aus der Nutzertabelle aufgelöst,
     // und zwar immer dann, wenn die Tutor:in wechselt.
     const patch = { ...req.body };
+    if (patch.status !== undefined && !COURSE_STATUSES.includes(patch.status)) {
+      return res.status(400).json({ error: 'invalid_status' });
+    }
+    if (patch.max_participants !== undefined) {
+      patch.max_participants = Number(patch.max_participants);
+      if (!isValidMax(patch.max_participants)) {
+        return res.status(400).json({ error: 'max_participants muss zwischen 1 und 500 liegen' });
+      }
+      if (patch.max_participants < course.current_participants) {
+        return res.status(400).json({ error: 'max_below_participants' });
+      }
+    }
     const requestedEmail = patch.instructor_email;
     delete patch.instructor_email;
 
@@ -205,7 +233,19 @@ router.delete('/:id', requireAuth, async (req, res) => {
         await client.query('COMMIT');
         res.json({ ok: true, emails, courseTitle: course.title, courseDate: course.date });
       } else {
-        // Tutor: Delete fails if bookings exist (foreign key constraint)
+        // Tutor:innen dürfen nur Kurse ohne aktive Anmeldung löschen. Stornierte
+        // Buchungen blockierten das Löschen bisher über den Fremdschlüssel,
+        // obwohl der Kurs 0 Teilnehmende zeigte.
+        const active = await client.query(
+          `SELECT 1 FROM bookings WHERE course_id = $1 AND status <> 'cancelled' LIMIT 1`,
+          [req.params.id]
+        );
+        if (active.rows.length > 0) {
+          await client.query('ROLLBACK');
+          return res.status(409).json({ error: 'course_has_bookings' });
+        }
+        await client.query('DELETE FROM bookings WHERE course_id = $1', [req.params.id]);
+        await client.query('DELETE FROM course_feedbacks WHERE course_id = $1', [req.params.id]);
         await client.query('DELETE FROM courses WHERE id = $1', [req.params.id]);
         await client.query('COMMIT');
         res.json({ ok: true });

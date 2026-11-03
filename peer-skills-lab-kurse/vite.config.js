@@ -23,7 +23,9 @@ export default defineConfig({
           // Vendor libraries into separate chunks
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-query': ['@tanstack/react-query'],
-          'vendor-charts': ['recharts', 'framer-motion'],
+          // recharts wird nur in der Admin-Statistik gebraucht und landet dort
+          // im eigenen, nachgeladenen Paket. framer-motion nutzt jede Seite.
+          'vendor-motion': ['framer-motion'],
         },
       },
     },

@@ -4,3 +4,4 @@
 **/dist
 server/db/peerskills.db
 .git
+server/public

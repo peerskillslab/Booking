@@ -7,6 +7,7 @@ import CourseCalendar from "@/components/courses/CourseCalendar";
 import { Loader2 } from "lucide-react";
 import { getCategoryOklch } from "@/lib/categoryStyles";
 import { queryKeys } from "@/lib/queryKeys";
+import { isCoursePast } from "@/lib/courseUtils";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,10 +18,10 @@ export default function Home() {
   const { data: courses = [], isLoading } = useQuery({
     queryKey: queryKeys.courses(),
     queryFn: async () => {
-      const allCourses = await peerskillslab.entities.Course.list();
-      const today = new Date().toISOString().slice(0, 10);
-      return allCourses
-        .filter(c => c.status === "active" && (!c.date || c.date >= today))
+      // Nur aktive Kurse vom Server holen; vergangen = Kursende vorbei (isCoursePast)
+      const activeCourses = await peerskillslab.entities.Course.filter({ status: "active" });
+      return activeCourses
+        .filter(c => !isCoursePast(c))
         .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
     },
   });

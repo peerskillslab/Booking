@@ -13,7 +13,7 @@ import {
 import { Loader2, FileText, ArrowUp, ArrowDown, Trash2, Plus, ExternalLink, ChevronDown } from "lucide-react";
 import ContentPreview from "@/components/admin/ContentPreview";
 import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/lib/AuthContext";
+import { useRequireAuth, canEditContent } from "@/lib/useRequireAuth";
 import { siteContentKey, mergeContent } from "@/lib/siteContent";
 import { TUTOR_WERDEN_DEFAULTS, FAQ_DEFAULTS, ABOUT_DEFAULTS } from "@/content/defaults";
 
@@ -312,7 +312,7 @@ function Field({ field, value, onChange, depth }) {
 
 export default function AdminContent() {
   const { toast } = useToast();
-  const { user, isLoadingAuth } = useAuth();
+  const { user } = useRequireAuth(canEditContent);
   // Admin-Rolle allein reicht nicht: Es braucht die Zusatzberechtigung «Inhalte bearbeiten».
   const isAdmin = user?.role === "admin" && !!user?.can_edit_content;
   const queryClient = useQueryClient();
@@ -325,15 +325,6 @@ export default function AdminContent() {
 
   const page = PAGES.find((p) => p.key === pageKey);
   const sections = useMemo(() => groupSections(page.fields), [page]);
-
-  useEffect(() => {
-    if (isLoadingAuth) return;
-    if (!user) {
-      peerskillslab.auth.redirectToLogin(window.location.href);
-    } else if (user.role !== "admin" || !user.can_edit_content) {
-      window.location.href = "/";
-    }
-  }, [user, isLoadingAuth]);
 
   const { data, isLoading } = useQuery({
     queryKey: siteContentKey(pageKey),

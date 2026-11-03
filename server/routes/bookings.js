@@ -23,6 +23,13 @@ function courseContext(row) {
   };
 }
 
+// Buchbar ist ein Kurs nur, solange er aktiv ist und noch nicht begonnen hat.
+function isBookable(course) {
+  if (course.status !== 'active') return false;
+  const start = courseStart(course.date, course.time);
+  return !start || start > new Date();
+}
+
 // Die Join-Spalten gehören nicht in die API-Antwort.
 function stripCourseContext(row) {
   const { course_created_by, course_instructor, course_instructor_email, ...rest } = row;
@@ -43,6 +50,17 @@ router.get('/', requireAuth, async (req, res) => {
       FROM bookings b
       LEFT JOIN users u   ON b.user_email = u.email
       LEFT JOIN courses c ON b.course_id  = c.id`;
+    // Nicht-Admins sehen nur eigene Buchungen und die ihrer Kurse. Diese
+    // Vorauswahl in SQL erspart es, für jede Anfrage die ganze Tabelle zu
+    // lesen; die genaue Prüfung macht danach weiterhin canReadBooking.
+    if (req.user.role !== 'admin') {
+      values.push(req.user.email);
+      const me = `$${values.length}`;
+      values.push(req.user.full_name || '');
+      const name = `$${values.length}`;
+      conditions.push(`(b.user_email = ${me} OR c.instructor_email = ${me}
+        OR (c.instructor_email IS NULL AND (c.created_by = ${me} OR c.instructor = ${name})))`);
+    }
     if (conditions.length) {
       sql += ` WHERE ${conditions.join(' AND ')}`;
     }
@@ -105,7 +123,7 @@ router.post('/', requireAuth, async (req, res) => {
     await client.query('BEGIN');
 
     const courseRes = await client.query(
-      'SELECT current_participants, max_participants FROM courses WHERE id = $1 FOR UPDATE',
+      'SELECT title, status, date, time, current_participants, max_participants FROM courses WHERE id = $1 FOR UPDATE',
       [course_id]
     );
     if (!courseRes.rows[0]) {
@@ -113,6 +131,12 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'course_not_found' });
     }
     const course = courseRes.rows[0];
+    // Abgesagte, nicht veröffentlichte oder bereits begonnene Kurse liessen
+    // sich bisher trotzdem buchen.
+    if (!isBookable(course)) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'course_not_bookable' });
+    }
     if (course.current_participants >= course.max_participants) {
       await client.query('ROLLBACK');
       return res.status(409).json({ error: 'course_full' });
@@ -124,7 +148,7 @@ router.post('/', requireAuth, async (req, res) => {
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       RETURNING *
     `, [
-      id, course_id, course_title, user_email,
+      id, course_id, course.title || course_title, user_email,
       req.body.user_name || null,
       status,
       req.body.notes || null,
@@ -207,13 +231,17 @@ router.patch('/:id', requireAuth, async (req, res) => {
       // wie beim Anlegen, mit Row-Lock gegen parallele Buchungen.
       if (updates.status === 'confirmed' && booking.status !== 'confirmed') {
         const courseRes = await client.query(
-          'SELECT current_participants, max_participants FROM courses WHERE id = $1 FOR UPDATE',
+          'SELECT status, date, time, current_participants, max_participants FROM courses WHERE id = $1 FOR UPDATE',
           [booking.course_id]
         );
         const course = courseRes.rows[0];
         if (!course) {
           await client.query('ROLLBACK');
           return res.status(404).json({ error: 'course_not_found' });
+        }
+        if (!isBookable(course) && !isAdmin) {
+          await client.query('ROLLBACK');
+          return res.status(409).json({ error: 'course_not_bookable' });
         }
         if (course.current_participants >= course.max_participants) {
           await client.query('ROLLBACK');

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,8 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { queryKeys } from "@/lib/queryKeys";
 import { CategoryBadge } from "@/components/courses/CategoryBadge";
-import { useAuth } from "@/lib/AuthContext";
+import { useRequireAuth, isTutorOrAdmin } from "@/lib/useRequireAuth";
 import { CATEGORY_DEFAULTS } from "@/lib/courseConstants";
-
 
 export default function TutorDashboard() {
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
@@ -26,16 +25,7 @@ export default function TutorDashboard() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user, isLoadingAuth } = useAuth();
-
-  useEffect(() => {
-    if (isLoadingAuth) return;
-    if (!user) {
-      peerskillslab.auth.redirectToLogin(window.location.href);
-    } else if (user.role !== "admin" && user.role !== "tutor") {
-      window.location.href = "/";
-    }
-  }, [user, isLoadingAuth]);
+  const { user } = useRequireAuth(isTutorOrAdmin);
 
   const { data: templates = [], isLoading: templatesLoading } = useQuery({
     queryKey: queryKeys.courseTemplates(),

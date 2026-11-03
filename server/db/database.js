@@ -5,6 +5,21 @@ const path = require('path');
 const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://localhost/peerskills';
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
+// Erlaubte Werte für courses.level und course_templates.level
+const LEVELS = [
+  'Alle Studienjahre', 'ab 1. Studienjahr', 'ab 2. Studienjahr', 'ab 3. Studienjahr',
+  'ab 4. Studienjahr', 'ab 5. Studienjahr', 'ab 6. Studienjahr',
+];
+const LEVELS_SQL = LEVELS.map((l) => `'${l}'`).join(',');
+
+// Alte Level-Bezeichnungen aus der Base44-Zeit → heutige Werte
+const LEGACY_LEVELS = {
+  'Alle Level': 'Alle Studienjahre',
+  'Anfänger': 'ab 1. Studienjahr',
+  'Fortgeschritten': 'ab 3. Studienjahr',
+  'Experte': 'ab 5. Studienjahr',
+};
+
 let pool;
 let initialized = false;
 
@@ -36,61 +51,65 @@ function initDb() {
       client.release();
 
       const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
+      // Kommentarzeilen entfernen statt ganze Anweisungen zu überspringen:
+      // Vorher fiel jede Anweisung weg, vor der ein Kommentar stand.
       const statements = schema
         .split(';')
-        .map(s => s.trim())
-        .filter(s => s && !s.startsWith('--'));
+        .map(s => s.split('\n').filter(line => !line.trim().startsWith('--')).join('\n').trim())
+        .filter(Boolean);
 
       for (const statement of statements) {
         await pool.query(statement);
       }
       console.log('✓ Database schema initialized');
 
-      // First: migrate old level values to new study year values (including NULL)
-      try {
-        await pool.query("UPDATE courses SET level = 'Alle Studienjahre' WHERE level IS NULL OR level NOT IN ('Alle Studienjahre','ab 1. Studienjahr','ab 2. Studienjahr','ab 3. Studienjahr','ab 4. Studienjahr','ab 5. Studienjahr','ab 6. Studienjahr')");
-        await pool.query("UPDATE courses SET level = 'Alle Studienjahre' WHERE level = 'Alle Level'");
-        await pool.query("UPDATE courses SET level = 'ab 1. Studienjahr' WHERE level = 'Anfänger'");
-        await pool.query("UPDATE courses SET level = 'ab 3. Studienjahr' WHERE level = 'Fortgeschritten'");
-        await pool.query("UPDATE courses SET level = 'ab 5. Studienjahr' WHERE level = 'Experte'");
-        await pool.query("UPDATE course_templates SET level = 'Alle Studienjahre' WHERE level IS NULL OR level NOT IN ('Alle Studienjahre','ab 1. Studienjahr','ab 2. Studienjahr','ab 3. Studienjahr','ab 4. Studienjahr','ab 5. Studienjahr','ab 6. Studienjahr')");
-        await pool.query("UPDATE course_templates SET level = 'Alle Studienjahre' WHERE level = 'Alle Level'");
-        await pool.query("UPDATE course_templates SET level = 'ab 1. Studienjahr' WHERE level = 'Anfänger'");
-        await pool.query("UPDATE course_templates SET level = 'ab 3. Studienjahr' WHERE level = 'Fortgeschritten'");
-        await pool.query("UPDATE course_templates SET level = 'ab 5. Studienjahr' WHERE level = 'Experte'");
-        console.log('✓ Level values fixed');
-      } catch (err) {
-        console.log('⚠ Level migration failed:', err.message);
-      }
+      // Level-Werte und CHECK-Constraints nur anfassen, wenn noch Altbestände da
+      // sind. Vorher liefen bei jedem Start zehn UPDATEs und die Constraints
+      // wurden entfernt und neu angelegt (prüft jedes Mal die ganze Tabelle).
+      for (const table of ['courses', 'course_templates']) {
+        try {
+          const stale = await pool.query(
+            `SELECT 1 FROM ${table} WHERE level IS NULL OR level NOT IN (${LEVELS_SQL}) LIMIT 1`
+          );
+          if (stale.rows.length > 0) {
+            for (const [from, to] of Object.entries(LEGACY_LEVELS)) {
+              await pool.query(`UPDATE ${table} SET level = $1 WHERE level = $2`, [to, from]);
+            }
+            await pool.query(
+              `UPDATE ${table} SET level = 'Alle Studienjahre' WHERE level IS NULL OR level NOT IN (${LEVELS_SQL})`
+            );
+            console.log(`✓ ${table}: Level-Werte bereinigt`);
+          }
 
-      // Second: Now update the CHECK constraints
-      try {
-        await pool.query(`ALTER TABLE courses DROP CONSTRAINT IF EXISTS courses_level_check CASCADE`);
-        await pool.query(`ALTER TABLE courses ADD CONSTRAINT courses_level_check
-          CHECK (level IN ('Alle Studienjahre','ab 1. Studienjahr','ab 2. Studienjahr','ab 3. Studienjahr','ab 4. Studienjahr','ab 5. Studienjahr','ab 6. Studienjahr'))`);
-        console.log('✓ courses CHECK constraint updated');
-      } catch (err) {
-        console.log('⚠ courses CHECK constraint update failed:', err.message);
-      }
-
-      try {
-        await pool.query(`ALTER TABLE course_templates DROP CONSTRAINT IF EXISTS course_templates_level_check CASCADE`);
-        await pool.query(`ALTER TABLE course_templates ADD CONSTRAINT course_templates_level_check
-          CHECK (level IN ('Alle Studienjahre','ab 1. Studienjahr','ab 2. Studienjahr','ab 3. Studienjahr','ab 4. Studienjahr','ab 5. Studienjahr','ab 6. Studienjahr'))`);
-        console.log('✓ course_templates CHECK constraint updated');
-      } catch (err) {
-        console.log('⚠ course_templates CHECK constraint update failed:', err.message);
+          const def = await pool.query(
+            `SELECT pg_get_constraintdef(oid) AS def FROM pg_constraint WHERE conname = $1`,
+            [`${table}_level_check`]
+          );
+          const current = def.rows[0]?.def || '';
+          if (!LEVELS.every((l) => current.includes(l))) {
+            await pool.query(`ALTER TABLE ${table} DROP CONSTRAINT IF EXISTS ${table}_level_check`);
+            await pool.query(`ALTER TABLE ${table} ADD CONSTRAINT ${table}_level_check CHECK (level IN (${LEVELS_SQL}))`);
+            console.log(`✓ ${table}: CHECK constraint aktualisiert`);
+          }
+        } catch (err) {
+          console.log(`⚠ ${table} level migration failed:`, err.message);
+        }
       }
 
       // Nutzer:innen löschen scheiterte mit FK-Verletzung, sobald sie je ein
       // Passwort zurückgesetzt hatten.
       try {
-        await pool.query(`ALTER TABLE password_reset_tokens
-          DROP CONSTRAINT IF EXISTS password_reset_tokens_user_id_fkey`);
-        await pool.query(`ALTER TABLE password_reset_tokens
-          ADD CONSTRAINT password_reset_tokens_user_id_fkey
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`);
-        console.log('✓ password_reset_tokens FK auf ON DELETE CASCADE gesetzt');
+        const fk = await pool.query(
+          `SELECT confdeltype FROM pg_constraint WHERE conname = 'password_reset_tokens_user_id_fkey'`
+        );
+        if (fk.rows[0]?.confdeltype !== 'c') {
+          await pool.query(`ALTER TABLE password_reset_tokens
+            DROP CONSTRAINT IF EXISTS password_reset_tokens_user_id_fkey`);
+          await pool.query(`ALTER TABLE password_reset_tokens
+            ADD CONSTRAINT password_reset_tokens_user_id_fkey
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`);
+          console.log('✓ password_reset_tokens FK auf ON DELETE CASCADE gesetzt');
+        }
       } catch (err) {
         console.log('⚠ password_reset_tokens FK migration failed:', err.message);
       }
@@ -156,6 +175,23 @@ function initDb() {
         }
       } catch (err) {
         console.log('⚠ can_edit_content migration failed:', err.message);
+      }
+
+      // Monats-Snapshots: einer pro Monat. Öffnen zwei Admins die Statistik
+      // gleichzeitig, entstand er bisher doppelt.
+      try {
+        const dupes = await pool.query(`
+          SELECT month_label FROM monthly_stat_snapshots GROUP BY month_label HAVING COUNT(*) > 1
+        `);
+        if (dupes.rows.length > 0) {
+          console.warn('⚠ Doppelte Monats-Snapshots, Unique-Index nicht angelegt:',
+            dupes.rows.map(r => r.month_label).join(', '));
+        } else {
+          await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_snapshots_month
+            ON monthly_stat_snapshots(month_label)`);
+        }
+      } catch (err) {
+        console.log('⚠ snapshot unique index migration failed:', err.message);
       }
 
       console.log('✓ Migrations applied');
