@@ -64,7 +64,29 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
       }
     }
 
-    const { setClause, values, nextParam } = buildUpdate(req.body, ['role', 'full_name', 'studienjahr']);
+    // Zusatzberechtigung «Inhalte bearbeiten»: Nur wer sie selbst hat, darf sie
+    // vergeben oder entziehen, sonst könnte sich jede Admin-Person selbst
+    // berechtigen. Sie gilt nur für Admins und entfällt mit der Admin-Rolle.
+    const body = { ...req.body };
+    if (body.can_edit_content !== undefined) {
+      if (typeof body.can_edit_content !== 'boolean') {
+        return res.status(400).json({ error: 'invalid_value' });
+      }
+      if (!req.user.can_edit_content) return res.status(403).json({ error: 'forbidden' });
+      if (user.role !== 'admin') return res.status(400).json({ error: 'not_admin' });
+    }
+    if (body.role !== undefined && body.role !== 'admin') body.can_edit_content = false;
+
+    // Mindestens eine berechtigte Person muss bleiben, sonst kann niemand mehr
+    // Inhalte bearbeiten oder die Berechtigung neu vergeben.
+    if (body.can_edit_content === false && user.can_edit_content) {
+      const holders = await pool.query(
+        `SELECT COUNT(*)::int AS n FROM users WHERE role = 'admin' AND can_edit_content = TRUE`
+      );
+      if (holders.rows[0].n <= 1) return res.status(409).json({ error: 'last_content_editor' });
+    }
+
+    const { setClause, values, nextParam } = buildUpdate(body, ['role', 'full_name', 'studienjahr', 'can_edit_content']);
     if (!setClause) return res.json(sanitize(user));
     values.push(req.params.id);
 

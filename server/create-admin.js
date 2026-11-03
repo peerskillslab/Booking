@@ -20,12 +20,12 @@ if (!email || !password) {
     const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.rows.length) {
       // Update existing user to admin
-      await pool.query("UPDATE users SET role = 'admin', full_name = $1 WHERE email = $2", [fullName || '', email]);
+      await pool.query("UPDATE users SET role = 'admin', can_edit_content = TRUE, full_name = $1 WHERE email = $2", [fullName || '', email]);
       console.log(`✓ Nutzer ${email} auf Admin gesetzt.`);
     } else {
       const hash = bcrypt.hashSync(password, 10);
       await pool.query(
-        'INSERT INTO users (id, email, password_hash, full_name, role, created_date) VALUES ($1, $2, $3, $4, $5, $6)',
+        'INSERT INTO users (id, email, password_hash, full_name, role, can_edit_content, created_date) VALUES ($1, $2, $3, $4, $5, TRUE, $6)',
         [randomUUID(), email, hash, fullName || '', 'admin', new Date().toISOString()]
       );
       console.log(`✓ Admin-Nutzer ${email} angelegt.`);

@@ -4,6 +4,7 @@ import { peerskillslab } from "@/api/peerskillslabClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -59,6 +60,27 @@ export default function AdminUsers() {
         description: err.data?.error || "Bitte versuche es später erneut.",
         variant: "destructive",
         duration: 3000
+      });
+    },
+  });
+
+  // Zusatzberechtigung «Inhalte bearbeiten»: Nur wer sie selbst hat, darf sie vergeben.
+  const contentEditorMutation = useMutation({
+    mutationFn: ({ id, value }) => peerskillslab.entities.User.update(id, { can_edit_content: value }),
+    onSuccess: (_data, { value }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminUsers() });
+      toast({ title: value ? "Berechtigung erteilt" : "Berechtigung entzogen", duration: 2000 });
+    },
+    onError: (err) => {
+      toast({
+        title: "Fehler beim Ändern der Berechtigung",
+        description: err.data?.error === "last_content_editor"
+          ? "Mindestens eine Person muss Inhalte bearbeiten dürfen."
+          : err.status === 403
+            ? "Nur Personen mit dieser Berechtigung dürfen sie vergeben."
+            : "Bitte versuche es später erneut.",
+        variant: "destructive",
+        duration: 4000,
       });
     },
   });
@@ -174,6 +196,21 @@ export default function AdminUsers() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 flex-wrap">
+                                {u.role === "admin" && (
+                                  <label
+                                    className="flex items-center gap-1.5 text-xs text-muted-foreground mr-1"
+                                    title={currentUser.can_edit_content
+                                      ? "Darf die Texte der Infoseiten bearbeiten"
+                                      : "Nur Personen mit dieser Berechtigung dürfen sie vergeben"}
+                                  >
+                                    <Checkbox
+                                      checked={!!u.can_edit_content}
+                                      disabled={!currentUser.can_edit_content || u.id === currentUser.id || contentEditorMutation.isPending}
+                                      onCheckedChange={(v) => contentEditorMutation.mutate({ id: u.id, value: v === true })}
+                                    />
+                                    Inhalte bearbeiten
+                                  </label>
+                                )}
                                 <Select
                                   value={u.role || "student"}
                                   onValueChange={(newRole) => {

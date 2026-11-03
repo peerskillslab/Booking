@@ -1,6 +1,9 @@
 // @ts-nocheck
 import React, { useState } from "react";
 import { useIsDarkTheme } from "@/lib/useTheme";
+import { useSiteContent } from "@/lib/siteContent";
+import { linkify } from "@/lib/linkify";
+import { FAQ_DEFAULTS } from "@/content/defaults";
 
 const CSS_LIGHT = {
   "--bg": "oklch(98% 0.004 130)", "--ink": "oklch(20% 0.01 130)", "--ink-2": "oklch(50% 0.01 130)", "--ink-3": "oklch(58% 0.01 130)",
@@ -13,68 +16,6 @@ const CSS_DARK = {
   "--surface": "oklch(23% 0.006 130)", "--line": "oklch(30% 0.008 130)", "--line-soft": "oklch(36% 0.008 130)",
   "--sage": "#3a4a38", "--accent": "#8FBF4E",
 };
-
-const FAQS = [
-  {
-    category: "Allgemeines",
-    items: [
-      {
-        q: "Was ist das Peer Skills Lab?",
-        a: "Wir sind ein Verein von Medizinstudierenden, bei dem du praktische Fertigkeiten mithilfe von Peers erarbeiten kannst. Zusätzlich setzen wir uns für eine bessere Lehre an der Fakultät ein und versuchen, gleiche Anstellungsbedingungen für alle studierenden Tutor:innen zu erreichen.",
-      },
-      {
-        q: "Für wen sind die Kurse gedacht?",
-        a: "Die Kurse richten sich an alle Studierenden der Humanmedizin in Bern. Du darfst unsere Kurse besuchen, sobald du den kurrikulären Kurs der Universität besucht hast. Dies gilt nicht für ausserkurriculäre Themen wie die fortgeschrittenen Nahttechniken der YSSA.",
-      },
-      {
-        q: "Ist das Peer Skills Lab ein offizieller Teil des Studiums?",
-        a: "Nein, wir sind ein weitgehend unabhängiger Verein. Unsere Kurse sind alle freiwillig. Einige kurriculäre Kurse werden jedoch von unseren Tutor:innen unterrichtet.",
-      },
-    ],
-  },
-  {
-    category: "Kurse & Buchungen",
-    items: [
-      {
-        q: "Wie buche ich einen Kurs?",
-        a: "Registriere dich auf unserer Webseite und wähle einen Kurs den du buchen möchtest. So einfach ist es.",
-      },
-      {
-        q: "Bis wann kann ich eine Buchung stornieren?",
-        a: "Buchungen können bis 72 Stunden vor Kursbeginn selbstständig storniert werden. Kurzfristige Absagen aus Krankheitsgründen oder aus anderen wichtigen Gründen müssen per E-Mail an info@peerskillslab.ch erfolgen.",
-      },
-      {
-        q: "Was passiert, wenn ein Kurs ausgebucht ist?",
-        a: "Die Kurse werden wiederholt angeboten. Falls ein Kurs, der dich interessiert, ausgebucht ist, warte, bis eine unserer Tutor:innen oder Tutoren den Kurs erneut ausschreibt.",
-      },
-      {
-        q: "Wie viel kosten die Kurse?",
-        a: "Alle unsere Kurse sind für Studierende kostenlos.",
-      },
-      {
-        q: "Wo finden die Kurse statt?",
-        a: "Die Kurse finden im BISS der Uni Ziegler statt. Sollten sie an einem anderen Ort stattfinden, werden unsere Tutor:innen dies kommunizieren.",
-      },
-    ],
-  },
-  {
-    category: "Tutor:innen & Mitmachen",
-    items: [
-      {
-        q: "Wie kann ich selbst Tutor:in werden?",
-        a: "Einmal im Jahr rekrutieren wir neue Peer-Tutor:innen über ein Bewerbungsverfahren mit Fragebogen und Motivationsschreiben. Alle Infos dazu findest du auf unserer Seite „Tutor:in werden“.",
-      },
-      {
-        q: "Welche Voraussetzungen brauche ich, um zu unterrichten?",
-        a: "Du kannst dich ab bestandenem 3. Studienjahr bewerben. Fix dazu gehört die Teilnahme am eintägigen Didaktikkurs im März. Details siehe „Tutor:in werden“.",
-      },
-      {
-        q: "Wie kann ich dem Verein beitreten?",
-        a: "Im Moment sind nur Tutor:innen Mitglieder unseres Vereins.",
-      },
-    ],
-  },
-];
 
 function AccordionItem({ q, a, isDark }) {
   const [open, setOpen] = useState(false);
@@ -132,7 +73,7 @@ function AccordionItem({ q, a, isDark }) {
       </button>
       {open && (
         <div style={{ paddingBottom: 18, fontSize: 15, color: "var(--ink-2)", lineHeight: 1.6, paddingRight: 40 }}>
-          {a}
+          {linkify(a)}
         </div>
       )}
     </div>
@@ -142,6 +83,7 @@ function AccordionItem({ q, a, isDark }) {
 export default function FAQ() {
   const isDark = useIsDarkTheme();
   const CSS = isDark ? CSS_DARK : CSS_LIGHT;
+  const content = useSiteContent("faq", FAQ_DEFAULTS);
 
   return (
     <div style={CSS}>
@@ -164,18 +106,18 @@ export default function FAQ() {
         </h1>
 
         <p style={{ fontSize: 17, color: "var(--ink-2)", lineHeight: 1.5, margin: "0 0 56px", maxWidth: 520 }}>
-          Hier findest du Antworten auf die häufigsten Fragen rund um das Peer Skills Lab, unsere Kurse und wie du mitmachen kannst.
+          {linkify(content.intro)}
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
-          {FAQS.map((section) => (
-            <div key={section.category}>
+          {content.sections.map((section, si) => (
+            <div key={`${section.category}-${si}`}>
               <div style={{ fontSize: 13, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 4 }}>
                 {section.category}
               </div>
               <div>
-                {section.items.map((item) => (
-                  <AccordionItem key={item.q} q={item.q} a={item.a} isDark={isDark} />
+                {section.items.map((item, ii) => (
+                  <AccordionItem key={`${item.q}-${ii}`} q={item.q} a={item.a} isDark={isDark} />
                 ))}
               </div>
             </div>

@@ -140,6 +140,24 @@ function initDb() {
         console.log('⚠ instructor_email backfill failed:', err.message);
       }
 
+      // Zusatzberechtigung «Inhalte bearbeiten»: nicht jede Admin-Person soll die
+      // Infoseiten ändern dürfen. Beim ersten Anlegen der Spalte bekommen die
+      // bestehenden Admins die Berechtigung einmalig, damit niemand ausgesperrt
+      // wird. Danach lässt sie sich in der Nutzerverwaltung entziehen.
+      try {
+        const col = await pool.query(`
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'users' AND column_name = 'can_edit_content'
+        `);
+        if (col.rows.length === 0) {
+          await pool.query('ALTER TABLE users ADD COLUMN can_edit_content BOOLEAN NOT NULL DEFAULT FALSE');
+          const granted = await pool.query(`UPDATE users SET can_edit_content = TRUE WHERE role = 'admin'`);
+          console.log(`✓ users.can_edit_content angelegt (${granted.rowCount} Admin(s) berechtigt)`);
+        }
+      } catch (err) {
+        console.log('⚠ can_edit_content migration failed:', err.message);
+      }
+
       console.log('✓ Migrations applied');
     } catch (err) {
       console.error('⚠ Database error:', err.message);

@@ -99,6 +99,17 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
   used_at    TIMESTAMPTZ
 );
 
+CREATE TABLE IF NOT EXISTS site_content (
+  -- Bearbeitbare Inhalte der öffentlichen Infoseiten, ein JSON-Dokument pro Seite.
+  -- Fehlt ein Eintrag, zeigt das Frontend die Standardtexte aus dem Code.
+  -- (Der Kommentar steht bewusst innerhalb der Anweisung: initDb() überspringt
+  -- Anweisungen, die mit einem Kommentar beginnen.)
+  key           TEXT PRIMARY KEY,
+  value         JSONB NOT NULL,
+  updated_by    TEXT,
+  updated_date  TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+);
+
 -- Indexes for common filter/sort operations
 CREATE INDEX IF NOT EXISTS idx_courses_status       ON courses(status);
 CREATE INDEX IF NOT EXISTS idx_courses_date         ON courses(date);

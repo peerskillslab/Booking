@@ -11,6 +11,7 @@ const TutorDashboard = lazy(() => import('./pages/TutorDashboard'));
 const AdminUsers = lazy(() => import('./pages/AdminUsers'));
 const AdminStats = lazy(() => import('./pages/AdminStats'));
 const AdminCourses = lazy(() => import('./pages/AdminCourses'));
+const AdminContent = lazy(() => import('./pages/AdminContent'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 
 // Regular imports for frequently used pages
@@ -113,6 +114,7 @@ const AuthenticatedApp = () => {
         <Route path="/AdminCourses" element={page('AdminCourses', AdminCourses, { lazy: true })} />
         <Route path="/AdminUsers" element={page('AdminUsers', AdminUsers, { lazy: true })} />
         <Route path="/AdminStats" element={page('AdminStats', AdminStats, { lazy: true })} />
+        <Route path="/AdminContent" element={page('AdminContent', AdminContent, { lazy: true })} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </AnimatePresence>

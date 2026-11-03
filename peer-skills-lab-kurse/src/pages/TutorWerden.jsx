@@ -1,6 +1,9 @@
 // @ts-nocheck
 import React from "react";
 import { useIsDarkTheme } from "@/lib/useTheme";
+import { useSiteContent } from "@/lib/siteContent";
+import { linkify } from "@/lib/linkify";
+import { TUTOR_WERDEN_DEFAULTS } from "@/content/defaults";
 
 const CSS_LIGHT = {
   "--bg": "oklch(98% 0.004 130)", "--ink": "oklch(20% 0.01 130)", "--ink-2": "oklch(50% 0.01 130)", "--ink-3": "oklch(58% 0.01 130)",
@@ -14,65 +17,19 @@ const CSS_DARK = {
   "--sage": "#3a4a38", "--accent": "#8FBF4E",
 };
 
-const REQUIREMENTS = [
-  {
-    title: "Bestandenes 3. Studienjahr",
-    body: "Du kannst dich bewerben, sobald du das 3. Studienjahr Humanmedizin erfolgreich abgeschlossen hast.",
-    fixed: true,
-  },
-  {
-    title: "Teilnahme am Didaktikkurs",
-    body: "Der eintägige Didaktikkurs findet jedes Jahr im März statt und ist für alle neu rekrutierten Tutor:innen obligatorisch.",
-    fixed: true,
-  },
-  {
-    title: "Keine Erfahrung nötig",
-    body: "Du brauchst keine Erfahrung im Tutorieren, irgendwo müssen alle anfangen.",
-    fixed: true,
-  },
-];
-
-const TIMELINE = [
-  {
-    month: "Ende September",
-    title: "Umfrage bei aktiven Tutor:innen",
-    body: "Wir fragen die aktiven Tutor:innen, wer im nächsten Semester weiterhin tutorieren wird, daraus ergibt sich der Bedarf an neuen Tutor:innen.",
-  },
-  {
-    month: "Oktober",
-    title: "Vorstand entscheidet Anzahl",
-    body: "Der Vorstand legt fest, wie viele neue Tutor:innen in diesem Jahr rekrutiert werden.",
-  },
-  {
-    month: "November",
-    title: "Bewerbungsfenster",
-    body: "Bewerbung mit Fragebogen und Motivationsschreiben. Link zum Fragebogen: [Platzhalter: Link folgt]",
-  },
-  {
-    month: "Januar – Februar",
-    title: "Auswahl & Kontaktierung",
-    body: "Wir schauen uns eure Bewerbungen an und melden uns für ein Treffen mit euch.",
-  },
-  {
-    month: "März",
-    title: "Didaktikkurs",
-    body: "Eintägiger, obligatorischer Didaktikkurs für alle neuen Tutor:innen.",
-  },
-];
-
-function Timeline({ accentColor }) {
+function Timeline({ items, accentColor }) {
   return (
     <div className="tw-timeline">
-      {TIMELINE.map((t, i) => (
-        <div className="tw-t-item" key={t.month}>
+      {items.map((t, i) => (
+        <div className="tw-t-item" key={`${t.month}-${i}`}>
           <div className="tw-t-rail">
             <span className="tw-t-dot" style={{ background: accentColor }} />
-            {i < TIMELINE.length - 1 && <span className="tw-t-connector" />}
+            {i < items.length - 1 && <span className="tw-t-connector" />}
           </div>
           <div className="tw-t-content">
             <div className="tw-t-month" style={{ color: accentColor }}>{t.month}</div>
             <div className="tw-t-title">{t.title}</div>
-            <p className="tw-t-body">{t.body}</p>
+            <p className="tw-t-body">{linkify(t.body)}</p>
           </div>
         </div>
       ))}
@@ -84,6 +41,7 @@ export default function TutorWerden() {
   const isDark = useIsDarkTheme();
   const CSS = isDark ? CSS_DARK : CSS_LIGHT;
   const accentColor = isDark ? "#8FBF4E" : "#466E0E";
+  const content = useSiteContent("tutorwerden", TUTOR_WERDEN_DEFAULTS);
 
   return (
     <div style={CSS}>
@@ -130,8 +88,7 @@ export default function TutorWerden() {
         </h1>
 
         <p style={{ fontSize: 17, color: "var(--ink-2)", lineHeight: 1.55, margin: "0 0 56px", maxWidth: 720 }}>
-          Das Herz des Peer Skills Lab sind unsere Tutor:innen. Einmal im Jahr
-          rekrutieren wir deshalb neue Peer-Tutor:innen.
+          {linkify(content.intro)}
         </p>
 
         {/* Voraussetzungen */}
@@ -140,9 +97,9 @@ export default function TutorWerden() {
             Voraussetzungen
           </div>
           <div className="tw-req-grid">
-            {REQUIREMENTS.map((r) => (
+            {content.requirements.map((r, i) => (
               <div
-                key={r.title}
+                key={`${r.title}-${i}`}
                 style={{
                   background: "var(--surface)",
                   border: "1px solid var(--line)",
@@ -157,12 +114,12 @@ export default function TutorWerden() {
                   <span
                     style={{
                       width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
-                      background: r.fixed ? accentColor : "var(--ink-3)",
+                      background: accentColor,
                     }}
                   />
                   <span style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)" }}>{r.title}</span>
                 </div>
-                <p style={{ fontSize: 13.5, lineHeight: 1.5, color: "var(--ink-2)", margin: 0 }}>{r.body}</p>
+                <p style={{ fontSize: 13.5, lineHeight: 1.5, color: "var(--ink-2)", margin: 0 }}>{linkify(r.body)}</p>
               </div>
             ))}
           </div>
@@ -173,7 +130,7 @@ export default function TutorWerden() {
           <div style={{ fontSize: 13, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 24 }}>
             So funktioniert die Bewerbung
           </div>
-          <Timeline accentColor={accentColor} />
+          <Timeline items={content.timeline} accentColor={accentColor} />
         </section>
 
         {/* Hinweis zur Anzahl Plätze */}
@@ -189,19 +146,16 @@ export default function TutorWerden() {
               lineHeight: 1.6,
             }}
           >
-            <strong style={{ color: "var(--ink)" }}>Wie viele Tutor:innen werden gesucht?</strong><br />
-            Die Anzahl der neu rekrutierten Tutor:innen wird vom Vorstand jedes Jahr
-            individuell festgelegt, abhängig vom aktuellen Bedarf an Kursen und
-            Kapazitäten. Es gibt also keine fixe Anzahl offener Plätze pro Jahrgang.
+            <strong style={{ color: "var(--ink)" }}>{content.seatsTitle}</strong><br />
+            {linkify(content.seatsBody)}
           </div>
         </section>
 
         {/* Kontakt */}
         <div style={{ padding: "28px 32px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 18 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", marginBottom: 6 }}>Fragen zur Bewerbung?</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", marginBottom: 6 }}>{content.contactTitle}</div>
           <p style={{ fontSize: 14, color: "var(--ink-2)", margin: "0 0 14px", lineHeight: 1.5 }}>
-            Melde dich einfach bei uns, falls du Fragen zur Rekrutierung oder zum
-            Bewerbungsverfahren hast.
+            {linkify(content.contactBody)}
           </p>
           <a
             href="mailto:info@peerskillslab.ch"

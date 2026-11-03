@@ -51,6 +51,7 @@ function navGroups(user) {
           { label: "Kurse verwalten", path: "/AdminCourses",   icon: "gear" },
           { label: "Nutzer:innen",    path: "/AdminUsers",     icon: "users" },
           { label: "Statistiken",     path: "/AdminStats",     icon: "chart" },
+          ...(user?.can_edit_content ? [{ label: "Inhalte", path: "/AdminContent", icon: "pencil" }] : []),
         ] : []),
       ],
     }] : []),
@@ -67,6 +68,7 @@ const PAGE_TITLES = {
   TutorDashboard: "Kurs ausschreiben",
   AdminUsers: "Nutzer:innen",
   AdminStats: "Statistiken",
+  AdminContent: "Inhalte",
   MyProfile: "Profil",
 };
 

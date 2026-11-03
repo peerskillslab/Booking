@@ -2,6 +2,8 @@
 import React, { useMemo } from "react";
 import { useIsDarkTheme } from "@/lib/useTheme";
 import { Link } from "react-router-dom";
+import { useSiteContent } from "@/lib/siteContent";
+import { ABOUT_DEFAULTS } from "@/content/defaults";
 
 // --- Custom SVG icons from design ---
 const Icon = {
@@ -58,39 +60,14 @@ const CSS_DARK = {
 const A_LIGHT = { main: "#466E0E", soft: "#E3EAD0", ink: "#1F2C0A", deep: "#2F4A09" };
 const A_DARK = { main: "#8FBF4E", soft: "#3a4a38", ink: "#f0f0f0", deep: "#d0d0d0" };
 
-const TEAM = [
-  { name: "Elin",     role: "Co-Founder", tone: 0, img: "/team/elin.jpg" },
-  { name: "Zoe",      role: "Co-Founder", tone: 1, img: "/team/zoe.jpg" },
-  { name: "Simon",    role: "Co-Founder", tone: 2, img: "/team/simon.jpg" },
-  { name: "Lorenz",   role: "Co-Founder", tone: 3, img: "/team/lorenz.jpg" },
-  { name: "Anabelle", role: "Vorstand",   tone: 4, img: "/team/anabelle.jpg" },
-  { name: "Mira",     role: "Vorstand",   tone: 5, img: "/team/mira.jpg" },
-  { name: "Surya",    role: "Vorstand",   tone: 0, img: "/team/surya.jpg" },
-  { name: "Liam",     role: "Vorstand",   tone: 1, img: "/team/Liam.jpeg" },
-  { name: "Elena",    role: "Peer-Tutorin", tone: 1, img: "/team/elena.jpg" },
-  { name: "Luzia",    role: "Peer-Tutorin", tone: 2, img: "/team/luzia.jpg" },
-];
+// Zeilenumbrüche aus den bearbeitbaren Texten (Enter im Feld) als <br />
+function lines(text) {
+  return String(text || "").split("\n").map((l, i, a) => (
+    <React.Fragment key={i}>{l}{i < a.length - 1 && <br />}</React.Fragment>
+  ));
+}
 
-const PARTNERS = [
-  { name: "Medizinische Fakultät", logo: "/partners/unibern.png", url: "https://www.medizin.unibe.ch" },
-  { name: "BiSS Bern", logo: "/partners/biss.png", url: "https://cms.biss.iml.unibe.ch" },
-  { name: "Fachschaft Medizin", logo: "/partners/fsmb.png", url: "https://www.fsmb.ch" },
-  { name: "Alumni Med Bern", logo: "/partners/logo_alumni_med_bern.png", url: "https://med.alumni.unibe.ch" },
-  { name: "YSSA Bern", logo: "/partners/yssa.jpg", url: "https://www.yssa-bern.ch/startseite" },
-  { name: "PEC Bern", logo: "/partners/pec.jpg", url: "https://www.fsmb.ch/paul-ehrlich-contest/" },
-  { name: "Direktion Lehre und Forschung", logo: "/partners/insel.png", url: "https://inselgruppe.ch/de/die-insel-gruppe/organisation/direktion-lehre-und-forschung" },
-];
-
-const COURSES = [
-  { name: "CST Abdomen",           icon: Icon.Stethoscope, body: "Im Repetitionskurs 'CST-Abdomen' wird die Untersuchung des Abdomens wiederholt. Neben den Grundlagen der Inspektion, Auskultation, Perkussion und Palpation werden auch spezielle Untersuchungen (z. B. bei Peritonitis oder Appendizitis) thematisiert. Ziel des Kurses ist es, eure praktischen Fertigkeiten zu festigen und euch ein fundiertes Verständnis für die differenzierte Abdomenuntersuchung zu vermitteln." },
-  { name: "CST HKL",               icon: Icon.Heart,       body: "Im Repetitionskurs 'CST-Herzkreislauf' werden die wesentlichen Untersuchungsmethoden des Herzens und des Kreislaufsystems wiederholt und vertieft. Dabei gehen Sie alle Schritte von der Inspektion über die Perkussion bis hin zur Auskultation und Palpation durch. Das Ziel besteht darin, eure praktischen Fertigkeiten in der Untersuchung des kardiovaskulären Systems zu festigen." },
-  { name: "CST Lunge",             icon: Icon.Stethoscope, body: "Im Repetitionskurs 'CST-Lunge' wiederholen Sie die Untersuchung der Lunge und der Atemwege. Dabei gehen Sie alle Schritte von der Inspektion über die Perkussion bis hin zur Auskultation und Palpation durch. Das Ziel besteht darin, die praktischen Fertigkeiten in der Untersuchung des respiratorischen Systems zu festigen." },
-  { name: "CST Bewegungsapparat",  icon: Icon.Users,       body: "Untersuchung von Gelenken und Muskeln – orientiert an häufigen OSCE-Stationen und klinischen Tests." },
-  { name: "CST Neurologie",        icon: Icon.Sparkle,     body: "Neurologische Grunduntersuchung: Reflexe, Sensibilität, Koordination und Hirnnerven strukturiert üben." },
-  { name: "CST Gynäkologie",       icon: Icon.Heart,       body: "Im Repetitionskurs CST-Gynäkologie werden gynäkologische Untersuchungen wiederholt. Dazu gehören die Brustuntersuchung sowie die Spekulumuntersuchung. Dabei gehen Sie alle Schritte strukturiert durch. Das Ziel besteht darin, die praktischen Fertigkeiten in der Gynäkologie zu festigen." },
-  { name: "Venenpunktion",         icon: Icon.Stethoscope, body: "In unserem Repetitionskurs zur Venenpunktion wiederholen wir die wichtigsten Grundlagen der Blutentnahme und der Anlage eines peripheren Venenkatheters. Dazu gehören auch das vorbereitende Gespräch, die Hygiene und die Technik. Ihr habt die Gelegenheit, an einem Modell zu üben. Der Kurs wird von erfahrenen Tutor:innen geleitet, die seit mehreren Jahren auch die Erstjahreskurse betreuen." },
-  { name: "POCUS Notfallsonografie", icon: Icon.Sparkle,   body: "E-FAST ist eine schnelle Ultraschalluntersuchung bei Traumapatienten, mit der sich freie Flüssigkeit im Abdomen, im Perikard und im Thorax sowie ein Pneumothorax nachweisen lassen. Sie ist lebensrettend in der Notfallversorgung. Bei POCUS Abdomen stehen die Gallenblase, die Nieren und die Harnblase im Mittelpunkt. Mithilfe standardisierter Untersuchungsschritte werden typische Krankheitsbilder erkannt. Aufbauend auf die Kurse 'E-FAST' und 'POCUS Abdomen' vermitteln wir theoretische und praktische Ultraschallfertigkeiten anhand der Untersuchung der Aorta, der Vena cava inferior sowie der tiefen Beinvenen. Durchführung einer sonografisch gesteuerten Punktion in 'in-plane'- und 'out-of-plane'-Technik werden geübt." },
-];
+const PILL_ICONS = [Icon.Stethoscope, Icon.Repeat, Icon.Users, Icon.Heart];
 
 const TONE_PAIRS = [
   ["#E5DFC9","#D5CCAB"], ["#DDE2CB","#C8D1AA"], ["#E8DEC8","#D6BF9A"],
@@ -110,20 +87,15 @@ function Pill({ icon: I, label, A }) {
   );
 }
 
-function HowCards() {
-  const steps = [
-    { n: "01", icon: Icon.Users,       title: "Peers lehren Peers",        body: "Dadurch entsteht eine hohe soziale und kognitive Kongruenz, weil Inhalte verständlich, praxisnah und ähnlich der eigenen Denkstruktur erklärt werden." },
-    { n: "02", icon: Icon.Repeat,      title: "Strategisch wiederholen",   body: "Mithilfe von Spaced Repetition werden Inhalte in zeitlich abgestuften Abständen wiederholt, damit Wissen langfristig im Gedächtnis verankert wird." },
-    { n: "03", icon: Icon.Stethoscope, title: "OSCE- und Klinik-nah",      body: "Unsere Kurse orientieren sich an den Lernzielen der Universität Bern." },
-    { n: "04", icon: Icon.Sparkle,     title: "Niedrigschwellig & offen",  body: "Eintragen, hingehen, üben – und wer selbst unterrichten möchte, kann sich einfach bei uns melden." },
-  ];
+function HowCards({ c }) {
+  const steps = c.steps.map((st, i) => ({ ...st, n: String(i + 1).padStart(2, "0") }));
   return (
     <section className="au-section">
       <div className="au-how-header" style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 32 }}>
         <h2 className="au-h2" style={{ fontWeight: 600, lineHeight: 1.0, margin: 0, maxWidth: 720 }}>
-          Vier Prinzipien,<br />die alles tragen.
+          {lines(c.howTitle)}
         </h2>
-        <div style={{ fontSize: 13.5, textTransform: "uppercase", fontWeight: 500, color: "var(--ink-3)" }}>Wie es funktioniert</div>
+        <div style={{ fontSize: 13.5, textTransform: "uppercase", fontWeight: 500, color: "var(--ink-3)" }}>{c.howKicker}</div>
       </div>
       <div className="au-how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
         {steps.map(s => {
@@ -140,18 +112,13 @@ function HowCards() {
   );
 }
 
-function StatsBlock() {
-  const stats = [
-    { n: "70", label: "Übungseinheiten",        sub: "seit Gründung 2025" },
-    { n: "15", label: "aktive Peer-Tutor*innen", sub: "ab dem 7. Semester" },
-    { n: "9",  label: "Skill-Stationen",        sub: "von Anamnese bis ZVK" },
-    { n: "94%", label: "empfehlen weiter",      sub: "aus 60 Feedback-Bögen" },
-  ];
+function StatsBlock({ c }) {
+  const stats = c.stats;
   return (
     <section className="au-section">
       <div className="au-stats-inner">
-        <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 32 }}>Stand heute</div>
-        <h2 className="au-h2" style={{ fontWeight: 600, lineHeight: 1.05, margin: "0 0 56px", maxWidth: 540 }}>In Zahlen.</h2>
+        <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 32 }}>{c.statsKicker}</div>
+        <h2 className="au-h2" style={{ fontWeight: 600, lineHeight: 1.05, margin: "0 0 56px", maxWidth: 540 }}>{c.statsTitle}</h2>
         <div className="au-stats-numbers" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
           {stats.map((s, i) => {
             const isGreen = i % 2 === 0;
@@ -182,26 +149,26 @@ function StatsBlock() {
   );
 }
 
-function TeamSection({ A }) {
+function TeamSection({ A, c }) {
   // Fisher-Yates shuffle for stable randomization
   const shuffledTeam = useMemo(() => {
-    const arr = [...TEAM];
+    const arr = c.team.map((m, i) => ({ ...m, tone: i }));
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
-  }, []);
+  }, [c.team]);
 
   return (
     <section className="au-section">
       <div className="au-team-header" style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 32 }}>
         <div>
-          <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 14 }}>Köpfe</div>
-          <h2 className="au-h2" style={{ fontWeight: 600, lineHeight: 1.0, margin: 0 }}>Viele Peers,<br />ein gemeinsames Ziel.</h2>
+          <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500, marginBottom: 14 }}>{c.teamKicker}</div>
+          <h2 className="au-h2" style={{ fontWeight: 600, lineHeight: 1.0, margin: 0 }}>{lines(c.teamTitle)}</h2>
         </div>
         <p className="au-team-sub" style={{ maxWidth: 360, fontSize: 15, color: "var(--ink-2)", lineHeight: 1.55, margin: 0 }}>
-          Werde ein Teil unseres Teams! Wir sind immer auf der Suche nach motivierten Peer-Tutor*innen, die Lust haben, praktische Skills zu unterrichten. Schreib uns einfach eine Mail oder komm zu einer unserer Vereinssitzungen vorbei.
+          {c.teamText}
         </p>
       </div>
       <div className="au-team-mosaic" style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gridAutoRows: "160px", gap: 14 }}>
@@ -229,19 +196,19 @@ function TeamSection({ A }) {
   );
 }
 
-function PartnersBand() {
+function PartnersBand({ c }) {
   return (
     <section className="au-section">
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22 }} className="au-partners-inner">
         <div className="au-partners-header" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 28 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 600, margin: 0 }}>Partner & Unterstützer:innen</h2>
-          <span style={{ fontSize: 13.5, color: "var(--ink-3)", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>7 Institutionen</span>
+          <h2 style={{ fontSize: 32, fontWeight: 600, margin: 0 }}>{c.partnersTitle}</h2>
+          <span style={{ fontSize: 13.5, color: "var(--ink-3)", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>{c.partners.length} Institutionen</span>
         </div>
         <p style={{ fontSize: 15, lineHeight: 1.55, margin: "0 0 28px", color: "var(--ink-2)" }}>
-          Das Projekt wird von verschiedenen Partner:innen und Unterstützer:innen gefördert, darunter die Medizinische Fakultät der Universität Bern, BiSS Bern, die Fachschaft Medizin, Alumni Med Bern, YSSA Bern, PEC Bern sowie die Direktion Lehre und Forschung der Inselgruppe. Diese Zusammenarbeit hilft uns, unsere Kurse breit zu verankern und praxisnah zu gestalten.
+          {c.partnersIntro}
         </p>
         <div className="au-partners-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-          {PARTNERS.map((p, i) => {
+          {c.partners.map((p, i) => {
             const card = (
               <div style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 14, height: 320, display: "flex", flexDirection: "column", transition: p.url ? "opacity 0.15s, transform 0.15s" : undefined, cursor: p.url ? "pointer" : "default" }}>
                 {p.logo
@@ -291,20 +258,20 @@ function ContactRow({ label, value, href }) {
   return <div style={shared}>{inner}</div>;
 }
 
-function CoursesBlock() {
+function CoursesBlock({ c: content }) {
   return (
     <section className="au-section">
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22 }} className="au-courses-inner">
         <div className="au-partners-header" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 28 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 600, margin: 0 }}>Unsere Kurse</h2>
-          <span style={{ fontSize: 13.5, color: "var(--ink-3)", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>8 Kurse</span>
+          <h2 style={{ fontSize: 32, fontWeight: 600, margin: 0 }}>{content.coursesTitle}</h2>
+          <span style={{ fontSize: 13.5, color: "var(--ink-3)", textTransform: "uppercase", fontWeight: 500, whiteSpace: "nowrap" }}>{content.courses.length} Kurse</span>
         </div>
         <p style={{ fontSize: 15, lineHeight: 1.55, margin: "0 0 28px", color: "var(--ink-2)" }}>
-          Ziel ist es, die praktischen Fertigkeiten zu festigen und ein fundiertes Verständnis für klinische Untersuchungen zu vermitteln.
+          {content.coursesIntro}
         </p>
         <div className="au-courses-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
-          {COURSES.map((c, i) => (
-            <div key={c.title || i} style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 16, padding: "28px 26px", display: "flex", flexDirection: "column", gap: 16 }}>
+          {content.courses.map((c, i) => (
+            <div key={`${c.name}-${i}`} style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 16, padding: "28px 26px", display: "flex", flexDirection: "column", gap: 16 }}>
               <div>
                 <div style={{ fontSize: 18, fontWeight: 600, lineHeight: 1.2, marginBottom: 10 }}>{c.name}</div>
                 <p style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink-2)", margin: 0 }}>{c.body}</p>
@@ -317,19 +284,17 @@ function CoursesBlock() {
   );
 }
 
-function JoinBlock() {
+function JoinBlock({ c }) {
   return (
     <section className="au-section au-section-join">
       <div className="au-join-right" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 22, display: "flex", flexDirection: "column", gap: 18 }}>
-        <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500 }}>Direkt erreichen</div>
+        <div style={{ fontSize: 13.5, textTransform: "uppercase", color: "var(--ink-3)", fontWeight: 500 }}>{c.contactTitle}</div>
         <div className="au-contact-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
-          <ContactRow label="Allgemein"  value="info@peerskillslab.ch" href="mailto:info@peerskillslab.ch" />
-          <ContactRow label="Instagram"  value="@peerskillslab"        href="https://www.instagram.com/peerskillslab_bern" />
-          <ContactRow label="LinkedIn"   value="PeerSkills Lab"        href="https://www.linkedin.com/company/112596144" />
+          {c.contacts.map((k, i) => <ContactRow key={`${k.label}-${i}`} label={k.label} value={k.value} href={k.href} />)}
         </div>
         <div style={{ paddingTop: 16, borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10, color: "var(--ink-2)", fontSize: 13.5 }}>
           <Icon.Calendar width="16" height="16" />
-          <span>Melde dich bei uns!</span>
+          <span>{c.contactNote}</span>
         </div>
       </div>
     </section>
@@ -342,6 +307,7 @@ export default function AboutUs() {
 
   const CSS = isDark ? CSS_DARK : CSS_LIGHT;
   const A = isDark ? A_DARK : A_LIGHT;
+  const c = useSiteContent("about", ABOUT_DEFAULTS);
 
   return (
     <div style={{ width: "100%", background: "var(--bg)", color: "var(--ink)", ...CSS }}>
@@ -414,11 +380,11 @@ export default function AboutUs() {
       <section className="au-hero-padding" style={{ padding: "64px 56px 32px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--ink-3)", fontSize: 14, marginBottom: 32 }}>
           <span style={{ width: 28, height: 1, background: "var(--ink-3)", display: "block" }} />
-          <span style={{ textTransform: "uppercase", fontWeight: 500 }}>Über uns · seit 2025</span>
+          <span style={{ textTransform: "uppercase", fontWeight: 500 }}>{c.heroKicker}</span>
         </div>
         <h1 style={{ fontWeight: 600, fontSize: "clamp(36px, 10vw, 168px)", lineHeight: 1.0, fontKerning: "none", fontVariantLigatures: "none", margin: "0 0 56px", wordBreak: "break-word" }}>
-          Peer produced<br />
-          <span style={{ color: A.main }}>proficiency.</span>
+          {c.heroTitle1}<br />
+          <span style={{ color: A.main }}>{c.heroTitle2}</span>
         </h1>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 64 }}>
           <Link to="/FAQ" style={{ textDecoration: "none" }}>
@@ -428,7 +394,7 @@ export default function AboutUs() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
               </svg>
-              FAQs ansehen
+              {c.faqButton}
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
@@ -437,13 +403,10 @@ export default function AboutUs() {
         </div>
         <div className="au-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 56, alignItems: "start" }}>
           <p style={{ fontSize: 22, lineHeight: 1.45, margin: 0, color: "var(--ink-2)" }}>
-            <strong style={{ color: "var(--ink)", fontWeight: 600 }}>PeerSkills Lab</strong> ist ein studentisch geprägtes Lern- und Vernetzungsprojekt, welches praktische Skills in der Medizin auf verständliche und niederschwellige Weise vermittelt. Uns ist wichtig, dass Wissen auf Augenhöhe vermittelt wird: Studierende lernen besonders effektiv im Austausch mit Peers, die sich in derselben Ausbildungsphase befinden. Offenes Fragenstellen, aktives Ausprobieren und das Korrigieren von Fehlern ohne Hemmschwelle sind dabei zentral.
+            <strong style={{ color: "var(--ink)", fontWeight: 600 }}>{c.heroBrand}</strong> {c.heroIntro}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
-            <Pill icon={Icon.Stethoscope} label="OSCE-fokussiert" A={A} />
-            <Pill icon={Icon.Repeat}      label="Spaced repetition" A={A} />
-            <Pill icon={Icon.Users}       label="Peer-zu-Peer" A={A} />
-            <Pill icon={Icon.Heart}       label="Non-profit, Verein" A={A} />
+            {c.pills.map((pl, i) => <Pill key={`${pl.label}-${i}`} icon={PILL_ICONS[i % PILL_ICONS.length]} label={pl.label} A={A} />)}
           </div>
         </div>
       </section>
@@ -451,12 +414,8 @@ export default function AboutUs() {
       {/* IMAGE BAND */}
       <section className="au-imgband-padding" style={{ padding: "24px 56px 88px" }}>
         <div className="au-img-band" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-          {[
-            { label: "Skills Day",              caption: "Jährliches Skills-Fest",       src: "/photos/skills-day.jpg" },
-            { label: "Venenpunktion",           caption: "Praktische Übungsstation",     src: "/photos/venenpunktion.jpg" },
-            { label: "Unsere Peer-Tutor*innen", caption: "Das Team hinter den Kursen",  src: "/photos/peer-tutorinnen.jpg" },
-          ].map((item) => (
-            <div key={item.label} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {c.images.map((item, i) => (
+            <div key={`${item.label}-${i}`} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <div style={{ aspectRatio: "16/10", borderRadius: 20, overflow: "hidden", border: "1px solid var(--line)", background: "repeating-linear-gradient(135deg, #E8E2CE 0 14px, #EFEADA 14px 28px)" }}>
                 <img
                   src={item.src}
@@ -474,12 +433,12 @@ export default function AboutUs() {
         </div>
       </section>
 
-      <HowCards />
-      <StatsBlock />
-      <CoursesBlock />
-      <TeamSection A={A} />
-      <PartnersBand />
-      <JoinBlock />
+      <HowCards c={c} />
+      <StatsBlock c={c} />
+      <CoursesBlock c={c} />
+      <TeamSection A={A} c={c} />
+      <PartnersBand c={c} />
+      <JoinBlock c={c} />
     </div>
   );
 }

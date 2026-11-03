@@ -176,6 +176,23 @@ export const localClient = {
     MonthlyStatSnapshot: makeEntityClient('MonthlyStatSnapshot'),
   },
 
+  // Bearbeitbare Inhalte der Infoseiten (Admin-Bereich «Inhalte»).
+  // get() ist öffentlich, save() und reset() nur für Admins.
+  content: {
+    get(key) {
+      return apiFetch(`/content/${key}`);
+    },
+    save(key, value) {
+      return apiFetch(`/content/${key}`, {
+        method: 'PUT',
+        body: JSON.stringify({ value }),
+      });
+    },
+    reset(key) {
+      return apiFetch(`/content/${key}`, { method: 'DELETE' });
+    },
+  },
+
   functions: {
     invoke(name, args) {
       return apiFetch(`/functions/${name}`, {
