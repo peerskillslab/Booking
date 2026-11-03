@@ -105,6 +105,8 @@ const AuthenticatedApp = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={page('Home', Home)} />
+        {/* Alte Links auf /Home (früher von «Zurück»-Knöpfen erzeugt) landen auf der Kursübersicht */}
+        <Route path="/Home" element={<Navigate to="/" replace />} />
         <Route path="/CourseDetail" element={page('CourseDetail', CourseDetail)} />
         <Route path="/MyBookings" element={page('MyBookings', MyBookings)} />
         <Route path="/MyStats" element={page('MyStats', MyStats)} />

@@ -194,7 +194,7 @@ export default function MyBookings() {
             <BookOpen className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-foreground mb-2">Noch keine Buchungen</h3>
             <p className="text-muted-foreground mb-6">Entdecke unsere Kurse und buche deinen ersten!</p>
-            <Link to={createPageUrl("Home")}>
+            <Link to="/">
               <Button>Kurse entdecken</Button>
             </Link>
           </motion.div>

@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import BookingDialog from "@/components/booking/BookingDialog";
 import { CategoryBadge } from "@/components/courses/CategoryBadge";
 import { useQueryClient } from "@tanstack/react-query";
@@ -67,7 +66,7 @@ export default function CourseDetail() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <p className="text-5xl">😕</p>
         <h2 className="text-xl font-semibold">Kurs nicht gefunden</h2>
-        <Link to={createPageUrl("Home")}>
+        <Link to="/">
           <Button variant="outline">
             <ArrowLeft className="w-4 h-4 mr-2" /> Zurück zur Übersicht
           </Button>
@@ -80,7 +79,7 @@ export default function CourseDetail() {
     <div className="min-h-screen bg-background">
       <div className="max-w-[900px] mx-auto px-4 md:px-6 pt-6 pb-20">
         <div className="mb-5">
-          <Link to={createPageUrl("Home")}>
+          <Link to="/">
             <Button variant="outline" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" /> Zurück
             </Button>

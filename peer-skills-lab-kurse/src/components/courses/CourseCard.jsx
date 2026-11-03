@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { getCategoryOklch } from "@/lib/categoryStyles";
 import { parseCourseDate } from "@/lib/courseUtils";
+import ShortNoticeBanner from "@/components/courses/ShortNoticeBanner";
 
 const LEVEL_LABELS = {
   "Alle Studienjahre":   "ALLE STUDIENJAHRE",
@@ -89,6 +90,9 @@ export default function CourseCard({ course }) {
             )}
           </div>
         </div>
+
+        {/* Beginn in < 72 h: Abmeldung nur noch bei der Tutor:in */}
+        <ShortNoticeBanner course={course} compact />
 
         {/* Footer: instructor + seats */}
         <div className="psl-cc-foot">

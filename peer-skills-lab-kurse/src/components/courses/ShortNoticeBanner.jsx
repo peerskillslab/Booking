@@ -10,10 +10,27 @@ import { CANCELLATION_WINDOW_HOURS, isShortNoticeWindow } from "@/lib/courseUtil
  * (server/routes/courses.js, stripContactData). Ohne Adresse erscheint der Text
  * ohne Link, es sei denn, `fallbackEmail` ist gesetzt.
  */
-export default function ShortNoticeBanner({ course, fallbackEmail, className = "" }) {
+export default function ShortNoticeBanner({ course, fallbackEmail, compact = false, className = "" }) {
   if (!course || !isShortNoticeWindow(course)) return null;
 
   const tutorName = course.instructor || "der Tutor:in";
+
+  // Kompakte Variante für die Kurskarte: Die ganze Karte ist ein Link, ein
+  // Mail-Link darin wäre verschachtelt. Deshalb nur der Hinweis, der Link
+  // steht auf der Kursdetail-Seite.
+  if (compact) {
+    return (
+      <div
+        className={`flex items-start gap-2 border-t border-amber-300 bg-amber-50 px-3.5 py-2 text-xs text-amber-800 ${className}`}
+      >
+        <AlertTriangle className="w-3.5 h-3.5 mt-px shrink-0" />
+        <span className="leading-snug">
+          Beginn in weniger als {CANCELLATION_WINDOW_HOURS} h: Abmeldung nur noch direkt bei {tutorName}.
+        </span>
+      </div>
+    );
+  }
+
   const tutorEmail = course.instructor_email || course.created_by;
   const email = tutorEmail || fallbackEmail;
   const subject = `Abmeldung: ${course.title || course.course_title || "Kurs"}`;
