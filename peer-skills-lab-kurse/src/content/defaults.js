@@ -144,7 +144,7 @@ export const ABOUT_DEFAULTS = {
   "images": [
     {
       "label": "Skills Day",
-      "caption": "Jährliches Skills-Fest",
+      "caption": "Optimale Prüfungsvorbereitung",
       "src": "/photos/skills-day.jpg"
     },
     {
@@ -283,11 +283,6 @@ export const ABOUT_DEFAULTS = {
       "img": "/team/Liam.jpeg"
     },
     {
-      "name": "Sanna",
-      "role": "Vorstand",
-      "img": "/team/sanna.jpg"
-    },
-    {
       "name": "Elena",
       "role": "Peer-Tutorin",
       "img": "/team/elena.jpg"
@@ -296,6 +291,11 @@ export const ABOUT_DEFAULTS = {
       "name": "Luzia",
       "role": "Peer-Tutorin",
       "img": "/team/luzia.jpg"
+    },
+    {
+      "name": "Sanna",
+      "role": "Vorstand",
+      "img": "/team/sanna.jpg"
     }
   ],
   "partnersTitle": "Partner & Unterstützer:innen",
