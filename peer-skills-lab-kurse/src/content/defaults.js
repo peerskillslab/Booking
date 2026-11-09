@@ -283,6 +283,11 @@ export const ABOUT_DEFAULTS = {
       "img": "/team/Liam.jpeg"
     },
     {
+      "name": "Sanna",
+      "role": "Vorstand",
+      "img": "/team/sanna.jpg"
+    },
+    {
       "name": "Elena",
       "role": "Peer-Tutorin",
       "img": "/team/elena.jpg"
