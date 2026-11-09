@@ -184,4 +184,16 @@ export const localClient = {
       return apiFetch(`/content/${key}`, { method: 'DELETE' });
     },
   },
+
+  // Bilder für die Infoseiten (Teamfotos, Partner-Logos). upload() nur für
+  // Admins mit «Inhalte bearbeiten», liefert { url } zum Eintragen in den Inhalt.
+  images: {
+    upload(blob) {
+      return apiFetch('/images', {
+        method: 'POST',
+        headers: { 'Content-Type': blob.type },
+        body: blob,
+      });
+    },
+  },
 };

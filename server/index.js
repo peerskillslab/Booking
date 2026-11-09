@@ -63,6 +63,7 @@ app.use('/api/entities/users',            apiCors, require('./routes/users'));
 app.use('/api/entities/coursetemplates',  apiCors, require('./routes/courseTemplates'));
 app.use('/api/entities/monthlystatshots', apiCors, require('./routes/monthlyStats'));
 app.use('/api/content',                   apiCors, require('./routes/content'));
+app.use('/api/images',                    apiCors, require('./routes/images'));
 
 // --- JSON 404 for unknown /api/* routes ---
 app.use('/api', (req, res) => {
@@ -75,6 +76,9 @@ app.use('/api', (err, req, res, next) => {
   if (res.headersSent) return next(err);
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: 'invalid_json' });
+  }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'too_large' });
   }
   console.error(err);
   res.status(err.status || 500).json({ error: 'Internal server error' });

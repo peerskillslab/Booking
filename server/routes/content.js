@@ -94,3 +94,4 @@ router.delete('/:key', checkKey, requireContentEditor, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.requireContentEditor = requireContentEditor;

@@ -108,6 +108,17 @@ CREATE TABLE IF NOT EXISTS site_content (
   updated_date  TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
 );
 
+CREATE TABLE IF NOT EXISTS images (
+  -- Im Admin-Bereich hochgeladene Bilder (Teamfotos, Partner-Logos).
+  -- Abgelegt in der Datenbank, weil Dateien im Container einen Deploy nicht überleben.
+  -- Ein Bild wird nie verändert: neuer Upload = neue ID.
+  id            SERIAL PRIMARY KEY,
+  data          BYTEA NOT NULL,
+  mime          TEXT NOT NULL,
+  created_by    TEXT,
+  created_date  TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+);
+
 -- Indexes for common filter/sort operations
 CREATE INDEX IF NOT EXISTS idx_courses_status       ON courses(status);
 CREATE INDEX IF NOT EXISTS idx_courses_date         ON courses(date);

@@ -10,7 +10,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, FileText, ArrowUp, ArrowDown, Trash2, Plus, ExternalLink, ChevronDown } from "lucide-react";
+import { Loader2, FileText, ArrowUp, ArrowDown, Trash2, Plus, ExternalLink, ChevronDown, Upload } from "lucide-react";
+import { resizeImage } from "@/lib/resizeImage";
 import ContentPreview from "@/components/admin/ContentPreview";
 import { useToast } from "@/components/ui/use-toast";
 import { useRequireAuth, canEditContent } from "@/lib/useRequireAuth";
@@ -85,10 +86,10 @@ const PAGES = [
       { key: "teamText", label: "Text zum Mitmachen", multiline: true },
       {
         key: "team", label: "Teammitglieder", type: "list", itemLabel: "Person",
-        hint: "Die Fotos hinterlegt das Entwicklungsteam. Neue Personen erscheinen zunächst ohne Foto, bestehende behalten ihres.",
         fields: [
           { key: "name", label: "Name" },
           { key: "role", label: "Rolle" },
+          { key: "img", label: "Foto", type: "image", format: "jpeg", maxSize: 600 },
         ],
       },
       { type: "heading", label: "Partner", anchor: "partners" },
@@ -96,10 +97,11 @@ const PAGES = [
       { key: "partnersIntro", label: "Text", multiline: true },
       {
         key: "partners", label: "Partner", type: "list", itemLabel: "Partner",
-        hint: "Die Logos hinterlegt das Entwicklungsteam. Die Zahl «n Institutionen» zählt sich selbst.",
+        hint: "Die Zahl «n Institutionen» zählt sich selbst.",
         fields: [
           { key: "name", label: "Name" },
           { key: "url", label: "Web-Adresse" },
+          { key: "logo", label: "Logo", type: "image", format: "png", maxSize: 400 },
         ],
       },
       { type: "heading", label: "Kontakt", anchor: "contact" },
@@ -218,7 +220,7 @@ function move(list, from, to) {
 // Kurzbezeichnung eines Listeneintrags für die Kopfzeile (erstes ausgefülltes Textfeld)
 function itemSummary(field, item) {
   for (const f of field.fields) {
-    if (f.type !== "list" && typeof item[f.key] === "string" && item[f.key].trim()) {
+    if (f.type !== "list" && f.type !== "image" && typeof item[f.key] === "string" && item[f.key].trim()) {
       return item[f.key].replace(/\s+/g, " ").slice(0, 70);
     }
   }
@@ -266,8 +268,70 @@ function ListItem({ field, item, index, count, depth, onMove, onRemove, onChange
   );
 }
 
+// Bildfeld: Vorschau, «hochladen» (Bild wird vorher im Browser verkleinert)
+// und «entfernen». Gespeichert wird nur die URL des hochgeladenen Bildes.
+function ImageField({ field, value, onChange }) {
+  const { toast } = useToast();
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [broken, setBroken] = useState(false);
+  const noun = field.label;
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    try {
+      const blob = await resizeImage(file, { maxSize: field.maxSize, format: field.format });
+      const { url } = await peerskillslab.images.upload(blob);
+      setBroken(false);
+      onChange(url);
+    } catch (err) {
+      toast({
+        title: `${noun} konnte nicht hochgeladen werden`,
+        description: err.message === "unreadable_image"
+          ? "Die Datei ist kein lesbares Bild. Bitte JPG oder PNG verwenden."
+          : "Bitte nochmals versuchen.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div>
+      <span className="block text-sm font-medium text-foreground mb-1">{field.label}</span>
+      <div className="flex items-center gap-3">
+        <div className="w-20 h-20 shrink-0 rounded-md border border-border/60 overflow-hidden flex items-center justify-center bg-muted/40">
+          {value && !broken
+            ? <img src={value} alt="" onError={() => setBroken(true)}
+                className={`w-full h-full ${field.format === "png" ? "object-contain" : "object-cover"}`} />
+            : <span className="text-[11px] text-muted-foreground text-center px-1">{value ? "nicht gefunden" : `kein ${noun}`}</span>}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+          <Button type="button" variant="outline" size="sm" disabled={uploading}
+            onClick={() => inputRef.current?.click()}>
+            {uploading ? <Loader2 className="animate-spin" /> : <Upload />}
+            {value ? `${noun} ersetzen` : `${noun} hochladen`}
+          </Button>
+          {value && (
+            <Button type="button" variant="ghost" size="sm" className="text-destructive" disabled={uploading}
+              onClick={() => { setBroken(false); onChange(""); }}>
+              Entfernen
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Field({ field, value, onChange, depth }) {
   if (field.type === "heading") return null;
+  if (field.type === "image") return <ImageField field={field} value={value} onChange={onChange} />;
   if (field.type === "list") {
     const items = Array.isArray(value) ? value : [];
     // Einträge, die beim Öffnen schon da waren, starten zugeklappt; neue offen
