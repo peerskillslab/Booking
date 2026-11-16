@@ -111,7 +111,7 @@ function StatsBlock({ c }) {
             const isGreen = i % 2 === 0;
             return (
               <div key={s.label || i} style={{
-                background: isGreen ? "#eef3e6" : "#e8f2f2",
+                background: isGreen ? "var(--stat-green-bg)" : "var(--stat-teal-bg)",
                 borderRadius: 16,
                 padding: "24px 22px",
                 display: "flex",
@@ -121,12 +121,12 @@ function StatsBlock({ c }) {
                   fontFamily: "'Plus Jakarta Sans', sans-serif",
                   fontSize: 40,
                   fontWeight: 800,
-                  color: isGreen ? "#466e0e" : "#4e9597",
+                  color: isGreen ? "var(--stat-green-ink)" : "var(--stat-teal-ink)",
                   lineHeight: 0.92,
                   margin: 0,
                 }}>{s.n}</div>
                 <div style={{ fontSize: 15, fontWeight: 600, marginTop: 10, color: "var(--ink)" }}>{s.label}</div>
-                <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 2, opacity: 0.7 }}>{s.sub}</div>
+                <div style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 2 }}>{s.sub}</div>
               </div>
             );
           })}
