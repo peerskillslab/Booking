@@ -12,8 +12,12 @@ router.get('/', requireRole('admin'), async (req, res) => {
     const pool = getPool();
     const sort = parseSort(req.query.sort, ['created_date','email','role']) || { col: 'created_date', dir: 'DESC' };
     const limit = Math.min(parseInt(req.query.limit) || 500, 1000);
+    // categories: Kursrechte der Person (nur für Tutor:innen relevant)
     const result = await pool.query(
-      `SELECT * FROM users ORDER BY ${sort.col} ${sort.dir} LIMIT $1`,
+      `SELECT u.*,
+         COALESCE(array_agg(t.category ORDER BY t.category) FILTER (WHERE t.category IS NOT NULL), '{}') AS categories
+       FROM users u LEFT JOIN tutor_categories t ON t.user_id = u.id
+       GROUP BY u.id ORDER BY u.${sort.col} ${sort.dir} LIMIT $1`,
       [limit]
     );
     res.json(result.rows.map(sanitize));
@@ -99,6 +103,46 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/entities/users/:id/categories  — Admin. Ersetzt die Kursrechte
+// einer Person. Body: { categories: ["CST Abdomen", ...] }
+router.put('/:id/categories', requireRole('admin'), async (req, res) => {
+  const list = req.body && req.body.categories;
+  if (!Array.isArray(list) || list.length > 500 || !list.every((c) => typeof c === 'string')) {
+    return res.status(400).json({ error: 'invalid_categories' });
+  }
+  const categories = [...new Set(list)];
+  const pool = getPool();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const user = await client.query('SELECT id FROM users WHERE id = $1', [req.params.id]);
+    if (!user.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'not_found' });
+    }
+    const known = await client.query('SELECT name FROM course_categories WHERE name = ANY($1)', [categories]);
+    if (known.rows.length !== categories.length) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'unknown_category' });
+    }
+    await client.query('DELETE FROM tutor_categories WHERE user_id = $1', [req.params.id]);
+    if (categories.length > 0) {
+      await client.query(
+        'INSERT INTO tutor_categories (user_id, category) SELECT $1, unnest($2::text[])',
+        [req.params.id, categories]
+      );
+    }
+    await client.query('COMMIT');
+    res.json({ categories: categories.sort() });
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
   }
 });
 

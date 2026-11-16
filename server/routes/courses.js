@@ -1,7 +1,7 @@
 const express = require('express');
 const { getPool } = require('../db/database');
 const { authenticate, requireAuth, requireRole } = require('../middleware/authenticate');
-const { canReadCourse, canWriteCourse, canDeleteCourse } = require('../middleware/authorize');
+const { canReadCourse, canWriteCourse, canDeleteCourse, canUseCategory } = require('../middleware/authorize');
 const { newId, parseSort, buildWhere, buildUpdate } = require('../utils');
 
 const router = express.Router();
@@ -113,6 +113,9 @@ router.post('/', requireAuth, requireRole('tutor', 'admin'), async (req, res) =>
     if (rest.status !== undefined && !COURSE_STATUSES.includes(rest.status)) {
       return res.status(400).json({ error: 'invalid_status' });
     }
+    if (!(await canUseCategory(req.user, category))) {
+      return res.status(403).json({ error: 'category_forbidden' });
+    }
 
     const id = newId();
     const now = new Date().toISOString();
@@ -166,6 +169,12 @@ router.patch('/:id', requireAuth, async (req, res) => {
     // zeigen lassen. Sie wird ausschliesslich aus der Nutzertabelle aufgelöst,
     // und zwar immer dann, wenn die Tutor:in wechselt.
     const patch = { ...req.body };
+    // Kategorie wechseln nur in eine erlaubte. Bestehende Kurse einer
+    // entzogenen Kategorie bleiben bearbeit- und absagbar.
+    if (patch.category !== undefined && patch.category !== course.category
+        && !(await canUseCategory(req.user, patch.category))) {
+      return res.status(403).json({ error: 'category_forbidden' });
+    }
     if (patch.status !== undefined && !COURSE_STATUSES.includes(patch.status)) {
       return res.status(400).json({ error: 'invalid_status' });
     }

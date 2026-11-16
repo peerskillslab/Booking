@@ -185,6 +185,36 @@ export const localClient = {
     },
   },
 
+  // Kategorien (Kursarten). list() öffentlich, nur aktive; listAll() und
+  // Änderungen nur für Admins.
+  categories: {
+    list() {
+      return apiFetch('/categories');
+    },
+    listAll() {
+      return apiFetch('/categories?all=1');
+    },
+    create(data) {
+      return apiFetch('/categories', { method: 'POST', body: JSON.stringify(data) });
+    },
+    update(name, data) {
+      return apiFetch(`/categories/${encodeURIComponent(name)}`, { method: 'PATCH', body: JSON.stringify(data) });
+    },
+    remove(name) {
+      return apiFetch(`/categories/${encodeURIComponent(name)}`, { method: 'DELETE' });
+    },
+  },
+
+  // Kursrechte einer Person ersetzen (nur Admins)
+  userCategories: {
+    set(userId, categories) {
+      return apiFetch(`/entities/users/${encodeURIComponent(userId)}/categories`, {
+        method: 'PUT',
+        body: JSON.stringify({ categories }),
+      });
+    },
+  },
+
   // Bilder für die Infoseiten (Teamfotos, Partner-Logos). upload() nur für
   // Admins mit «Inhalte bearbeiten», liefert { url } zum Eintragen in den Inhalt.
   images: {

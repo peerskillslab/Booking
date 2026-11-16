@@ -16,7 +16,8 @@ import {
 import { Loader2, Search, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import ParticipantsList from "../components/admin/ParticipantsList";
-import { CATEGORIES, LEVELS } from "@/lib/courseConstants";
+import { LEVELS } from "@/lib/courseConstants";
+import { useCategories } from "@/lib/useCategories";
 import {
   invalidateOnCourseCreate,
   invalidateOnCourseUpdate,
@@ -41,6 +42,10 @@ export default function AdminCourses() {
   const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [form, setForm] = useState(emptyCourse);
+  const { names: CATEGORIES } = useCategories();
+  // Im Bearbeiten-Dialog bleibt eine inzwischen deaktivierte Kategorie wählbar
+  const formCategories = form.category && !CATEGORIES.includes(form.category)
+    ? [form.category, ...CATEGORIES] : CATEGORIES;
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterDate, setFilterDate] = useState("");
@@ -429,7 +434,7 @@ export default function AdminCourses() {
                 <Select value={form.category} onValueChange={(v) => updateField("category", v)}>
                   <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    {formCategories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

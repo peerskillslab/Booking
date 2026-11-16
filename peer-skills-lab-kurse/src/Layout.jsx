@@ -14,6 +14,7 @@ const icons = {
   pencil:   "M4 20l1-4L16 5a2 2 0 0 1 3 3L8 19z M14 7l3 3",
   users:    "M9 8a3.2 3.2 0 1 0 0-6.4A3.2 3.2 0 0 0 9 8z M3.5 19a5.5 5.5 0 0 1 11 0 M16 5.5a3 3 0 0 1 0 5.6M16.5 19a5.5 5.5 0 0 0-1.4-3.7",
   chart:    "M4 20V4M20 20H4 M7 12h3v5H7z M12 8h3v9h-3z M17 5h3v12h-3z",
+  tag:      "M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8-9 9z M8 8h.01",
   logout:   "M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M9 16l4-4-4-4M13 12H3",
   sun:      "M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z M12 2v2.5M12 19.5V22M22 12h-2.5M4.5 12H2M19 5l-1.8 1.8M6.8 17.2 5 19M19 19l-1.8-1.8M6.8 6.8 5 5",
   moon:     "M20 14.5A8 8 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z",
@@ -50,6 +51,7 @@ function navGroups(user) {
         ...(user?.role === "admin" ? [
           { label: "Kurse verwalten", path: "/AdminCourses",   icon: "gear" },
           { label: "Nutzer:innen",    path: "/AdminUsers",     icon: "users" },
+          { label: "Kategorien",      path: "/AdminCategories", icon: "tag" },
           { label: "Statistiken",     path: "/AdminStats",     icon: "chart" },
           ...(user?.can_edit_content ? [{ label: "Inhalte", path: "/AdminContent", icon: "pencil" }] : []),
         ] : []),
@@ -69,6 +71,7 @@ const PAGE_TITLES = {
   AdminUsers: "Nutzer:innen",
   AdminStats: "Statistiken",
   AdminContent: "Inhalte",
+  AdminCategories: "Kategorien",
   MyProfile: "Profil",
 };
 

@@ -10,11 +10,13 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, Users, User, Search, Trash2 } from "lucide-react";
+import { Loader2, Users, User, Search, Trash2, KeyRound } from "lucide-react";
 import { motion } from "framer-motion";
 import { queryKeys } from "@/lib/queryKeys";
 import { useToast } from "@/components/ui/use-toast";
 import { useRequireAuth, isAdminUser } from "@/lib/useRequireAuth";
+import { useCategories } from "@/lib/useCategories";
+import CategoryRightsDialog from "@/components/admin/CategoryRightsDialog";
 
 const ROLES = [
   { value: "student", label: "Student:in" },
@@ -29,6 +31,8 @@ export default function AdminUsers() {
   const [search, setSearch] = useState("");
   const [pendingRoleChange, setPendingRoleChange] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [rightsFor, setRightsFor] = useState(null);
+  const { names: categoryNames } = useCategories();
   const queryClient = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery({
@@ -187,6 +191,19 @@ export default function AdminUsers() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 flex-wrap">
+                                {u.role === "tutor" && (() => {
+                                  const n = categoryNames.filter((c) => (u.categories || []).includes(c)).length;
+                                  return (
+                                    <button
+                                      onClick={() => setRightsFor({ id: u.id, name: u.full_name || u.email, categories: u.categories || [] })}
+                                      title="Welche Kategorien diese Person ausschreiben darf"
+                                      className={`h-8 px-2.5 rounded-md border text-xs flex items-center gap-1.5 transition-colors hover:bg-muted/60 ${n === 0 ? "border-destructive/40 text-destructive" : "border-border text-muted-foreground"}`}
+                                    >
+                                      <KeyRound className="w-3.5 h-3.5" />
+                                      Kurse: {n === categoryNames.length && n > 0 ? "alle" : `${n} von ${categoryNames.length}`}
+                                    </button>
+                                  );
+                                })()}
                                 {u.role === "admin" && (
                                   <label
                                     className="flex items-center gap-1.5 text-xs text-muted-foreground mr-1"
@@ -241,6 +258,8 @@ export default function AdminUsers() {
             })}
           </div>
         )}
+
+      <CategoryRightsDialog person={rightsFor} onClose={() => setRightsFor(null)} />
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open) setPendingDelete(null); }}>

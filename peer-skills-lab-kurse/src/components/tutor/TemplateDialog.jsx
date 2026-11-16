@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { CATEGORIES, LEVELS } from "@/lib/courseConstants";
+import { LEVELS } from "@/lib/courseConstants";
+import { useAllowedCategories } from "@/lib/useCategories";
 
 const empty = {
-  title: "", short_description: "", description: "", category: "CST Abdomen",
+  title: "", short_description: "", description: "", category: "",
   level: "Alle Studienjahre", duration_minutes: 60, max_participants: 10,
   location: "", image_url: "", session_count: 1,
 };
@@ -20,6 +21,10 @@ const empty = {
 export default function TemplateDialog({ open, onOpenChange, editingTemplate, onSaved }) {
   const { toast } = useToast();
   const [form, setForm] = useState(empty);
+  const { names: allowedNames } = useAllowedCategories();
+  // Beim Bearbeiten bleibt die bisherige Kategorie wählbar, auch wenn sie inzwischen deaktiviert ist
+  const categoryOptions = form.category && !allowedNames.includes(form.category)
+    ? [form.category, ...allowedNames] : allowedNames;
 
   useEffect(() => {
     if (editingTemplate) {
@@ -27,7 +32,7 @@ export default function TemplateDialog({ open, onOpenChange, editingTemplate, on
         title: editingTemplate.title || "",
         short_description: editingTemplate.short_description || "",
         description: editingTemplate.description || "",
-        category: editingTemplate.category || "CST Abdomen",
+        category: editingTemplate.category || "",
         level: editingTemplate.level || "Alle Studienjahre",
         duration_minutes: editingTemplate.duration_minutes || 60,
         max_participants: editingTemplate.max_participants || 10,
@@ -84,9 +89,9 @@ export default function TemplateDialog({ open, onOpenChange, editingTemplate, on
             <div>
               <Label>Kategorie *</Label>
               <Select value={form.category} onValueChange={(v) => f("category", v)}>
-                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="mt-1.5"><SelectValue placeholder="Kategorie wählen" /></SelectTrigger>
                 <SelectContent position="popper" className="max-h-60">
-                  {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {categoryOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -141,7 +146,7 @@ export default function TemplateDialog({ open, onOpenChange, editingTemplate, on
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Abbrechen</Button>
-          <Button onClick={() => saveMutation.mutate({ ...form, max_participants: Number(form.max_participants), duration_minutes: Number(form.duration_minutes) })} disabled={!form.title || saveMutation.isPending}>
+          <Button onClick={() => saveMutation.mutate({ ...form, max_participants: Number(form.max_participants), duration_minutes: Number(form.duration_minutes) })} disabled={!form.title || !form.category || saveMutation.isPending}>
             {saveMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {editingTemplate ? "Speichern" : "Erstellen"}
           </Button>

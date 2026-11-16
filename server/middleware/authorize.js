@@ -63,9 +63,25 @@ function isAdmin(user) {
   return user && user.role === 'admin';
 }
 
+// Kursrechte pro Kategorie: Admins dürfen alles, Tutor:innen nur aktive
+// Kategorien, die ihnen in der Nutzer:innenverwaltung zugeteilt wurden.
+async function canUseCategory(user, category) {
+  if (!user || !category) return false;
+  if (user.role === 'admin') return true;
+  if (user.role !== 'tutor') return false;
+  const { getPool } = require('../db/database');
+  const result = await getPool().query(
+    `SELECT 1 FROM tutor_categories t
+     JOIN course_categories c ON c.name = t.category
+     WHERE t.user_id = $1 AND t.category = $2 AND c.active`,
+    [user.id, category]
+  );
+  return result.rows.length > 0;
+}
+
 module.exports = {
   canReadCourse, canWriteCourse, canDeleteCourse,
-  ownsCourse, isAdmin,
+  ownsCourse, isAdmin, canUseCategory,
   canReadBooking, canWriteBooking,
   canReadTemplate, canWriteTemplate,
 };

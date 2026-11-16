@@ -20,6 +20,16 @@ export const CATEGORY_HUES = {
   "CST Gynäkologie": 340,
 };
 
+// Neue Kategorien (im Admin-Bereich angelegt) bekommen einen festen Farbton aus
+// ihrem Namen, damit nichts gepflegt werden muss und die Farbe stabil bleibt.
+function categoryHue(category) {
+  if (category in CATEGORY_HUES) return CATEGORY_HUES[category];
+  if (!category) return 130;
+  let h = 0;
+  for (const ch of String(category)) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  return h % 360;
+}
+
 /**
  * Returns OKLCH color palette for a given category.
  * Shared chroma/lightness; hue varies per category.
@@ -41,7 +51,7 @@ export const CATEGORY_HUES = {
  *   - border: visible but subdued
  */
 export function getCategoryOklch(category, opts = {}) {
-  const hue = CATEGORY_HUES[category] ?? 130;
+  const hue = categoryHue(category);
   const dark = opts.dark;
 
   if (dark) {

@@ -90,7 +90,9 @@ router.post('/login', authLimiter, async (req, res) => {
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) return res.status(401).json({ error: 'invalid_credentials' });
 
-    res.json({ token: makeToken(user), user: sanitize(user) });
+    // categories mitliefern, damit das Frontend die Kursrechte ohne Neuladen kennt
+    const cats = await pool.query('SELECT category FROM tutor_categories WHERE user_id = $1 ORDER BY category', [user.id]);
+    res.json({ token: makeToken(user), user: { ...sanitize(user), categories: cats.rows.map((r) => r.category) } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -98,8 +100,18 @@ router.post('/login', authLimiter, async (req, res) => {
 });
 
 // GET /api/auth/me
-router.get('/me', requireAuth, (req, res) => {
-  res.json(sanitize(req.user));
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    // categories: Kursrechte (welche Kategorien die Person ausschreiben darf)
+    const result = await getPool().query(
+      'SELECT category FROM tutor_categories WHERE user_id = $1 ORDER BY category',
+      [req.user.id]
+    );
+    res.json({ ...sanitize(req.user), categories: result.rows.map((r) => r.category) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // PATCH /api/auth/me

@@ -119,6 +119,26 @@ CREATE TABLE IF NOT EXISTS images (
   created_date  TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
 );
 
+CREATE TABLE IF NOT EXISTS course_categories (
+  -- Kursarten (z. B. «CST Abdomen»). Der Name ist der Schlüssel, weil Kurse und
+  -- Vorlagen ihn als Text speichern. Umbenennen zieht beides in einer Transaktion nach.
+  name              TEXT PRIMARY KEY,
+  short_description TEXT,
+  description       TEXT,
+  level             TEXT,
+  sort_order        INTEGER NOT NULL DEFAULT 0,
+  -- deaktiviert = nicht mehr wählbar, bestehende Kurse bleiben unverändert
+  active            BOOLEAN NOT NULL DEFAULT TRUE,
+  created_date      TEXT NOT NULL DEFAULT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+);
+
+CREATE TABLE IF NOT EXISTS tutor_categories (
+  -- Welche Kategorien eine Tutor:in ausschreiben darf. Admins brauchen keine Einträge.
+  user_id   TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  category  TEXT NOT NULL REFERENCES course_categories(name) ON UPDATE CASCADE ON DELETE CASCADE,
+  PRIMARY KEY (user_id, category)
+);
+
 -- Indexes for common filter/sort operations
 CREATE INDEX IF NOT EXISTS idx_courses_status       ON courses(status);
 CREATE INDEX IF NOT EXISTS idx_courses_date         ON courses(date);

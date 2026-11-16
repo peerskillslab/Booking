@@ -33,4 +33,8 @@ export const queryKeys = {
 
   // Templates
   courseTemplates: () => ["courseTemplates"],
+
+  // Kategorien
+  categories: () => ["categories"],
+  adminCategories: () => ["adminCategories"],
 };

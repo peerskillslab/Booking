@@ -63,7 +63,8 @@ app.use('/api/entities/users',            apiCors, require('./routes/users'));
 app.use('/api/entities/coursetemplates',  apiCors, require('./routes/courseTemplates'));
 app.use('/api/entities/monthlystatshots', apiCors, require('./routes/monthlyStats'));
 app.use('/api/content',                   apiCors, require('./routes/content'));
-app.use('/api/images',                    apiCors, require('./routes/images'));
+app.use('/api/categories',                apiCors, require('./routes/categories'));
+app.use('/api/images',                   apiCors, require('./routes/images'));
 
 // --- JSON 404 for unknown /api/* routes ---
 app.use('/api', (req, res) => {

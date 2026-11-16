@@ -1,7 +1,7 @@
 const express = require('express');
 const { getPool } = require('../db/database');
 const { authenticate, requireAuth } = require('../middleware/authenticate');
-const { canReadTemplate, canWriteTemplate } = require('../middleware/authorize');
+const { canReadTemplate, canWriteTemplate, canUseCategory } = require('../middleware/authorize');
 const { newId, parseSort, buildUpdate } = require('../utils');
 
 const router = express.Router();
@@ -43,6 +43,9 @@ router.post('/', requireAuth, async (req, res) => {
     const pool = getPool();
     const { title, category, ...rest } = req.body;
     if (!title || !category) return res.status(400).json({ error: 'title und category sind erforderlich' });
+    if (!(await canUseCategory(req.user, category))) {
+      return res.status(403).json({ error: 'category_forbidden' });
+    }
 
     const id = newId();
     const now = new Date().toISOString();
@@ -73,6 +76,10 @@ router.patch('/:id', requireAuth, async (req, res) => {
     const tpl = resultSelect.rows[0];
     if (!tpl) return res.status(404).json({ error: 'not_found' });
     if (!canWriteTemplate(req.user, tpl)) return res.status(403).json({ error: 'forbidden' });
+    if (req.body.category !== undefined && req.body.category !== tpl.category
+        && !(await canUseCategory(req.user, req.body.category))) {
+      return res.status(403).json({ error: 'category_forbidden' });
+    }
 
     const editable = ['title','description','short_description','category','duration_minutes','max_participants','location','image_url','level','session_count'];
     const { setClause, values, nextParam } = buildUpdate(req.body, editable);

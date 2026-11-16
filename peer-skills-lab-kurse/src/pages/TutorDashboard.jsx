@@ -16,7 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { queryKeys } from "@/lib/queryKeys";
 import { CategoryBadge } from "@/components/courses/CategoryBadge";
 import { useRequireAuth, isTutorOrAdmin } from "@/lib/useRequireAuth";
-import { CATEGORY_DEFAULTS } from "@/lib/courseConstants";
+import { useAllowedCategories } from "@/lib/useCategories";
 
 export default function TutorDashboard() {
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
@@ -27,10 +27,14 @@ export default function TutorDashboard() {
   const { toast } = useToast();
   const { user } = useRequireAuth(isTutorOrAdmin);
 
-  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+  const { data: allTemplates = [], isLoading: templatesLoading } = useQuery({
     queryKey: queryKeys.courseTemplates(),
     queryFn: () => peerskillslab.entities.CourseTemplate.list("-created_date"),
   });
+  const { names: allowedNames, byName: categoryDefaults, isAllowed } = useAllowedCategories();
+  // Tutor:innen sehen nur Vorlagen der Kategorien, für die sie Kursrechte haben
+  const templates = allTemplates.filter((t) => isAllowed(t.category));
+  const hiddenCount = allTemplates.length - templates.length;
 
   const deleteTemplateMutation = useMutation({
     mutationFn: (id) => peerskillslab.entities.CourseTemplate.delete(id),
@@ -48,8 +52,9 @@ export default function TutorDashboard() {
     },
   });
 
-  const missingCategories = Object.keys(CATEGORY_DEFAULTS).filter(
-    (cat) => !templates.some((t) => t.category === cat)
+  // nur für Admins sichtbar, dort sind alle Kategorien erlaubt
+  const missingCategories = allowedNames.filter(
+    (cat) => !allTemplates.some((t) => t.category === cat)
   );
 
   const seedMutation = useMutation({
@@ -58,7 +63,9 @@ export default function TutorDashboard() {
         await peerskillslab.entities.CourseTemplate.create({
           title: cat,
           category: cat,
-          ...CATEGORY_DEFAULTS[cat],
+          short_description: categoryDefaults[cat]?.short_description || "",
+          description: categoryDefaults[cat]?.description || "",
+          level: categoryDefaults[cat]?.level || "Alle Studienjahre",
           duration_minutes: 60,
           max_participants: 10,
           session_count: 1,
@@ -116,11 +123,15 @@ export default function TutorDashboard() {
       ) : templates.length === 0 ? (
         <div className="text-center py-16 border border-dashed border-border rounded-2xl">
           <BookOpen className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="font-semibold text-foreground">Noch keine Vorlagen</p>
+          <p className="font-semibold text-foreground">
+            {hiddenCount > 0 && allowedNames.length === 0 ? "Noch keine Kursrechte" : "Noch keine Vorlagen"}
+          </p>
           <p className="text-sm text-muted-foreground mt-1 mb-4">
             {user.role === "admin"
               ? "Erstelle eine Vorlage, um daraus schnell Kurse auszuschreiben."
-              : "Ein Admin muss zuerst Kursvorlagen erstellen."}
+              : allowedNames.length === 0
+                ? "Dir sind noch keine Kategorien zugeteilt. Melde dich beim Vorstand, damit du Kurse ausschreiben kannst."
+                : "Für deine Kategorien gibt es noch keine Vorlagen. Ein Admin muss sie zuerst erstellen."}
           </p>
           {user.role === "admin" && (
             <Button onClick={openCreateTemplate} variant="outline">

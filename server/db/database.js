@@ -177,6 +177,52 @@ function initDb() {
         console.log('⚠ can_edit_content migration failed:', err.message);
       }
 
+      // Kategorien und Kursrechte: Beim allerersten Start (Tabelle leer) die
+      // bisher im Code hinterlegten Kategorien übernehmen und allen bestehenden
+      // Tutor:innen alle Kategorien geben, damit niemand ausgesperrt wird.
+      // Danach teilen Admins die Rechte in der Nutzer:innenverwaltung zu.
+      try {
+        const existing = await pool.query('SELECT 1 FROM course_categories LIMIT 1');
+        if (existing.rows.length === 0) {
+          const client = await pool.connect();
+          try {
+            await client.query('BEGIN');
+            const seed = require('./categorySeed');
+            for (const [i, c] of seed.entries()) {
+              await client.query(
+                `INSERT INTO course_categories (name, short_description, description, level, sort_order)
+                 VALUES ($1, $2, $3, $4, $5) ON CONFLICT (name) DO NOTHING`,
+                [c.name, c.short_description || null, c.description || null, c.level || null, i]
+              );
+            }
+            // Kategorien, die nur noch in alten Kursen/Vorlagen vorkommen: als
+            // inaktiv übernehmen, damit sie im Admin-Bereich sichtbar sind.
+            await client.query(`
+              INSERT INTO course_categories (name, sort_order, active)
+              SELECT DISTINCT category, 1000, FALSE FROM (
+                SELECT category FROM courses UNION SELECT category FROM course_templates
+              ) c WHERE category IS NOT NULL AND category <> ''
+              ON CONFLICT (name) DO NOTHING
+            `);
+            const granted = await client.query(`
+              INSERT INTO tutor_categories (user_id, category)
+              SELECT u.id, c.name FROM users u CROSS JOIN course_categories c
+              WHERE u.role = 'tutor' AND c.active
+              ON CONFLICT DO NOTHING
+            `);
+            await client.query('COMMIT');
+            console.log(`✓ Kategorien übernommen, ${granted.rowCount} Kursrechte an bestehende Tutor:innen vergeben`);
+          } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+          } finally {
+            client.release();
+          }
+        }
+      } catch (err) {
+        console.log('⚠ course_categories migration failed:', err.message);
+      }
+
       // Monats-Snapshots: einer pro Monat. Öffnen zwei Admins die Statistik
       // gleichzeitig, entstand er bisher doppelt.
       try {
