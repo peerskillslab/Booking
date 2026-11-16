@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { LEVELS } from "@/lib/courseConstants";
 import { useAllowedCategories } from "@/lib/useCategories";
+import { apiErrorMessage } from "@/lib/errorMessages";
 
 const empty = {
   title: "", short_description: "", description: "", category: "",
@@ -64,7 +65,7 @@ export default function TemplateDialog({ open, onOpenChange, editingTemplate, on
     onError: (err) => {
       toast({
         title: "Fehler beim Speichern",
-        description: err.data?.error || "Bitte versuche es später erneut.",
+        description: apiErrorMessage(err),
         variant: "destructive",
         duration: 3000
       });

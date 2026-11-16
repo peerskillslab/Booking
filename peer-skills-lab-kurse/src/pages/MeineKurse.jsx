@@ -17,6 +17,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { useRequireAuth, isTutorOrAdmin } from "@/lib/useRequireAuth";
 import { CategoryBadge, StatusBadge } from "@/components/courses/CategoryBadge";
 import { formatCourseDate, isCoursePast } from "@/lib/courseUtils";
+import { apiErrorMessage } from "@/lib/errorMessages";
 
 export default function MeineKurse() {
   const [bookingsDialogOpen, setBookingsDialogOpen] = useState(false);
@@ -53,7 +54,7 @@ export default function MeineKurse() {
       if (errData.error === 'course_has_bookings') {
         setDeleteError('Kurs kann nicht gelöscht werden, solange noch Buchungen vorhanden sind.');
       } else {
-        setDeleteError(errData.error || 'Fehler beim Löschen des Kurses.');
+        setDeleteError(apiErrorMessage(err, 'Fehler beim Löschen des Kurses.'));
       }
     },
   });

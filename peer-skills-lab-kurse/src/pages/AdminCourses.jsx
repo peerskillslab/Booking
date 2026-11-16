@@ -26,6 +26,8 @@ import {
 import { queryKeys } from "@/lib/queryKeys";
 import { useRequireAuth, isAdminUser } from "@/lib/useRequireAuth";
 import AdminCourseRow from "@/components/admin/AdminCourseRow";
+import { apiErrorMessage } from "@/lib/errorMessages";
+import { formatCourseDate } from "@/lib/courseUtils";
 
 const emptyCourse = {
   title: "", description: "", short_description: "", category: "CST Abdomen",
@@ -81,10 +83,9 @@ export default function AdminCourses() {
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (editingCourse) {
-        await peerskillslab.entities.Course.update(editingCourse.id, data);
-      } else {
-        await peerskillslab.entities.Course.create(data);
+        return peerskillslab.entities.Course.update(editingCourse.id, data);
       }
+      return peerskillslab.entities.Course.create(data);
     },
     onSuccess: (result, variables) => {
       if (editingCourse) {
@@ -96,12 +97,17 @@ export default function AdminCourses() {
         invalidateOnCourseCreate(queryClient, variables.status || 'active');
       }
       toast({ title: editingCourse ? "Kurs gespeichert" : "Kurs erstellt", description: form.title, duration: 3000 });
+      // Kurs abgesagt: Angemeldete benachrichtigen (gleicher Dialog wie beim Löschen)
+      if (result?.notify_emails?.length > 0) {
+        setNotifyData({ emails: result.notify_emails, courseTitle: result.title, courseDate: result.date });
+        setNotifyDialogOpen(true);
+      }
       closeDialog();
     },
     onError: (err) => {
       toast({
         title: "Speichern fehlgeschlagen",
-        description: err?.data?.error || "Bitte prüfe die Eingaben und versuche es erneut.",
+        description: apiErrorMessage(err, "Bitte prüfe die Eingaben und versuche es erneut."),
         variant: "destructive",
         duration: 4000,
       });
@@ -125,7 +131,7 @@ export default function AdminCourses() {
       if (errData.error === 'course_has_bookings') {
         setDeleteError('Kurs kann nicht gelöscht werden, solange noch Buchungen vorhanden sind.');
       } else {
-        setDeleteError(errData.error || 'Fehler beim Löschen des Kurses.');
+        setDeleteError(apiErrorMessage(err, 'Fehler beim Löschen des Kurses.'));
       }
     },
   });
@@ -355,14 +361,14 @@ export default function AdminCourses() {
                 <Label className="text-sm font-semibold">Nachrichtentext</Label>
                 <textarea
                   readOnly
-                  value={`Liebe Teilnehmende\n\nLeider muss der Kurs „${notifyData.courseTitle}" (${notifyData.courseDate}) abgesagt werden.\n\nWir entschuldigen uns für die Unannehmlichkeiten.\n\nFreundliche Grüsse\nPeer Skills Lab`}
+                  value={`Liebe Teilnehmende\n\nLeider muss der Kurs „${notifyData.courseTitle}" (${formatCourseDate(notifyData.courseDate)}) abgesagt werden.\n\nWir entschuldigen uns für die Unannehmlichkeiten.\n\nFreundliche Grüsse\nPeer Skills Lab`}
                   className="mt-2 w-full h-32 p-2 border rounded text-sm bg-muted"
                 />
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    const text = `Liebe Teilnehmende\n\nLeider muss der Kurs „${notifyData.courseTitle}" (${notifyData.courseDate}) abgesagt werden.\n\nWir entschuldigen uns für die Unannehmlichkeiten.\n\nFreundliche Grüsse\nPeer Skills Lab`;
+                    const text = `Liebe Teilnehmende\n\nLeider muss der Kurs „${notifyData.courseTitle}" (${formatCourseDate(notifyData.courseDate)}) abgesagt werden.\n\nWir entschuldigen uns für die Unannehmlichkeiten.\n\nFreundliche Grüsse\nPeer Skills Lab`;
                     navigator.clipboard.writeText(text);
                     toast({ title: "Text kopiert", duration: 2000 });
                   }}

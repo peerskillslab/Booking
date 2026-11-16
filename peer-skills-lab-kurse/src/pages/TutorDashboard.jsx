@@ -17,6 +17,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { CategoryBadge } from "@/components/courses/CategoryBadge";
 import { useRequireAuth, isTutorOrAdmin } from "@/lib/useRequireAuth";
 import { useAllowedCategories } from "@/lib/useCategories";
+import { apiErrorMessage } from "@/lib/errorMessages";
 
 export default function TutorDashboard() {
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
@@ -45,7 +46,7 @@ export default function TutorDashboard() {
     onError: (err) => {
       toast({
         title: "Fehler beim Löschen",
-        description: err.data?.error || "Bitte versuche es später erneut.",
+        description: apiErrorMessage(err),
         variant: "destructive",
         duration: 3000
       });
@@ -79,7 +80,7 @@ export default function TutorDashboard() {
     onError: (err) => {
       toast({
         title: "Fehler beim Erstellen",
-        description: err.data?.error || "Bitte versuche es später erneut.",
+        description: apiErrorMessage(err),
         variant: "destructive",
         duration: 3000
       });

@@ -31,6 +31,7 @@ import { useToast } from "@/components/ui/use-toast";
 import ShortNoticeBanner from "@/components/courses/ShortNoticeBanner";
 import { StatusBadge } from "@/components/courses/CategoryBadge";
 import { CONTACT_EMAIL } from "@/lib/contact";
+import { apiErrorMessage } from "@/lib/errorMessages";
 
 function BookingRow({ booking, course, status, action, lowParticipantsMessage, shortNoticeCourse, courseCancelled }) {
   return (
@@ -127,7 +128,7 @@ export default function MyBookings() {
         title: "Stornierung fehlgeschlagen",
         description: err?.message === "cancellation_deadline_passed"
           ? `Die Frist von ${CANCELLATION_WINDOW_HOURS}h vor Kursbeginn ist abgelaufen.`
-          : "Bitte versuche es später erneut.",
+          : apiErrorMessage(err),
         variant: "destructive",
         duration: 5000,
       });

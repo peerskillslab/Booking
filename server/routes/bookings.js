@@ -152,7 +152,7 @@ router.post('/', requireAuth, async (req, res) => {
       req.body.user_name || null,
       status,
       req.body.notes || null,
-      req.body.price_paid ?? 0,
+      req.user.role === 'admin' ? (req.body.price_paid ?? 0) : 0,
       req.user.email, now
     ]);
 
@@ -178,31 +178,54 @@ router.post('/', requireAuth, async (req, res) => {
 
 // PATCH /api/entities/bookings/:id
 router.patch('/:id', requireAuth, async (req, res) => {
+  const BOOKING_STATUSES = ['confirmed', 'cancelled', 'pending'];
+  const isAdmin = req.user.role === 'admin';
+
+  if (req.body.status !== undefined) {
+    if (!BOOKING_STATUSES.includes(req.body.status)) {
+      return res.status(400).json({ error: 'invalid_status' });
+    }
+    // Nicht-Admins können nur stornieren oder reaktivieren. Mit «pending» liess
+    // sich sonst der Platz kurz vor Kursbeginn freigeben, ohne Stornofrist.
+    if (!isAdmin && req.body.status === 'pending') {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+  }
+
+  const pool = getPool();
+  const client = await pool.connect();
   try {
-    const pool = getPool();
-    const resultSelect = await pool.query(`
+    await client.query('BEGIN');
+    // Buchung in der Transaktion sperren: Zwei gleichzeitige Stornos zogen
+    // sonst beide einen Platz ab.
+    const resultSelect = await client.query(`
       SELECT b.*, c.date, c.time,
              c.created_by AS course_created_by, c.instructor AS course_instructor,
              c.instructor_email AS course_instructor_email
       FROM bookings b JOIN courses c ON b.course_id = c.id
-      WHERE b.id = $1`, [req.params.id]);
+      WHERE b.id = $1
+      FOR UPDATE OF b`, [req.params.id]);
     const booking = resultSelect.rows[0];
-    if (!booking) return res.status(404).json({ error: 'not_found' });
+    if (!booking) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'not_found' });
+    }
     if (!canWriteBooking(req.user, booking, courseContext(booking))) {
+      await client.query('ROLLBACK');
       return res.status(403).json({ error: 'forbidden' });
     }
 
     // Nur die buchende Person darf Status/Notizen ändern; Kurs-Tutor:innen
-    // dürfen ausschliesslich die Anwesenheit setzen.
+    // dürfen ausschliesslich die Anwesenheit setzen, price_paid nur Admins.
     const isOwnBooking = booking.user_email === req.user.email;
-    const isAdmin = req.user.role === 'admin';
 
-    // Check cancellation deadline (user non-admin only)
-    if (req.body.status === 'cancelled' && !isAdmin) {
-      // `time` ist meist "10:00 - 12:00", `new Date("…T10:00 - 12:00")` wäre ungültig
-      // und die Sperre hätte nie gegriffen. Ohne lesbares Datum wird nicht gesperrt.
+    // Stornofrist (nicht für Admins): gilt für jeden Wechsel weg von «confirmed».
+    // `time` ist meist "10:00 - 12:00"; ohne lesbares Datum wird nicht gesperrt.
+    if (!isAdmin && req.body.status !== undefined
+        && booking.status === 'confirmed' && req.body.status !== 'confirmed') {
       const start = courseStart(booking.date, booking.time);
       if (start && new Date() > new Date(start.getTime() - 72 * 60 * 60 * 1000)) {
+        await client.query('ROLLBACK');
         return res.status(403).json({ error: 'cancellation_deadline_passed' });
       }
     }
@@ -213,74 +236,73 @@ router.patch('/:id', requireAuth, async (req, res) => {
       if (req.body[key] === undefined) continue;
       if (key === 'attended') {
         if (req.user.role !== 'admin' && req.user.role !== 'tutor') continue;
+      } else if (key === 'price_paid') {
+        if (!isAdmin) continue;
       } else if (!isOwnBooking && !isAdmin) {
         continue;
       }
       updates[key] = req.body[key];
     }
-    if (Object.keys(updates).length === 0) return res.json(stripCourseContext(booking));
+    if (Object.keys(updates).length === 0) {
+      await client.query('ROLLBACK');
+      return res.json(stripCourseContext(booking));
+    }
+
+    // Reaktivierung einer stornierten Buchung: dieselbe Kapazitätsprüfung
+    // wie beim Anlegen, mit Row-Lock gegen parallele Buchungen.
+    if (updates.status === 'confirmed' && booking.status !== 'confirmed') {
+      const courseRes = await client.query(
+        'SELECT status, date, time, current_participants, max_participants FROM courses WHERE id = $1 FOR UPDATE',
+        [booking.course_id]
+      );
+      const course = courseRes.rows[0];
+      if (!course) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'course_not_found' });
+      }
+      if (!isBookable(course) && !isAdmin) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({ error: 'course_not_bookable' });
+      }
+      if (course.current_participants >= course.max_participants) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({ error: 'course_full' });
+      }
+    }
 
     const { setClause, values, nextParam } = buildUpdate(updates, editable);
     values.push(req.params.id);
+    const updateRes = await client.query(
+      `UPDATE bookings SET ${setClause} WHERE id = $${nextParam} RETURNING *`,
+      values
+    );
+    const updatedBooking = updateRes.rows[0];
 
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-
-      // Reaktivierung einer stornierten Buchung: dieselbe Kapazitätsprüfung
-      // wie beim Anlegen, mit Row-Lock gegen parallele Buchungen.
-      if (updates.status === 'confirmed' && booking.status !== 'confirmed') {
-        const courseRes = await client.query(
-          'SELECT status, date, time, current_participants, max_participants FROM courses WHERE id = $1 FOR UPDATE',
+    // Teilnehmendenzahl nachführen, wenn sich der Status ändert
+    if (updates.status && updates.status !== booking.status) {
+      if (booking.status === 'confirmed') {
+        await client.query(
+          'UPDATE courses SET current_participants = GREATEST(0, current_participants - 1) WHERE id = $1',
           [booking.course_id]
         );
-        const course = courseRes.rows[0];
-        if (!course) {
-          await client.query('ROLLBACK');
-          return res.status(404).json({ error: 'course_not_found' });
-        }
-        if (!isBookable(course) && !isAdmin) {
-          await client.query('ROLLBACK');
-          return res.status(409).json({ error: 'course_not_bookable' });
-        }
-        if (course.current_participants >= course.max_participants) {
-          await client.query('ROLLBACK');
-          return res.status(409).json({ error: 'course_full' });
-        }
+      } else if (updates.status === 'confirmed') {
+        await client.query(
+          'UPDATE courses SET current_participants = current_participants + 1 WHERE id = $1',
+          [booking.course_id]
+        );
       }
-
-      const updateRes = await client.query(
-        `UPDATE bookings SET ${setClause} WHERE id = $${nextParam} RETURNING *`,
-        values
-      );
-      const updatedBooking = updateRes.rows[0];
-
-      // Keep current_participants in sync when status changes
-      if (updates.status && updates.status !== booking.status) {
-        if (booking.status === 'confirmed' && updates.status !== 'confirmed') {
-          await client.query(
-            'UPDATE courses SET current_participants = GREATEST(0, current_participants - 1) WHERE id = $1',
-            [booking.course_id]
-          );
-        } else if (updates.status === 'confirmed' && booking.status !== 'confirmed') {
-          await client.query(
-            'UPDATE courses SET current_participants = current_participants + 1 WHERE id = $1',
-            [booking.course_id]
-          );
-        }
-      }
-
-      await client.query('COMMIT');
-      res.json(updatedBooking);
-    } catch (err) {
-      try { await client.query('ROLLBACK'); } catch {}
-      throw err;
-    } finally {
-      client.release();
     }
+
+    await client.query('COMMIT');
+    res.json(updatedBooking);
   } catch (err) {
+    try { await client.query('ROLLBACK'); } catch {}
+    // Reaktivieren, obwohl schon eine aktive Buchung für den Kurs besteht
+    if (err.code === '23505') return res.status(409).json({ error: 'already_booked' });
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
   }
 });
 

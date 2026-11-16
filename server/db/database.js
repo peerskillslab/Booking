@@ -223,6 +223,36 @@ function initDb() {
         console.log('⚠ course_categories migration failed:', err.message);
       }
 
+      // Textkorrekturen (du-Form, «:innen»): nur Texte ersetzen, die noch exakt
+      // der alten Fassung entsprechen. Selbst geänderte Texte bleiben, ein
+      // zweiter Lauf findet nichts mehr. Ausgeschriebene Kurse bleiben unverändert.
+      try {
+        const fixes = new Map(require('./textFixes'));
+        let changed = 0;
+        for (const [from, to] of fixes) {
+          const cats = await pool.query('UPDATE course_categories SET description = $2 WHERE description = $1', [from, to]);
+          const tpls = await pool.query('UPDATE course_templates SET description = $2 WHERE description = $1', [from, to]);
+          changed += cats.rowCount + tpls.rowCount;
+        }
+        const deepFix = (v) => {
+          if (typeof v === 'string') return fixes.has(v) ? fixes.get(v) : v;
+          if (Array.isArray(v)) return v.map(deepFix);
+          if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, deepFix(x)]));
+          return v;
+        };
+        const pages = await pool.query('SELECT key, value FROM site_content');
+        for (const row of pages.rows) {
+          const fixed = deepFix(row.value);
+          if (JSON.stringify(fixed) !== JSON.stringify(row.value)) {
+            await pool.query('UPDATE site_content SET value = $2 WHERE key = $1', [row.key, JSON.stringify(fixed)]);
+            changed += 1;
+          }
+        }
+        if (changed > 0) console.log(`✓ Textkorrekturen übernommen (${changed} Einträge)`);
+      } catch (err) {
+        console.log('⚠ text fix migration failed:', err.message);
+      }
+
       // Monats-Snapshots: einer pro Monat. Öffnen zwei Admins die Statistik
       // gleichzeitig, entstand er bisher doppelt.
       try {

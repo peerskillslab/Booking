@@ -33,6 +33,7 @@ export function authErrorMessage(code) {
     'password must be at least 8 characters': 'Das Passwort muss mindestens 8 Zeichen lang sein.',
     'email und password erforderlich': 'Bitte fülle alle Felder aus.',
     'token und password erforderlich': 'Bitte fülle alle Felder aus.',
+    too_many_attempts: 'Zu viele Versuche. Bitte warte 15 Minuten und versuche es dann erneut.',
   };
   return messages[code] || 'Etwas ist schiefgelaufen. Bitte versuche es später erneut.';
 }

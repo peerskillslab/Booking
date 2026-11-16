@@ -2,7 +2,7 @@ const express = require('express');
 const { createHash } = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { getPool } = require('../db/database');
 const { authenticate, requireAuth, JWT_SECRET } = require('../middleware/authenticate');
 const { newId, buildUpdate, sanitizeUser: sanitize } = require('../utils');
@@ -10,20 +10,41 @@ const { sendResetEmail } = require('../emailService');
 
 const router = express.Router();
 
-// Rate limiting for auth endpoints
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 requests per windowMs
-  message: 'Too many attempts, please try again later',
+// Rate-Limits. Früher teilten sich alle Auth-Endpunkte einen Zähler von 10
+// Versuchen pro IP. Im Uni-WLAN teilen sich viele Studierende eine öffentliche
+// IP, dann sperrten 10 Fehlversuche irgendeiner Person alle aus.
+const WINDOW_MS = 15 * 60 * 1000;
+const limiterDefaults = {
+  windowMs: WINDOW_MS,
   standardHeaders: false,
   legacyHeaders: false,
+  message: { error: 'too_many_attempts' },
+};
+const emailOf = (req) => String(req.body?.email || '').toLowerCase().trim();
+
+// Login: pro IP *und* E-Mail. Passwortraten für ein Konto bleibt gebremst,
+// andere Personen im selben Netz sind nicht betroffen.
+const loginLimiter = rateLimit({
+  ...limiterDefaults,
+  limit: 10,
+  keyGenerator: (req) => `${ipKeyGenerator(req.ip)}|${emailOf(req)}`,
+});
+// Registrierung und Passwort-vergessen: pro IP, mit Spielraum für ein ganzes Netz.
+const accountLimiter = rateLimit({ ...limiterDefaults, limit: 30 });
+// Passwort zurücksetzen: Token sind 128 Bit zufällig, Raten ist aussichtslos.
+const resetLimiter = rateLimit({ ...limiterDefaults, limit: 30 });
+// Passwortwechsel im Profil: pro angemeldetem Konto (Raten von current_password).
+const passwordChangeLimiter = rateLimit({
+  ...limiterDefaults,
+  limit: 10,
+  keyGenerator: (req) => `user:${req.user?.id || ipKeyGenerator(req.ip)}`,
 });
 
 // Nur Passwortwechsel drosseln — sonst würde jedes Profil-Speichern auf das
 // gleiche Kontingent einzahlen. Ziel ist das Raten von current_password.
 function limitPasswordChange(req, res, next) {
   if (!req.body || !req.body.password) return next();
-  return authLimiter(req, res, next);
+  return passwordChangeLimiter(req, res, next);
 }
 
 // Parse JWT on all auth routes so req.user is populated for /me
@@ -43,7 +64,7 @@ function makeToken(user) {
 }
 
 // POST /api/auth/register
-router.post('/register', authLimiter, async (req, res) => {
+router.post('/register', accountLimiter, async (req, res) => {
   try {
     const { email, password, full_name, studienjahr } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'email und password erforderlich' });
@@ -77,7 +98,7 @@ router.post('/register', authLimiter, async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post('/login', authLimiter, async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'email und password erforderlich' });
@@ -122,6 +143,10 @@ router.patch('/me', limitPasswordChange, requireAuth, async (req, res) => {
 
     // If changing password, require and verify current password
     if (password) {
+      // Gleiche Mindestlänge wie bei Registrierung und Passwort-Reset
+      if (typeof password !== 'string' || password.length < 8) {
+        return res.status(400).json({ error: 'password must be at least 8 characters' });
+      }
       if (!current_password) {
         return res.status(400).json({ error: 'current_password required to change password' });
       }
@@ -203,7 +228,7 @@ router.patch('/me', limitPasswordChange, requireAuth, async (req, res) => {
 });
 
 // POST /api/auth/forgot-password
-router.post('/forgot-password', authLimiter, async (req, res) => {
+router.post('/forgot-password', accountLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: 'email erforderlich' });
@@ -245,7 +270,7 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
 });
 
 // POST /api/auth/reset-password
-router.post('/reset-password', authLimiter, async (req, res) => {
+router.post('/reset-password', resetLimiter, async (req, res) => {
   try {
     const { token, password } = req.body;
     if (!token || !password) return res.status(400).json({ error: 'token und password erforderlich' });

@@ -205,7 +205,17 @@ router.patch('/:id', requireAuth, async (req, res) => {
       `UPDATE courses SET ${setClause} WHERE id = $${nextParam} RETURNING *`,
       values
     );
-    res.json(resultFinal.rows[0]);
+    const updated = resultFinal.rows[0];
+    // Kurs abgesagt: Mailadressen der Angemeldeten mitliefern, damit sie wie
+    // beim Löschen benachrichtigt werden können (vorher erfuhr niemand davon).
+    if (updated.status === 'cancelled' && course.status !== 'cancelled') {
+      const emails = await pool.query(
+        `SELECT DISTINCT user_email FROM bookings WHERE course_id = $1 AND status = 'confirmed'`,
+        [req.params.id]
+      );
+      updated.notify_emails = emails.rows.map((r) => r.user_email).filter(Boolean);
+    }
+    res.json(updated);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

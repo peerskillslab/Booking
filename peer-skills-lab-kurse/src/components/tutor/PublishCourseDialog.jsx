@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import TimeInput from "@/components/ui/TimeInput";
 import RoomReservationDialog from "./RoomReservationDialog";
+import { apiErrorMessage } from "@/lib/errorMessages";
 
 export default function PublishCourseDialog({ open, onOpenChange, template, user, onPublished }) {
   const queryClient = useQueryClient();
@@ -71,7 +72,7 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
       setError(null);
     },
     onError: (err) => {
-      setError(err?.message || "Fehler beim Ausschreiben des Kurses");
+      setError(apiErrorMessage(err, "Fehler beim Ausschreiben des Kurses."));
     },
   });
 
