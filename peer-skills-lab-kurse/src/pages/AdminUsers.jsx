@@ -123,7 +123,7 @@ export default function AdminUsers() {
             <Users className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Nutzerverwaltung</h1>
+            <h1 className="text-3xl font-bold text-foreground">Nutzer:innenverwaltung</h1>
             <p className="text-muted-foreground mt-0.5">{users.length} registrierte Nutzer:innen</p>
           </div>
         </div>
