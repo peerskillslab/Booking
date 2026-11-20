@@ -1,37 +1,18 @@
 import React from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
+// Uhrzeit «HH:MM». Früher zwei Klapplisten (Stunde/Minute) – die übernahmen in
+// Dialogen auf Handys und Tablets die Auswahl nicht immer, das Feld wirkte
+// ausgefüllt und «Ausschreiben» blieb grau. Das eingebaute Zeitfeld des
+// Browsers funktioniert auf allen Geräten (Viertelstunden-Schritte).
 export default function TimeInput({ value, onChange, className }) {
-  const [h, m] = value ? value.split(":") : ["", ""];
-
-  const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"));
-  const minutes = ["00", "15", "30", "45"];
-
-  const update = (newH, newM) => {
-    if (newH && newM) onChange(`${newH}:${newM}`);
-    else if (newH) onChange(`${newH}:${m || "00"}`);
-    else if (newM) onChange(`${h || "00"}:${newM}`);
-  };
-
   return (
-    <div className={`flex gap-1 items-center ${className || ""}`}>
-      <Select value={h || ""} onValueChange={(v) => update(v, m)}>
-        <SelectTrigger className="w-20">
-          <SelectValue placeholder="HH" />
-        </SelectTrigger>
-        <SelectContent>
-          {hours.map((hr) => <SelectItem key={hr} value={hr}>{hr}</SelectItem>)}
-        </SelectContent>
-      </Select>
-      <span className="text-muted-foreground font-bold">:</span>
-      <Select value={m || ""} onValueChange={(v) => update(h, v)}>
-        <SelectTrigger className="w-20">
-          <SelectValue placeholder="MM" />
-        </SelectTrigger>
-        <SelectContent>
-          {minutes.map((min) => <SelectItem key={min} value={min}>{min}</SelectItem>)}
-        </SelectContent>
-      </Select>
-    </div>
+    <Input
+      type="time"
+      step={900}
+      value={value || ""}
+      onChange={(e) => onChange(e.target.value)}
+      className={className}
+    />
   );
 }

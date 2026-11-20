@@ -84,9 +84,20 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
     });
   };
 
-  const allSessionsValid = sessions.every(s =>
-    s.date && (s.timeStart?.toString().trim()) && (s.timeEnd?.toString().trim())
-  );
+  // Konkret benennen, was noch fehlt – vorher stand nur «alle Felder», und bei
+  // Vorlagen mit mehreren Terminen war unklar, welches Feld den Knopf sperrt.
+  const problems = sessions.flatMap((s, i) => {
+    const prefix = isMultiSession ? `Termin ${i + 1}: ` : "";
+    const missing = [
+      !s.date && "Datum",
+      !s.timeStart?.toString().trim() && "Uhrzeit von",
+      !s.timeEnd?.toString().trim() && "Uhrzeit bis",
+    ].filter(Boolean);
+    if (missing.length) return [`${prefix}${missing.join(", ")} fehlt`];
+    if (s.timeEnd <= s.timeStart) return [`${prefix}«bis» muss nach «von» liegen`];
+    return [];
+  });
+  const allSessionsValid = problems.length === 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -183,9 +194,9 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
 
             <DialogFooter className="flex flex-col gap-2">
               {!allSessionsValid && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Bitte füllen Sie alle Felder aus
-                </p>
+                <div className="text-xs text-muted-foreground text-center">
+                  {problems.map((p) => <div key={p}>{p}</div>)}
+                </div>
               )}
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">Abbrechen</Button>
