@@ -76,10 +76,24 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
     },
   });
 
+  // «bis» aus der Kursdauer der Vorlage vorschlagen, solange es nicht von Hand gesetzt wurde
+  const addMinutes = (hhmm, minutes) => {
+    const [h, m] = hhmm.split(":").map(Number);
+    const total = h * 60 + m + minutes;
+    if (!minutes || total >= 24 * 60) return "";
+    return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+  };
+
   const updateSession = (index, field, value) => {
     setSessions(s => {
       const newSessions = [...s];
-      newSessions[index] = { ...newSessions[index], [field]: value };
+      const current = { ...newSessions[index], [field]: value };
+      if (field === "timeEnd") current.endAuto = false;
+      if (field === "timeStart" && value && (!current.timeEnd || current.endAuto)) {
+        const suggested = addMinutes(value, Number(template?.duration_minutes) || 0);
+        if (suggested) { current.timeEnd = suggested; current.endAuto = true; }
+      }
+      newSessions[index] = current;
       return newSessions;
     });
   };
@@ -90,10 +104,13 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
     const prefix = isMultiSession ? `Termin ${i + 1}: ` : "";
     const missing = [
       !s.date && "Datum",
-      !s.timeStart?.toString().trim() && "Uhrzeit von",
-      !s.timeEnd?.toString().trim() && "Uhrzeit bis",
+      !s.timeStart && "Uhrzeit von",
+      !s.timeEnd && "Uhrzeit bis",
     ].filter(Boolean);
-    if (missing.length) return [`${prefix}${missing.join(", ")} fehlt`];
+    if (missing.length) {
+      const hint = missing.some((x) => x.startsWith("Uhrzeit")) ? " (Uhrzeit z. B. 18:15)" : "";
+      return [`${prefix}${missing.join(", ")} fehlt${hint}`];
+    }
     if (s.timeEnd <= s.timeStart) return [`${prefix}«bis» muss nach «von» liegen`];
     return [];
   });
