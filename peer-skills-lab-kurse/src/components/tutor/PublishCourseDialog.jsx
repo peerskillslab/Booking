@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import TimeInput from "@/components/ui/TimeInput";
+import DateInput from "@/components/ui/DateInput";
 import RoomReservationDialog from "./RoomReservationDialog";
 import { apiErrorMessage } from "@/lib/errorMessages";
 
@@ -166,7 +167,7 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
                       <div className="grid sm:grid-cols-3 gap-3">
                         <div>
                           <Label className="text-xs">Datum *</Label>
-                          <Input type="date" value={session.date} onChange={(e) => updateSession(i, "date", e.target.value)} className="mt-1 h-9" />
+                          <DateInput value={session.date} onChange={(v) => updateSession(i, "date", v)} className="mt-1" />
                         </div>
                         <div>
                           <Label className="text-xs">Von *</Label>
@@ -184,7 +185,7 @@ export default function PublishCourseDialog({ open, onOpenChange, template, user
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Datum *</Label>
-                    <Input type="date" value={sessions[0].date} onChange={(e) => updateSession(0, "date", e.target.value)} className="mt-1.5" />
+                    <DateInput value={sessions[0].date} onChange={(v) => updateSession(0, "date", v)} className="mt-1.5" />
                   </div>
                   <div>
                     <Label>Uhrzeit von *</Label>

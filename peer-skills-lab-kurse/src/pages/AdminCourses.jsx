@@ -28,6 +28,7 @@ import { useRequireAuth, isAdminUser } from "@/lib/useRequireAuth";
 import AdminCourseRow from "@/components/admin/AdminCourseRow";
 import { apiErrorMessage } from "@/lib/errorMessages";
 import { formatCourseDate } from "@/lib/courseUtils";
+import DateInput from "@/components/ui/DateInput";
 
 const emptyCourse = {
   title: "", description: "", short_description: "", category: "CST Abdomen",
@@ -469,7 +470,7 @@ export default function AdminCourses() {
             <div className="grid sm:grid-cols-3 gap-4">
               <div>
                 <Label>Datum *</Label>
-                <Input type="date" value={form.date} onChange={(e) => updateField("date", e.target.value)} className="mt-1.5" />
+                <DateInput value={form.date} onChange={(v) => updateField("date", v)} className="mt-1.5" />
               </div>
               <div>
                 <Label>Uhrzeit</Label>
