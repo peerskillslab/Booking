@@ -23,7 +23,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useRequireAuth, isAdminUser } from "@/lib/useRequireAuth";
 import { queryKeys } from "@/lib/queryKeys";
 import { getInitials, downloadCsv } from "@/lib/utils";
-import { MIN_PARTICIPANTS_THRESHOLD, parseCourseDate } from "@/lib/courseUtils";
+import { MIN_PARTICIPANTS_THRESHOLD, parseCourseDate, formatCourseDate } from "@/lib/courseUtils";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -198,7 +198,7 @@ export default function AdminStats() {
           monthLabel,
           c.title || "—",
           c.instructor || "—",
-          c.date || "—",
+          formatCourseDate(c.date),
           c.time || "—",
           c.current_participants || 0,
           c.max_participants || 0,
@@ -436,7 +436,7 @@ export default function AdminStats() {
                           ["Monat", "Kursname", "Tutor:in", "Datum", "Zeit", "Teilnehmende", "Max. Plätze"],
                         ];
                         if (parsedCourses.length > 0) {
-                          parsedCourses.forEach((c) => rows.push([snap.month_label, c.title || "—", c.instructor || "—", c.date || "—", c.time || "—", c.current_participants, c.max_participants]));
+                          parsedCourses.forEach((c) => rows.push([snap.month_label, c.title || "—", c.instructor || "—", formatCourseDate(c.date), c.time || "—", c.current_participants, c.max_participants]));
                         } else {
                           // Fallback für alte Snapshots ohne course_data — die
                           // Zeilen brauchen genauso viele Spalten wie der Header,
