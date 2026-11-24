@@ -24,7 +24,9 @@ export function getInitials(name) {
  */
 export function toCsv(rows) {
   const escape = (cell) => {
-    const s = cell === null || cell === undefined ? "" : String(cell);
+    let s = cell === null || cell === undefined ? "" : String(cell);
+    // Namen und Titel sind frei eintippbar: Excel würde «=…» usw. als Formel ausführen.
+    if (typeof cell === "string" && /^[=+\-@\t\r\n]/.test(s)) s = `'${s}`;
     return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   return "﻿" + rows.map((r) => r.map(escape).join(";")).join("\n");

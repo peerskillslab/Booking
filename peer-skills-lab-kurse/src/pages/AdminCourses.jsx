@@ -250,13 +250,7 @@ export default function AdminCourses() {
               {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Input
-            type="date"
-            value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
-            className="w-full sm:w-44"
-            style={{ height: 40, borderRadius: 11 }}
-          />
+          <DateInput value={filterDate} onChange={setFilterDate} className="w-full sm:w-44" />
           {hasFilters && (
             <Button variant="ghost" size="icon" onClick={() => { setSearch(""); setFilterCategory("all"); setFilterDate(""); }}>
               <X className="w-4 h-4" />

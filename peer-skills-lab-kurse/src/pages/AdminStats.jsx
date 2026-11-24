@@ -23,6 +23,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useRequireAuth, isAdminUser } from "@/lib/useRequireAuth";
 import { queryKeys } from "@/lib/queryKeys";
 import { getInitials, downloadCsv } from "@/lib/utils";
+import { participantRows } from "@/lib/participantExport";
 import { MIN_PARTICIPANTS_THRESHOLD, parseCourseDate, formatCourseDate } from "@/lib/courseUtils";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
@@ -209,6 +210,16 @@ export default function AdminStats() {
     downloadCsv(rows, `statistik_${format(now, "yyyy-MM")}.csv`);
   };
 
+  // CSV Export (aktueller Monat) – eine Zeile pro angemeldete Person und Kurs
+  const handleExportParticipants = () => {
+    const rows = participantRows(currentMonthCourses, bookings, format(now, "MMMM yyyy", { locale: de }));
+    if (rows.length === 1) {
+      toast({ title: "Keine Anmeldungen in diesem Monat", duration: 3000 });
+      return;
+    }
+    downloadCsv(rows, `teilnehmende_${format(now, "yyyy-MM")}.csv`);
+  };
+
   return (
     <div className="psl-page" style={{ maxWidth: 1100 }}>
         {/* Header */}
@@ -222,10 +233,16 @@ export default function AdminStats() {
             <h1 style={{ fontSize: 28, fontWeight: 600, marginBottom: 4 }}>Statistiken</h1>
             <p style={{ fontSize: 14, marginBottom: 0 }}>Übersicht aller Kurse und Buchungen</p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={isLoading}>
-            <Download className="w-4 h-4 mr-1.5" />
-            CSV Export
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={isLoading}>
+              <Download className="w-4 h-4 mr-1.5" />
+              CSV Kurse
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportParticipants} disabled={isLoading}>
+              <Download className="w-4 h-4 mr-1.5" />
+              CSV Teilnehmende
+            </Button>
+          </div>
         </motion.div>
 
         {isLoading ? (
